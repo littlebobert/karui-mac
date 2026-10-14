@@ -41,10 +41,31 @@ xcodebuild \
 # provisioning profile, which CloudKit needs; the source file alone lacks them.
 ENTITLEMENTS="$DERIVED_DATA/Build/Intermediates.noindex/KaruiMac.build/Release/KaruiMac.build/Karui.app.xcent"
 [[ -f "$ENTITLEMENTS" ]] || { echo "error: generated entitlements not found: $ENTITLEMENTS" >&2; exit 1; }
-codesign --force --deep --sign "$IDENTITY" --entitlements "$ENTITLEMENTS" \
+# Sparkle's helpers are signed first, on their own and without the app's
+# entitlements: the application-identifier and iCloud entitlements are restricted,
+# and a helper carrying them without a provisioning profile is refused at launch,
+# which surfaces as "failed to probe status service" when an update installs.
+# (A --deep sign with --entitlements would stamp them on every nested binary.)
+SPARKLE="$APP/Contents/Frameworks/Sparkle.framework/Versions/B"
+for helper in \
+  "$SPARKLE/XPCServices/Installer.xpc" \
+  "$SPARKLE/XPCServices/Downloader.xpc" \
+  "$SPARKLE/Autoupdate" \
+  "$SPARKLE/Updater.app"; do
+  [[ -e "$helper" ]] || { echo "error: Sparkle helper not found: $helper" >&2; exit 1; }
+  codesign --force --sign "$IDENTITY" --options runtime --timestamp "$helper"
+done
+codesign --force --sign "$IDENTITY" --options runtime --timestamp "$SPARKLE"
+codesign --force --sign "$IDENTITY" --entitlements "$ENTITLEMENTS" \
   --options runtime --timestamp "$APP"
 
 codesign --verify --deep --strict --verbose=2 "$APP"
+for helper in "$SPARKLE/XPCServices/Installer.xpc" "$SPARKLE/Autoupdate" "$SPARKLE/Updater.app"; do
+  if codesign -d --entitlements :- "$helper" 2>/dev/null | grep -Fq "com.apple.application-identifier"; then
+    echo "error: Sparkle helper carries the app's restricted entitlements: $helper" >&2
+    exit 1
+  fi
+done
 if codesign -d --entitlements :- "$APP" 2>/dev/null | grep -Fq "get-task-allow"; then
   echo "error: release app contains get-task-allow" >&2
   exit 1
