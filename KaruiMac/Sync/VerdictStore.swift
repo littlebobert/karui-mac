@@ -8,37 +8,68 @@ import KaruiLinkKit
 /// the inbox shows on their own.
 actor VerdictStore {
     static let pollInterval: Duration = .seconds(20)
+    /// The full day is re-read this often, for categories and read marks that changed.
+    static let fullPassInterval: Duration = .seconds(5 * 60)
     static let window: TimeInterval = VerdictRecord.lifetime
+    /// The first full pass reaches back as far as the inbox is kept.
+    static let firstPassWindow: TimeInterval = InboxStore.retention
+    private var hasCompletedFullPass = false
 
     private let database: CKDatabase?
     private var task: Task<Void, Never>?
     private var lastSummary = ""
     private let found: @Sendable ([VerdictRecord]) -> Void
+    private let awaiting: @Sendable () async -> [String]
 
     init(
         container: CKContainer? = CloudKitEntitlement.hasKaruiContainer
             ? CKContainer(identifier: DeepLinkSync.containerIdentifier) : nil,
+        awaiting: @escaping @Sendable () async -> [String],
         found: @escaping @Sendable ([VerdictRecord]) -> Void
     ) {
         database = container?.privateCloudDatabase
+        self.awaiting = awaiting
         self.found = found
     }
 
     func start() {
         guard task == nil else { return }
         task = Task {
+            var lastFullPass = ContinuousClock.now - Self.fullPassInterval
             while !Task.isCancelled {
-                await fetch()
+                if ContinuousClock.now - lastFullPass >= Self.fullPassInterval {
+                    await fetch()
+                    lastFullPass = ContinuousClock.now
+                } else {
+                    await fetchAwaiting()
+                }
                 try? await Task.sleep(for: Self.pollInterval)
             }
         }
     }
 
+    /// Only the verdicts the inbox is still waiting for, by name: cheap, and
+    /// enough between full passes.
+    func fetchAwaiting() async {
+        guard let database else { return }
+        let fingerprints = await awaiting()
+        guard !fingerprints.isEmpty else { return }
+        let ids = fingerprints.map { CKRecord.ID(recordName: VerdictRecordSchema.recordName(fingerprint: $0)) }
+        do {
+            let results = try await database.records(for: ids)
+            let verdicts = results.values.compactMap { try? Self.verdict(from: $0.get()) }
+            if !verdicts.isEmpty { found(verdicts) }
+        } catch {
+            SafeDiagnosticLog.shared.record("verdicts: fetch failed: \(error.localizedDescription)")
+        }
+    }
+
     func fetch(now: Date = Date()) async {
         guard let database else { return }
+        let reach = hasCompletedFullPass ? Self.window : Self.firstPassWindow
         let query = CKQuery(
             recordType: VerdictRecordSchema.recordType,
-            predicate: NSPredicate(format: "%K > %@", VerdictRecordSchema.triagedAt, now.addingTimeInterval(-Self.window) as NSDate)
+            predicate: NSPredicate(format: "%K > %@", VerdictRecordSchema.triagedAt, now.addingTimeInterval(-reach) as NSDate)
         )
         var verdicts: [VerdictRecord] = []
         var cursor: CKQueryOperation.Cursor?
@@ -55,6 +86,7 @@ actor VerdictStore {
             SafeDiagnosticLog.shared.record("verdicts: fetch failed: \(error.localizedDescription)")
             return
         }
+        hasCompletedFullPass = true
         // Counts only, when they change: which apps the iPhone sent, and how many carry text.
         let withText = verdicts.filter { $0.title != nil || $0.body != nil }.count
         let apps = Dictionary(grouping: verdicts, by: \.app).map { "\($0.key) \($0.value.count)" }.sorted().joined(separator: ", ")
@@ -64,6 +96,36 @@ actor VerdictStore {
             SafeDiagnosticLog.shared.record(summary)
         }
         found(verdicts)
+    }
+
+    /// What the person did here, onto the verdict record, for the iPhone to apply.
+    enum Action {
+        case read
+        case category(String)
+        case delete
+    }
+
+    func apply(_ action: Action, to fingerprints: [String]) async {
+        guard let database, !fingerprints.isEmpty else { return }
+        let ids = fingerprints.map { CKRecord.ID(recordName: VerdictRecordSchema.recordName(fingerprint: $0)) }
+        do {
+            let fetched = try await database.records(for: ids)
+            let now = Date()
+            let records = fetched.values.compactMap { try? $0.get() }
+            for record in records {
+                switch action {
+                case .read: record[VerdictRecordSchema.readAt] = now
+                case .category(let category): record[VerdictRecordSchema.requestedCategory] = category
+                case .delete: record[VerdictRecordSchema.deletedAt] = now
+                }
+                record[VerdictRecordSchema.actionAt] = now
+            }
+            guard !records.isEmpty else { return }
+            _ = try await database.modifyRecords(saving: records, deleting: [], savePolicy: .changedKeys)
+            SafeDiagnosticLog.shared.record("verdicts: \(action) sent for \(records.count) of \(fingerprints.count)")
+        } catch {
+            SafeDiagnosticLog.shared.record("verdicts: action failed: \(error.localizedDescription)")
+        }
     }
 
     static func verdict(from record: CKRecord) -> VerdictRecord? {
@@ -82,7 +144,10 @@ actor VerdictStore {
             triagedAt: triagedAt,
             isUnread: (record[VerdictRecordSchema.isUnread] as? Int ?? 0) != 0,
             title: record.encryptedValues[VerdictRecordSchema.title] as? String,
-            body: record.encryptedValues[VerdictRecordSchema.body] as? String
+            body: record.encryptedValues[VerdictRecordSchema.body] as? String,
+            readAt: record[VerdictRecordSchema.readAt] as? Date,
+            requestedCategory: record[VerdictRecordSchema.requestedCategory] as? String,
+            deletedAt: record[VerdictRecordSchema.deletedAt] as? Date
         )
     }
 }

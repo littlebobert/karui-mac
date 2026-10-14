@@ -6,7 +6,7 @@ final class AppCoordinator {
     let settings = AppSettings()
     let fullDiskAccess = FullDiskAccess()
     let loginItem = LoginItem()
-    let inbox = Inbox()
+    let inbox = Inbox(store: InboxStore())
     let autoUpdates = AutoUpdateService()
     let sync = DeepLinkSync()
     let syncStatus = SyncStatus()
@@ -22,15 +22,26 @@ final class AppCoordinator {
         MessagesHarvester()
     ])
     private let readWatcher = ReadWatcher()
-    private lazy var verdicts = VerdictStore { [weak self] verdicts in
-        Task { @MainActor in self?.inbox.apply(verdicts) }
-    }
+    private lazy var verdicts = VerdictStore(
+        awaiting: { [weak self] in await MainActor.run { self?.inbox.fingerprintsAwaitingVerdict() ?? [] } },
+        found: { [weak self] verdicts in
+            Task { @MainActor in self?.inbox.apply(verdicts) }
+        }
+    )
     private var watcher: NotificationDatabaseWatcher?
     private var watchTask: Task<Void, Never>?
     private var readPollTask: Task<Void, Never>?
     /// How often the apps' own data is checked for the items having been read.
     private static let readPollInterval: Duration = .seconds(10)
     private var hasStarted = false
+    private lazy var inboxWindow = InboxWindowController(coordinator: self)
+    private let aboutWindow = AboutWindowController()
+
+    func showAbout() {
+        aboutWindow.show()
+    }
+
+    var visibleInboxItems: [Inbox.Item] { inbox.visibleItems }
 
     func start() {
         guard !hasStarted else { return }
@@ -39,6 +50,7 @@ final class AppCoordinator {
         fullDiskAccess.refresh()
         startWatchingIfPossible()
         autoUpdates.start()
+        showInbox()
         let sync = sync
         let syncStatus = syncStatus
         let presence = presence
@@ -70,6 +82,7 @@ final class AppCoordinator {
     func showInbox() {
         NSApp.setActivationPolicy(.regular)
         NSApp.activate()
+        inboxWindow.present()
     }
 
     func inboxWindowAppeared() {
@@ -81,6 +94,38 @@ final class AppCoordinator {
     func inboxWindowClosed() {
         guard !settings.showsDockIcon else { return }
         NSApp.setActivationPolicy(.accessory)
+    }
+
+    // MARK: Actions on the inbox, applied here at once and sent to the iPhone.
+
+    func markRead(_ ids: Set<String>) {
+        let items = inbox.items.filter { ids.contains($0.id) && $0.isUnread }
+        guard !items.isEmpty else { return }
+        inbox.markRead(ids: ids)
+        let sync = sync
+        let verdicts = verdicts
+        Task {
+            for item in items where item.link != nil {
+                await sync.markRead(fingerprint: item.fingerprint)
+            }
+            await verdicts.apply(.read, to: items.map(\.fingerprint))
+        }
+    }
+
+    func setCategory(_ category: String, _ ids: Set<String>) {
+        let items = inbox.items.filter { ids.contains($0.id) && $0.category != category }
+        guard !items.isEmpty else { return }
+        inbox.setCategory(category, ids: ids)
+        let verdicts = verdicts
+        Task { await verdicts.apply(.category(category), to: items.map(\.fingerprint)) }
+    }
+
+    func delete(_ ids: Set<String>) {
+        let items = inbox.items.filter { ids.contains($0.id) }
+        guard !items.isEmpty else { return }
+        inbox.remove(ids: ids)
+        let verdicts = verdicts
+        Task { await verdicts.apply(.delete, to: items.map(\.fingerprint)) }
     }
 
     private func startWatchingIfPossible() {
@@ -107,6 +152,14 @@ final class AppCoordinator {
                     // Shown with or without a link; the verdict is the iPhone's to send.
                     if let app = KnownApp(macBundleIdentifier: record.bundleIdentifier) {
                         inbox.add(record, as: app)
+                    }
+                    // Kept from before a relaunch: the link is on iCloud already, so
+                    // only the read-watch is picked up again, when it's still unread.
+                    if case .backfilled = event, let kept = inbox.item(id: Inbox.id(for: record)), kept.link != nil {
+                        if kept.readAt == nil, let harvested = await harvesters.harvest(record) {
+                            await readWatcher.track(harvested)
+                        }
+                        continue
                     }
                     guard let harvested = await harvesters.harvest(record) else { continue }
                     let link = harvested.link

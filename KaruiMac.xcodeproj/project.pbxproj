@@ -17,12 +17,14 @@
 		29D7C805F698B12B4188AB8B /* DeepLinkSync.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1A75765EC9DF2745AF8F9FD /* DeepLinkSync.swift */; };
 		351CCFEAAFC9F7E04A808ADE /* KaruiMacApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 61B11DFC924A31F1D18275E7 /* KaruiMacApp.swift */; };
 		41DDECE3C0F720A32A5B6505 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = C424AFD49EBE5C89997B8D7C /* Assets.xcassets */; };
+		4289776CB4A0587BFD13136C /* InboxWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 54FF85BE43728EC33D14AF15 /* InboxWindowController.swift */; };
 		450373E70A90D9E47C01B39A /* FullDiskAccess.swift in Sources */ = {isa = PBXBuildFile; fileRef = BAA22D646B0B0086568E6C34 /* FullDiskAccess.swift */; };
 		48BC8B8FE8B3454F291F732C /* InboxView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 59EF49CEA27DDE8349D1BB63 /* InboxView.swift */; };
 		506A24EE70DB7B87395F9679 /* SparkHarvester.swift in Sources */ = {isa = PBXBuildFile; fileRef = F9695E99FA85CB7DC2E8B73A /* SparkHarvester.swift */; };
 		54758AD1ACDF40494DD0EB17 /* AutoUpdateService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9FBC7F39D73658B323FE3E33 /* AutoUpdateService.swift */; };
 		58B843671087828476A17A1A /* AppIconSource.png in Resources */ = {isa = PBXBuildFile; fileRef = 6CA9E859EEC0683C3C84FEEB /* AppIconSource.png */; };
 		5916F4769E5F40D48B463BFF /* Sparkle in Frameworks */ = {isa = PBXBuildFile; productRef = 782A9236982375E69B998D37 /* Sparkle */; };
+		611EDB47A4CA5D72542A9168 /* Acknowledgements.txt in Resources */ = {isa = PBXBuildFile; fileRef = CDA83893DD1898A941803C76 /* Acknowledgements.txt */; };
 		6F1F477087C760E2E8B83643 /* SlackHarvester.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0368E20A347FBE53765A797B /* SlackHarvester.swift */; };
 		71995B62B28464F1978F0F94 /* VerdictStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = B925C34CA7033ED768164254 /* VerdictStore.swift */; };
 		71FCA40B8355B8319BD331C2 /* MessagesLinkTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5986291BE197CA76F4D6CA8E /* MessagesLinkTests.swift */; };
@@ -34,12 +36,14 @@
 		AD28793611CC3ED7547620EB /* ReadWatcher.swift in Sources */ = {isa = PBXBuildFile; fileRef = B7677F16AEA0B585F6963745 /* ReadWatcher.swift */; };
 		B36C02CF03B1CE1739258C8D /* MessagesHarvester.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9789D39272AA5E1B1CC4C22B /* MessagesHarvester.swift */; };
 		B683E35184D1A6B6FAD22A3C /* MenuBarMenu.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1E81C403E1EA25EF28338C97 /* MenuBarMenu.swift */; };
+		BB21062D85E162C062CA9759 /* AboutWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57C6E865203C37F84966819F /* AboutWindowController.swift */; };
 		BDE1F47D809D94B97D3ADDFC /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01B64433CF565459941ABCA4 /* SettingsView.swift */; };
 		C18F4894F38E02C8FB692626 /* SlackLinkTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C44EC3DE17DE1FCA7463F4E /* SlackLinkTests.swift */; };
 		C2E50012B0D354A658E91189 /* SyncStatus.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD78E6FA806C0CC6D07E2BEF /* SyncStatus.swift */; };
 		C347228A7259723AA47FB4B8 /* CloudKitEntitlement.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6E0F2603A038F4EABE382CD4 /* CloudKitEntitlement.swift */; };
 		C45B77EA4308A5C8BF071917 /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = F3632FBB53F7B8E38A5FFB1B /* Localizable.strings */; };
 		CE9B510965CA78D9CD0F8D89 /* LoginItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5223EA087C8D20E54B0D5DDF /* LoginItem.swift */; };
+		D1283CD1A534EAB5246E66A9 /* InboxStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 02059342FADE2B98EE06A434 /* InboxStore.swift */; };
 		D1453266EDBE1F7502E7FA75 /* AppCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B466F1F135069DD48A1473B /* AppCoordinator.swift */; };
 		D5D5164D472F70C79643EE6A /* Localization.swift in Sources */ = {isa = PBXBuildFile; fileRef = 29A29143D3E9AA889152D714 /* Localization.swift */; };
 		D66550355B02294EBB91F582 /* NotificationPayloadTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57E3E9CF0788DE8E74AA72D0 /* NotificationPayloadTests.swift */; };
@@ -60,6 +64,7 @@
 /* Begin PBXFileReference section */
 		01510FEECF5D3DCE0DED30E6 /* SafeDiagnosticLog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SafeDiagnosticLog.swift; sourceTree = "<group>"; };
 		01B64433CF565459941ABCA4 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
+		02059342FADE2B98EE06A434 /* InboxStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InboxStore.swift; sourceTree = "<group>"; };
 		0368E20A347FBE53765A797B /* SlackHarvester.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SlackHarvester.swift; sourceTree = "<group>"; };
 		1234CDFEE07EA21BAA319888 /* SparkLinkTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SparkLinkTests.swift; sourceTree = "<group>"; };
 		17304FF1E3D049F3C656DA86 /* CorrespondentTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CorrespondentTests.swift; sourceTree = "<group>"; };
@@ -72,6 +77,8 @@
 		4C44EC3DE17DE1FCA7463F4E /* SlackLinkTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SlackLinkTests.swift; sourceTree = "<group>"; };
 		5223EA087C8D20E54B0D5DDF /* LoginItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoginItem.swift; sourceTree = "<group>"; };
 		53FC48A0DD6C2ECF2AF9D224 /* AppSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppSettings.swift; sourceTree = "<group>"; };
+		54FF85BE43728EC33D14AF15 /* InboxWindowController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InboxWindowController.swift; sourceTree = "<group>"; };
+		57C6E865203C37F84966819F /* AboutWindowController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AboutWindowController.swift; sourceTree = "<group>"; };
 		57E3E9CF0788DE8E74AA72D0 /* NotificationPayloadTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationPayloadTests.swift; sourceTree = "<group>"; };
 		5986291BE197CA76F4D6CA8E /* MessagesLinkTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MessagesLinkTests.swift; sourceTree = "<group>"; };
 		59EF49CEA27DDE8349D1BB63 /* InboxView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InboxView.swift; sourceTree = "<group>"; };
@@ -93,6 +100,7 @@
 		B925C34CA7033ED768164254 /* VerdictStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VerdictStore.swift; sourceTree = "<group>"; };
 		BAA22D646B0B0086568E6C34 /* FullDiskAccess.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FullDiskAccess.swift; sourceTree = "<group>"; };
 		C424AFD49EBE5C89997B8D7C /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		CDA83893DD1898A941803C76 /* Acknowledgements.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = Acknowledgements.txt; sourceTree = "<group>"; };
 		DD78E6FA806C0CC6D07E2BEF /* SyncStatus.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SyncStatus.swift; sourceTree = "<group>"; };
 		DF4BF525FF076257FB084C2A /* CorrespondentSync.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CorrespondentSync.swift; sourceTree = "<group>"; };
 		F3632FBB53F7B8E38A5FFB1B /* Localizable.strings */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = Localizable.strings; path = ja.lproj/Localizable.strings; sourceTree = "<group>"; };
@@ -144,6 +152,7 @@
 		69F5FD8E5F62FE9E958DDD80 /* Resources */ = {
 			isa = PBXGroup;
 			children = (
+				CDA83893DD1898A941803C76 /* Acknowledgements.txt */,
 				6CA9E859EEC0683C3C84FEEB /* AppIconSource.png */,
 				C424AFD49EBE5C89997B8D7C /* Assets.xcassets */,
 				F3632FBB53F7B8E38A5FFB1B /* Localizable.strings */,
@@ -183,7 +192,9 @@
 			isa = PBXGroup;
 			children = (
 				640B79B0B8031650B8824CEB /* Inbox.swift */,
+				02059342FADE2B98EE06A434 /* InboxStore.swift */,
 				59EF49CEA27DDE8349D1BB63 /* InboxView.swift */,
+				54FF85BE43728EC33D14AF15 /* InboxWindowController.swift */,
 			);
 			path = Inbox;
 			sourceTree = "<group>";
@@ -222,6 +233,7 @@
 		FCB80132059B74A9F4483512 /* App */ = {
 			isa = PBXGroup;
 			children = (
+				57C6E865203C37F84966819F /* AboutWindowController.swift */,
 				4B466F1F135069DD48A1473B /* AppCoordinator.swift */,
 				AFB92E764E41E683274F5389 /* AppDelegate.swift */,
 				53FC48A0DD6C2ECF2AF9D224 /* AppSettings.swift */,
@@ -328,6 +340,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				611EDB47A4CA5D72542A9168 /* Acknowledgements.txt in Resources */,
 				58B843671087828476A17A1A /* AppIconSource.png in Resources */,
 				41DDECE3C0F720A32A5B6505 /* Assets.xcassets in Resources */,
 				C45B77EA4308A5C8BF071917 /* Localizable.strings in Resources */,
@@ -341,6 +354,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				BB21062D85E162C062CA9759 /* AboutWindowController.swift in Sources */,
 				D1453266EDBE1F7502E7FA75 /* AppCoordinator.swift in Sources */,
 				12AE2ADF169EEC27C715B492 /* AppDelegate.swift in Sources */,
 				0E8ACEBE68E76745938B38FE /* AppSettings.swift in Sources */,
@@ -353,7 +367,9 @@
 				450373E70A90D9E47C01B39A /* FullDiskAccess.swift in Sources */,
 				03A9D4824CFC0492AF517084 /* Harvester.swift in Sources */,
 				04B9EDA56D644A72178963F7 /* Inbox.swift in Sources */,
+				D1283CD1A534EAB5246E66A9 /* InboxStore.swift in Sources */,
 				48BC8B8FE8B3454F291F732C /* InboxView.swift in Sources */,
+				4289776CB4A0587BFD13136C /* InboxWindowController.swift in Sources */,
 				351CCFEAAFC9F7E04A808ADE /* KaruiMacApp.swift in Sources */,
 				D5D5164D472F70C79643EE6A /* Localization.swift in Sources */,
 				CE9B510965CA78D9CD0F8D89 /* LoginItem.swift in Sources */,

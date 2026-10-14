@@ -17,6 +17,11 @@ public struct VerdictRecord: Codable, Equatable, Sendable {
     public var isUnread: Bool
     public var title: String?
     public var body: String?
+    /// Set by the Mac: read there, a category the person chose there, or deleted
+    /// there. The iPhone applies them to History and clears them on its next send.
+    public var readAt: Date?
+    public var requestedCategory: String?
+    public var deletedAt: Date?
 
     public init(
         fingerprint: String,
@@ -27,7 +32,10 @@ public struct VerdictRecord: Codable, Equatable, Sendable {
         triagedAt: Date,
         isUnread: Bool,
         title: String? = nil,
-        body: String? = nil
+        body: String? = nil,
+        readAt: Date? = nil,
+        requestedCategory: String? = nil,
+        deletedAt: Date? = nil
     ) {
         self.fingerprint = fingerprint
         self.app = app
@@ -38,6 +46,9 @@ public struct VerdictRecord: Codable, Equatable, Sendable {
         self.isUnread = isUnread
         self.title = title
         self.body = body
+        self.readAt = readAt
+        self.requestedCategory = requestedCategory
+        self.deletedAt = deletedAt
     }
 }
 
@@ -63,4 +74,9 @@ public enum VerdictRecordSchema {
     /// Encrypted, and only for apps the Mac doesn't have.
     public static let title = "title"
     public static let body = "body"
+    public static let readAt = "readAt"
+    public static let requestedCategory = "requestedCategory"
+    public static let deletedAt = "deletedAt"
+    /// When the Mac last did any of the three; what the iPhone subscribes to.
+    public static let actionAt = "actionAt"
 }
