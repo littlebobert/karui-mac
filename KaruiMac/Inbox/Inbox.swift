@@ -15,10 +15,10 @@ final class Inbox {
         var id: String
         let app: String
         let fingerprint: String
-        let title: String?
-        let subtitle: String?
-        let body: String?
-        let deliveredAt: Date
+        var title: String?
+        var subtitle: String?
+        var body: String?
+        var deliveredAt: Date
         var link: DeepLinkRecord?
         var readAt: Date?
         var verdict: VerdictRecord?
@@ -260,6 +260,21 @@ final class Inbox {
             store?.delete(ids: [id])
             store?.save([rekeyed])
             SafeDiagnosticLog.shared.record("inbox: record id reused, kept the earlier notification")
+        }
+        // The iPhone's verdict may have arrived first and stand in for this
+        // notification as a text-only item; it becomes this one, keeping its verdict.
+        if let index = items.firstIndex(where: { $0.fingerprint == fingerprint && $0.id != id }) {
+            let standIn = items[index]
+            var merged = standIn
+            merged.id = id
+            merged.title = record.title
+            merged.subtitle = record.subtitle
+            merged.body = record.body
+            merged.deliveredAt = record.deliveredAt ?? standIn.deliveredAt
+            items[index] = merged
+            store?.delete(ids: [standIn.id])
+            store?.save([merged])
+            return true
         }
         let item = Item(
             id: id,

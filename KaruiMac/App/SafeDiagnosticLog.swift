@@ -1,11 +1,15 @@
 import Foundation
+import OSLog
 
-/// In-memory events for a bug report. Nothing recorded here may be notification
-/// text: app names, counts, and what failed are fine.
+/// In-memory events for a bug report, mirrored to the system log so `log show`
+/// can read them (subsystem com.justin.henry.karui.mac, category Diagnostics).
+/// Nothing recorded here may be notification text: app names, counts, and what
+/// failed are fine, which is why the mirror is public.
 final class SafeDiagnosticLog: @unchecked Sendable {
     static let shared = SafeDiagnosticLog()
 
     private let lock = NSLock()
+    private let logger = Logger(subsystem: "com.justin.henry.karui.mac", category: "Diagnostics")
     private var entries: [Entry] = []
 
     private struct Entry {
@@ -17,6 +21,7 @@ final class SafeDiagnosticLog: @unchecked Sendable {
     private init() {}
 
     func record(_ event: String) {
+        logger.notice("\(event, privacy: .public)")
         lock.lock()
         if entries.last?.event == event {
             entries[entries.count - 1].repetitionCount += 1
