@@ -44,6 +44,7 @@ targets:
         LSApplicationCategoryType: public.app-category.productivity
         LSUIElement: false
         NSHumanReadableCopyright: Copyright © 2026 Justin Garcia
+        NSContactsUsageDescription: Karui looks up a sender in Contacts to open their conversation in Messages.
         SUFeedURL: https://littlebobert.github.io/karui-mac-appcast.xml
         SUPublicEDKey: 4YVKyR8C7OOHnRaFwP5KGegGT87xMAA/MgmZjvlXVjI=
         SUEnableAutomaticChecks: true

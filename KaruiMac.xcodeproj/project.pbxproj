@@ -35,6 +35,7 @@
 		993CD23DDD32E5C0C303FEBC /* SparkLinkTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1234CDFEE07EA21BAA319888 /* SparkLinkTests.swift */; };
 		A665DA8B77CE7BEE0C570BE2 /* SQLiteDatabase.swift in Sources */ = {isa = PBXBuildFile; fileRef = 256E396E924DE9AB3935ABB5 /* SQLiteDatabase.swift */; };
 		AD28793611CC3ED7547620EB /* ReadWatcher.swift in Sources */ = {isa = PBXBuildFile; fileRef = B7677F16AEA0B585F6963745 /* ReadWatcher.swift */; };
+		ADBF1CC1490BB3D97A63E3C6 /* MessagesConversationFinder.swift in Sources */ = {isa = PBXBuildFile; fileRef = ECAB38C530C9D9906723AA6A /* MessagesConversationFinder.swift */; };
 		B36C02CF03B1CE1739258C8D /* MessagesHarvester.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9789D39272AA5E1B1CC4C22B /* MessagesHarvester.swift */; };
 		B683E35184D1A6B6FAD22A3C /* MenuBarMenu.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1E81C403E1EA25EF28338C97 /* MenuBarMenu.swift */; };
 		BB21062D85E162C062CA9759 /* AboutWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57C6E865203C37F84966819F /* AboutWindowController.swift */; };
@@ -105,6 +106,7 @@
 		CDA83893DD1898A941803C76 /* Acknowledgements.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = Acknowledgements.txt; sourceTree = "<group>"; };
 		DD78E6FA806C0CC6D07E2BEF /* SyncStatus.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SyncStatus.swift; sourceTree = "<group>"; };
 		DF4BF525FF076257FB084C2A /* CorrespondentSync.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CorrespondentSync.swift; sourceTree = "<group>"; };
+		ECAB38C530C9D9906723AA6A /* MessagesConversationFinder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MessagesConversationFinder.swift; sourceTree = "<group>"; };
 		F3632FBB53F7B8E38A5FFB1B /* Localizable.strings */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = Localizable.strings; path = ja.lproj/Localizable.strings; sourceTree = "<group>"; };
 		F9695E99FA85CB7DC2E8B73A /* SparkHarvester.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SparkHarvester.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -166,6 +168,7 @@
 			isa = PBXGroup;
 			children = (
 				B8640EA18112E9AC366300AA /* Harvester.swift */,
+				ECAB38C530C9D9906723AA6A /* MessagesConversationFinder.swift */,
 				9789D39272AA5E1B1CC4C22B /* MessagesHarvester.swift */,
 				A2EF2A3CF2E9957E0C0B42B3 /* NotificationDatabase.swift */,
 				4B9727746C8262B05FCF0C07 /* NotificationDatabaseWatcher.swift */,
@@ -378,6 +381,7 @@
 				D5D5164D472F70C79643EE6A /* Localization.swift in Sources */,
 				CE9B510965CA78D9CD0F8D89 /* LoginItem.swift in Sources */,
 				B683E35184D1A6B6FAD22A3C /* MenuBarMenu.swift in Sources */,
+				ADBF1CC1490BB3D97A63E3C6 /* MessagesConversationFinder.swift in Sources */,
 				B36C02CF03B1CE1739258C8D /* MessagesHarvester.swift in Sources */,
 				820F35FC5B53F16C8C79C1D5 /* NotificationDatabase.swift in Sources */,
 				E00EE92CA4A237CC5AE01FB8 /* NotificationDatabaseWatcher.swift in Sources */,

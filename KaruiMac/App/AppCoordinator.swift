@@ -181,6 +181,30 @@ final class AppCoordinator {
         return formatter
     }()
 
+    // MARK: Opening
+
+    /// Opens the item where it has somewhere to open, or shows it in full. A
+    /// Messages notification without a link still tries its conversation, by the
+    /// sender, the way the iPhone does.
+    func open(_ item: Inbox.Item) {
+        if let link = item.link {
+            NSWorkspace.shared.open(link.url)
+            return
+        }
+        guard item.app == KnownApp.messages.rawValue, !DemoMode.isActive else {
+            inbox.openItemID = item.id
+            return
+        }
+        Task { @MainActor in
+            if let url = await MessagesConversationFinder().url(sender: item.sender, subtitle: item.subtitle) {
+                SafeDiagnosticLog.shared.record("messages: conversation found by the sender")
+                NSWorkspace.shared.open(url)
+            } else {
+                inbox.openItemID = item.id
+            }
+        }
+    }
+
     // MARK: Actions on the inbox, applied here at once and sent to the iPhone.
 
     func markRead(_ ids: Set<String>) {

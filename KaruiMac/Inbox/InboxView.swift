@@ -592,7 +592,7 @@ private struct ItemsList: View {
                 .modifier(ItemActions(coordinator: coordinator))
             } else {
                 List(sorted, selection: $inbox.selection) { item in
-                    InboxRow(item: item)
+                    InboxRow(coordinator: coordinator, item: item)
                 }
                 .modifier(ItemActions(coordinator: coordinator))
             }
@@ -621,11 +621,10 @@ private struct ItemActions: ViewModifier {
                 // A double-click opens the item where it has somewhere to open, shows it
                 // in full here otherwise, and counts as reading it either way.
                 let opened = inbox.items.filter { ids.contains($0.id) }
-                for item in opened {
-                    if let link = item.link { NSWorkspace.shared.open(link.url) }
-                }
-                if opened.count == 1, let item = opened.first, item.link == nil {
-                    inbox.openItemID = item.id
+                if opened.count == 1, let item = opened.first {
+                    coordinator.open(item)
+                } else {
+                    for item in opened where item.link != nil { coordinator.open(item) }
                 }
                 coordinator.markRead(ids)
             }
@@ -640,6 +639,7 @@ private struct ItemActions: ViewModifier {
 
 /// An expanded row: the app and verdict, the text, the reason, and Open.
 private struct InboxRow: View {
+    let coordinator: AppCoordinator
     let item: Inbox.Item
 
     var body: some View {
@@ -673,9 +673,9 @@ private struct InboxRow: View {
             VStack(alignment: .trailing, spacing: 6) {
                 Text(item.deliveredAt, format: Calendar.current.isDateInToday(item.deliveredAt) ? .dateTime.hour().minute() : .dateTime.month(.abbreviated).day().hour().minute())
                     .foregroundStyle(.secondary)
-                if let link = item.link {
+                if item.link != nil || item.app == KnownApp.messages.rawValue {
                     Button(L10n.string("Open")) {
-                        NSWorkspace.shared.open(link.url)
+                        coordinator.open(item)
                     }
                 }
             }
