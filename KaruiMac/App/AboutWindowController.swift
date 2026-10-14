@@ -138,21 +138,28 @@ private struct AboutView: View {
         .frame(width: 300, height: 250)
     }
 
-    /// An email with the diagnostics: app names, counts, and failures, never
-    /// notification text.
     private func reportBug() {
+        reportError = BugReport.compose()
+    }
+}
+
+enum BugReport {
+    /// An email with the diagnostics: app names, counts, and failures, never
+    /// notification text. Returns what went wrong when Mail can't be opened; the
+    /// report is on the pasteboard then.
+    @MainActor
+    static func compose() -> String? {
         guard let service = NSSharingService(named: .composeEmail) else {
             NSPasteboard.general.clearContents()
             NSPasteboard.general.setString(DiagnosticReport.text(), forType: .string)
-            reportError = L10n.string("Could not open Mail. The report was copied instead.")
-            return
+            return L10n.string("Could not open Mail. The report was copied instead.")
         }
         service.recipients = ["justin.garcia@gmail.com"]
         service.subject = "Karui for Mac Bug Report"
         service.perform(withItems: [
             L10n.string("Please describe what happened and what you expected.") + "\n\n" + DiagnosticReport.text()
         ])
-        reportError = nil
+        return nil
     }
 }
 

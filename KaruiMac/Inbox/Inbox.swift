@@ -36,6 +36,15 @@ final class Inbox {
         }
 
         var category: String? { chosenCategory ?? verdict?.category }
+        /// The category as a column sorts it: Important, Neutral, Spam, then none.
+        var categoryRank: Int { Inbox.categories.firstIndex(of: category ?? "") ?? Inbox.categories.count }
+        /// The title, subtitle, and body on one line, for a compact row.
+        var compactLine: String {
+            [title, subtitle, body]
+                .compactMap { $0?.trimmingCharacters(in: .whitespacesAndNewlines) }
+                .filter { !$0.isEmpty }
+                .joined(separator: " · ")
+        }
         var isUnread: Bool { readAt == nil && verdict?.isUnread ?? true }
 
         /// A verdict arrives within a minute or two when the iPhone got the
@@ -85,7 +94,7 @@ final class Inbox {
         func hash(into hasher: inout Hasher) { hasher.combine(id) }
     }
 
-    static let categories = ["notifyNow", "summary", "silence"]
+    nonisolated static let categories = ["notifyNow", "summary", "silence"]
 
     private(set) var items: [Item] = []
     private static let capacity = 3000
@@ -102,6 +111,28 @@ final class Inbox {
     var showsOnlyOpenable: Bool { didSet { defaults.set(showsOnlyOpenable, forKey: "inbox.showsOnlyOpenable") } }
     var search = ""
     var selection: Set<String> = []
+    /// The columns' sort, newest first until a header is clicked. Kept across
+    /// launches as the column's name and direction.
+    var sortOrder: [KeyPathComparator<Item>] {
+        didSet {
+            guard let first = sortOrder.first, let column = Self.sortColumns.first(where: { $0.keyPath == first.keyPath }) else { return }
+            defaults.set(column.name, forKey: "inbox.sortColumn")
+            defaults.set(first.order == .forward, forKey: "inbox.sortAscending")
+        }
+    }
+    private static let sortColumns: [(name: String, keyPath: PartialKeyPath<Item>)] = [
+        ("app", \.app), ("category", \.categoryRank), ("notification", \.compactLine), ("time", \.deliveredAt)
+    ]
+    private static func savedSortOrder(_ defaults: UserDefaults) -> [KeyPathComparator<Item>] {
+        let order: SortOrder = defaults.object(forKey: "inbox.sortAscending") == nil || defaults.bool(forKey: "inbox.sortAscending") ? .forward : .reverse
+        switch defaults.string(forKey: "inbox.sortColumn") {
+        case "app": return [KeyPathComparator(\.app, order: order)]
+        case "category": return [KeyPathComparator(\.categoryRank, order: order)]
+        case "notification": return [KeyPathComparator(\.compactLine, order: order)]
+        case "time": return [KeyPathComparator(\.deliveredAt, order: order)]
+        default: return [KeyPathComparator(\.deliveredAt, order: .reverse)]
+        }
+    }
     /// The app, sender, or thread opened from its list; nil at the list.
     var openGroupID: String?
     /// A notification opened in full, when it has nowhere else to open.
@@ -126,6 +157,7 @@ final class Inbox {
         shownReadStates = defaults.stringArray(forKey: "inbox.shownReadStates").map { Set($0.compactMap(ReadState.init(rawValue:))) } ?? Set(ReadState.allCases)
         barDisplayMode = defaults.string(forKey: "inbox.barDisplayMode").flatMap(BarDisplayMode.init(rawValue:)) ?? .iconAndText
         showsOnlyOpenable = defaults.bool(forKey: "inbox.showsOnlyOpenable")
+        sortOrder = Self.savedSortOrder(defaults)
     }
 
     /// The items the toolbar's bulk actions apply to: the open group's, or the filtered day.

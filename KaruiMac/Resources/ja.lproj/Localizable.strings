@@ -74,3 +74,12 @@
 "Unknown" = "不明";
 "%d deleted" = "%d件を削除しました";
 "Undo" = "取り消す";
+"App" = "アプリ";
+"Notification" = "通知";
+"Time" = "時刻";
+"Notifications" = "通知";
+"Mark as Important" = "重要にする";
+"Mark as Neutral" = "普通にする";
+"Mark as Spam" = "スパムにする";
+"Karui for Mac Help" = "Mac版Karuiヘルプ";
+"Report a Bug…" = "バグを報告…";

@@ -530,104 +530,141 @@ private struct GroupsList: View {
     }
 }
 
+/// The notifications, sorted as the columns say. Compact: a table whose columns
+/// resize and sort by their headers. Expanded: a list of fuller rows in the same
+/// order.
 private struct ItemsList: View {
     let coordinator: AppCoordinator
     let items: [Inbox.Item]
+    /// The columns' widths and order, kept across launches.
+    @AppStorage("inbox.columns") private var columns: TableColumnCustomization<Inbox.Item>
 
     var body: some View {
         @Bindable var inbox = coordinator.inbox
-        List(items, selection: $inbox.selection) { item in
-            InboxRow(item: item, isCompact: inbox.isCompact)
-        }
-        .contextMenu(forSelectionType: String.self) { ids in
-            let ids = ids.isEmpty ? inbox.selection : ids
-            Button(L10n.string("Mark as Read")) { coordinator.markRead(ids) }
-            Menu(L10n.string("Mark as")) {
-                Button(L10n.string("Important")) { coordinator.setCategory("notifyNow", ids) }
-                Button(L10n.string("Neutral")) { coordinator.setCategory("summary", ids) }
-                Button(L10n.string("Spam")) { coordinator.setCategory("silence", ids) }
+        let sorted = items.sorted(using: inbox.sortOrder)
+        Group {
+            if inbox.isCompact {
+                Table(sorted, selection: $inbox.selection, sortOrder: $inbox.sortOrder, columnCustomization: $columns) {
+                    TableColumn("") { item in
+                        Circle()
+                            .fill(item.isUnread ? Color.accentColor : Color.clear)
+                            .frame(width: 8, height: 8)
+                    }
+                    .width(12)
+                    TableColumn(L10n.string("App"), value: \.app) { item in
+                        Text(item.app).foregroundStyle(.secondary)
+                    }
+                    .width(min: 50, ideal: 70)
+                    .customizationID("app")
+                    TableColumn(L10n.string("Category"), value: \.categoryRank) { item in
+                        VerdictBadge(verdict: item.verdict, chosen: item.chosenCategory, isWaiting: item.isWaitingForVerdict)
+                    }
+                    .width(min: 60, ideal: 110)
+                    .customizationID("category")
+                    TableColumn(L10n.string("Notification"), value: \.compactLine) { item in
+                        Text(item.compactLine).lineLimit(1).truncationMode(.tail)
+                    }
+                    .customizationID("notification")
+                    TableColumn(L10n.string("Time"), value: \.deliveredAt) { item in
+                        Text(item.deliveredAt, format: Calendar.current.isDateInToday(item.deliveredAt) ? .dateTime.hour().minute() : .dateTime.month(.abbreviated).day().hour().minute())
+                            .foregroundStyle(.secondary)
+                    }
+                    .width(min: 50, ideal: 110)
+                    .customizationID("time")
+                }
+                .modifier(ItemActions(coordinator: coordinator))
+            } else {
+                List(sorted, selection: $inbox.selection) { item in
+                    InboxRow(item: item)
+                }
+                .modifier(ItemActions(coordinator: coordinator))
             }
-            Divider()
-            Button(L10n.string("Delete"), role: .destructive) { coordinator.delete(ids) }
-        } primaryAction: { ids in
-            // A double-click opens the item where it has somewhere to open, shows it
-            // in full here otherwise, and counts as reading it either way.
-            let opened = inbox.items.filter { ids.contains($0.id) }
-            for item in opened {
-                if let link = item.link { NSWorkspace.shared.open(link.url) }
-            }
-            if opened.count == 1, let item = opened.first, item.link == nil {
-                inbox.openItemID = item.id
-            }
-            coordinator.markRead(ids)
-        }
-        .onDeleteCommand {
-            coordinator.delete(inbox.selection)
-        }
-        .onExitCommand {
-            inbox.selection = []
         }
     }
 }
 
+/// What a right-click, a double-click, Delete, and Escape do to the items.
+private struct ItemActions: ViewModifier {
+    let coordinator: AppCoordinator
+
+    func body(content: Content) -> some View {
+        let inbox = coordinator.inbox
+        content
+            .contextMenu(forSelectionType: String.self) { ids in
+                let ids = ids.isEmpty ? inbox.selection : ids
+                Button(L10n.string("Mark as Read")) { coordinator.markRead(ids) }
+                Menu(L10n.string("Mark as")) {
+                    Button(L10n.string("Important")) { coordinator.setCategory("notifyNow", ids) }
+                    Button(L10n.string("Neutral")) { coordinator.setCategory("summary", ids) }
+                    Button(L10n.string("Spam")) { coordinator.setCategory("silence", ids) }
+                }
+                Divider()
+                Button(L10n.string("Delete"), role: .destructive) { coordinator.delete(ids) }
+            } primaryAction: { ids in
+                // A double-click opens the item where it has somewhere to open, shows it
+                // in full here otherwise, and counts as reading it either way.
+                let opened = inbox.items.filter { ids.contains($0.id) }
+                for item in opened {
+                    if let link = item.link { NSWorkspace.shared.open(link.url) }
+                }
+                if opened.count == 1, let item = opened.first, item.link == nil {
+                    inbox.openItemID = item.id
+                }
+                coordinator.markRead(ids)
+            }
+            .onDeleteCommand {
+                coordinator.delete(inbox.selection)
+            }
+            .onExitCommand {
+                inbox.selection = []
+            }
+    }
+}
+
+/// An expanded row: the app and verdict, the text, the reason, and Open.
 private struct InboxRow: View {
     let item: Inbox.Item
-    let isCompact: Bool
 
     var body: some View {
-        HStack(alignment: isCompact ? .center : .top, spacing: 10) {
+        HStack(alignment: .top, spacing: 10) {
             Circle()
                 .fill(item.isUnread ? Color.accentColor : Color.clear)
                 .frame(width: 8, height: 8)
-                .padding(.top, isCompact ? 0 : 6)
-            if isCompact {
-                Text(item.app).font(.caption).foregroundStyle(.secondary).frame(width: 64, alignment: .leading)
-                VerdictBadge(verdict: item.verdict, chosen: item.chosenCategory, isWaiting: item.isWaitingForVerdict).frame(width: 110, alignment: .leading)
-                Text(compactLine).lineLimit(1).truncationMode(.tail)
-                Spacer()
-            } else {
-                VStack(alignment: .leading, spacing: 2) {
-                    HStack(spacing: 6) {
-                        Text(item.app).font(.caption).foregroundStyle(.secondary)
-                        VerdictBadge(verdict: item.verdict, chosen: item.chosenCategory, isWaiting: item.isWaitingForVerdict)
-                    }
-                    if let title = item.title, !title.isEmpty {
-                        Text(title).fontWeight(.semibold)
-                    }
-                    if let subtitle = item.subtitle, !subtitle.isEmpty {
-                        Text(subtitle)
-                    }
-                    if let body = item.body, !body.isEmpty {
-                        Text(body).foregroundStyle(.secondary).lineLimit(2)
-                    }
-                    if let reason = item.verdict?.reason, !reason.isEmpty {
-                        Text(reason).font(.caption).foregroundStyle(.secondary).lineLimit(2)
-                    }
-                    if item.readAt != nil {
-                        Text(L10n.string("Read here; cleared on the iPhone")).font(.caption).foregroundStyle(.secondary)
-                    }
+                .padding(.top, 6)
+            VStack(alignment: .leading, spacing: 2) {
+                HStack(spacing: 6) {
+                    Text(item.app).font(.caption).foregroundStyle(.secondary)
+                    VerdictBadge(verdict: item.verdict, chosen: item.chosenCategory, isWaiting: item.isWaitingForVerdict)
                 }
-                Spacer()
+                if let title = item.title, !title.isEmpty {
+                    Text(title).fontWeight(.semibold)
+                }
+                if let subtitle = item.subtitle, !subtitle.isEmpty {
+                    Text(subtitle)
+                }
+                if let body = item.body, !body.isEmpty {
+                    Text(body).foregroundStyle(.secondary).lineLimit(2)
+                }
+                if let reason = item.verdict?.reason, !reason.isEmpty {
+                    Text(reason).font(.caption).foregroundStyle(.secondary).lineLimit(2)
+                }
+                if item.readAt != nil {
+                    Text(L10n.string("Read here; cleared on the iPhone")).font(.caption).foregroundStyle(.secondary)
+                }
             }
+            Spacer()
             VStack(alignment: .trailing, spacing: 6) {
                 Text(item.deliveredAt, format: Calendar.current.isDateInToday(item.deliveredAt) ? .dateTime.hour().minute() : .dateTime.month(.abbreviated).day().hour().minute())
                     .foregroundStyle(.secondary)
-                if !isCompact, let link = item.link {
+                if let link = item.link {
                     Button(L10n.string("Open")) {
                         NSWorkspace.shared.open(link.url)
                     }
                 }
             }
         }
-        .padding(.vertical, isCompact ? 1 : 3)
+        .padding(.vertical, 3)
         .tag(item.id)
-    }
-
-    private var compactLine: String {
-        [item.title, item.subtitle, item.body]
-            .compactMap { $0?.trimmingCharacters(in: .whitespacesAndNewlines) }
-            .filter { !$0.isEmpty }
-            .joined(separator: " · ")
     }
 }
 
