@@ -2,6 +2,8 @@
 set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+# The notes and project.yml hold non-ASCII text; without a locale, Ruby reads them as US-ASCII and fails.
+export LANG="${LANG:-en_US.UTF-8}"
 RELEASE_ENV_FILE="${RELEASE_ENV_FILE:-$ROOT_DIR/.env.release}"
 if [[ -f "$RELEASE_ENV_FILE" ]]; then
   set -a
