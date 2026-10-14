@@ -25,6 +25,8 @@ actor DeepLinkSync {
     private var database: CKDatabase? { container?.privateCloudDatabase }
     private let expiryStore: ExpiryStore
     private(set) var status: Status = .unknown
+    /// The records as the server returned them, so a read can update one in place.
+    private var savedRecords: [String: CKRecord] = [:]
 
     init(container: CKContainer? = CloudKitEntitlement.hasKaruiContainer
             ? CKContainer(identifier: DeepLinkSync.containerIdentifier) : nil) {
@@ -71,11 +73,47 @@ actor DeepLinkSync {
         record[DeepLinkRecordSchema.deliveredAt] = link.deliveredAt
         record[DeepLinkRecordSchema.expiresAt] = link.expiresAt
         do {
-            _ = try await database.modifyRecords(saving: [record], deleting: [], savePolicy: .allKeys)
+            let results = try await database.modifyRecords(saving: [record], deleting: [], savePolicy: .allKeys)
+            if let saved = try results.saveResults[record.recordID]?.get() {
+                savedRecords[link.fingerprint] = saved
+            }
             expiryStore.remember(recordName: link.fingerprint, expiresAt: link.expiresAt)
             SafeDiagnosticLog.shared.record("sync: sent \(link.app) link")
         } catch {
             SafeDiagnosticLog.shared.record("sync: send failed: \(error.localizedDescription)")
+        }
+    }
+
+    /// Tells the iPhone the item was read here: `readAt` on the link's record, which
+    /// the iPhone subscribes to. Only the one field changes. Another Mac that saw
+    /// the same notification may have rewritten the record meanwhile; then the
+    /// server's copy is taken and the field set on that.
+    func markRead(fingerprint: String, at date: Date = Date()) async {
+        guard let database else { return }
+        do {
+            let record: CKRecord
+            if let kept = savedRecords[fingerprint] {
+                record = kept
+            } else {
+                record = try await database.record(for: CKRecord.ID(recordName: fingerprint))
+            }
+            try await save(record, readAt: date, in: database, retryingOnConflict: true)
+            SafeDiagnosticLog.shared.record("sync: marked read")
+        } catch {
+            SafeDiagnosticLog.shared.record("sync: mark read failed: \(error.localizedDescription)")
+        }
+    }
+
+    private func save(_ record: CKRecord, readAt date: Date, in database: CKDatabase, retryingOnConflict: Bool) async throws {
+        record[DeepLinkRecordSchema.readAt] = date
+        do {
+            let results = try await database.modifyRecords(saving: [record], deleting: [], savePolicy: .changedKeys)
+            if let saved = try results.saveResults[record.recordID]?.get() {
+                savedRecords[record.recordID.recordName] = saved
+            }
+        } catch let error as CKError where error.code == .serverRecordChanged && retryingOnConflict {
+            guard let serverRecord = error.serverRecord else { throw error }
+            try await save(serverRecord, readAt: date, in: database, retryingOnConflict: false)
         }
     }
 
@@ -86,6 +124,7 @@ actor DeepLinkSync {
         do {
             _ = try await database.modifyRecords(saving: [], deleting: expired.map { CKRecord.ID(recordName: $0) })
             expiryStore.forget(recordNames: expired)
+            for name in expired { savedRecords.removeValue(forKey: name) }
             SafeDiagnosticLog.shared.record("sync: deleted \(expired.count) expired links")
         } catch {
             SafeDiagnosticLog.shared.record("sync: delete failed: \(error.localizedDescription)")

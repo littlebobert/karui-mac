@@ -9,7 +9,7 @@ struct SlackHarvester: NotificationHarvester {
     var supportDirectory = FileManager.default.homeDirectoryForCurrentUser
         .appending(path: "Library/Application Support/Slack")
 
-    func harvest(_ record: NotificationRecord) async -> DeepLinkRecord? {
+    func harvest(_ record: NotificationRecord) async -> HarvestedLink? {
         guard let identifier = record.identifier, let message = SlackLink.parseIdentifier(identifier) else {
             SafeDiagnosticLog.shared.record("slack: notification identifier not in the expected form")
             return nil
@@ -20,13 +20,25 @@ struct SlackHarvester: NotificationHarvester {
             return nil
         }
         let rootState = try? Data(contentsOf: supportDirectory.appending(path: "storage/root-state.json"))
+        let probe = ReadProbe.slack(channelID: channelID, timestamp: message.timestamp)
         if let rootState, let workspace = SlackLink.workspaceURL(teamID: message.teamID, rootState: rootState),
            let url = SlackLink.permalink(workspace: workspace, channelID: channelID, timestamp: message.timestamp) {
-            return record.deepLink(as: .slack, url: url, opensExactContent: true)
+            return HarvestedLink(link: record.deepLink(as: .slack, url: url, opensExactContent: true), readProbe: probe, notificationID: record.id)
         }
         SafeDiagnosticLog.shared.record("slack: workspace address not found; linking the channel")
         guard let url = SlackLink.channelURL(teamID: message.teamID, channelID: channelID) else { return nil }
-        return record.deepLink(as: .slack, url: url, opensExactContent: false)
+        return HarvestedLink(link: record.deepLink(as: .slack, url: url, opensExactContent: false), readProbe: probe, notificationID: record.id)
+    }
+
+    /// Slack logs each channel's read marker as it moves; the message is read once
+    /// the marker has reached its timestamp.
+    func isRead(_ probe: ReadProbe) async -> Bool? {
+        guard case .slack(let channelID, let timestamp) = probe else { return nil }
+        guard let log = try? String(contentsOf: supportDirectory.appending(path: "logs/default/webapp-console.log"), encoding: .utf8),
+              let lastRead = SlackLog.lastRead(channelID: channelID, in: log) else {
+            return nil
+        }
+        return (Double(lastRead) ?? 0) >= (Double(timestamp) ?? .infinity)
     }
 }
 
@@ -67,6 +79,18 @@ enum SlackLink {
 }
 
 enum SlackLog {
+    /// The furthest read marker logged for a channel: lines like
+    /// `Counting unreads in D0123456789 because last_read changed to 1791879249.798639`.
+    static func lastRead(channelID: String, in log: String) -> String? {
+        var latest: (value: Double, text: String)?
+        for line in log.split(separator: "\n") where line.contains("Counting unreads in \(channelID) ") {
+            guard let match = line.firstMatch(of: /last_read changed to (\d+\.\d+)/),
+                  let value = Double(match.1) else { continue }
+            if latest == nil || value > latest!.value { latest = (value, String(match.1)) }
+        }
+        return latest?.text
+    }
+
     /// Slack logs each notification it shows as a pretty-printed JSON object, one
     /// key per line, with `"msg": "<ts>"` and `"channel": "<ID>"` among them. The
     /// search stays inside that object: its lines between a lone `{` and a lone `}`.

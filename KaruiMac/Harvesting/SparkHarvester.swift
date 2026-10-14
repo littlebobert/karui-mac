@@ -10,12 +10,12 @@ struct SparkHarvester: NotificationHarvester {
     /// How far the email's `receivedDate` may be from the notification's delivery.
     static let receivedTolerance: TimeInterval = 300
 
-    func harvest(_ record: NotificationRecord) async -> DeepLinkRecord? {
+    func harvest(_ record: NotificationRecord) async -> HarvestedLink? {
         guard let subject = record.subtitle, let deliveredAt = record.deliveredAt else { return nil }
         do {
             let database = try SQLiteDatabase.opening(databaseURL)
             let rows = try database.rows("""
-                select messages.messageId, messages.gmailMessageId, accounts.additionalInfo
+                select messages.messageId, messages.gmailMessageId, accounts.additionalInfo, messages.pk
                 from messages join accounts on accounts.pk = messages.accountPk
                 where messages.subject = ?1 and abs(messages.receivedDate - ?2) <= ?3
                 order by abs(messages.receivedDate - ?2)
@@ -30,9 +30,26 @@ struct SparkHarvester: NotificationHarvester {
                 SafeDiagnosticLog.shared.record("spark: matched an email but couldn't build its link")
                 return nil
             }
-            return record.deepLink(as: .spark, url: url, opensExactContent: true)
+            return HarvestedLink(
+                link: record.deepLink(as: .spark, url: url, opensExactContent: true),
+                readProbe: row[3].integer.map { .spark(messagePrimaryKey: $0) },
+                notificationID: record.id
+            )
         } catch {
             SafeDiagnosticLog.shared.record("spark: database read failed: \(error)")
+            return nil
+        }
+    }
+
+    /// Spark clears `unseen` once the email is opened, on any device.
+    func isRead(_ probe: ReadProbe) async -> Bool? {
+        guard case .spark(let primaryKey) = probe else { return nil }
+        do {
+            let database = try SQLiteDatabase.opening(databaseURL)
+            let rows = try database.rows("select unseen from messages where pk = ?1", [.integer(primaryKey)])
+            guard let unseen = rows.first?[0].integer else { return nil }
+            return unseen == 0
+        } catch {
             return nil
         }
     }

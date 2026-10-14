@@ -28,3 +28,4 @@
 "iCloud is restricted on this Mac" = "このMacではiCloudが制限されています";
 "Each link goes to your iPhone through your iCloud account, with a fingerprint of the notification. The notification's text never leaves this Mac." = "各リンクは通知のフィンガープリントとともに、あなたのiCloudアカウントを通じてiPhoneに送られます。通知の本文がこのMacから出ることはありません。";
 "Copy Diagnostics" = "診断情報をコピー";
+"Read here; cleared on the iPhone" = "ここで既読。iPhoneの通知を消去";

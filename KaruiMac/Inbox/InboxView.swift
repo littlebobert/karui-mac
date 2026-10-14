@@ -74,7 +74,7 @@ private struct HarvestedLinksView: View {
                                 .foregroundStyle(.secondary)
                                 .lineLimit(1)
                                 .truncationMode(.middle)
-                            Text(L10n.string(entry.link.opensExactContent ? "Opens the exact item" : "Opens the conversation"))
+                            Text(L10n.string(entry.readAt != nil ? "Read here; cleared on the iPhone" : entry.link.opensExactContent ? "Opens the exact item" : "Opens the conversation"))
                                 .font(.caption)
                                 .foregroundStyle(.secondary)
                         }

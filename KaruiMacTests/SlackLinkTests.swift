@@ -34,6 +34,17 @@ final class SlackLinkTests: XCTestCase {
         XCTAssertNil(SlackLink.workspaceURL(teamID: "T0000000000", rootState: state))
     }
 
+    func testLastReadMarkerIsTheFurthestLoggedForTheChannel() {
+        let log = """
+        [17:14:20.100] info: [x] (T0123ABCDEF) Counting unreads in D0ABCDEFGHI because last_read changed to 1791879249.798639
+        [17:20:00.100] info: [x] (T0123ABCDEF) Counting unreads in C0ZZZZZZZZZ because last_read changed to 1791879600.000100
+        [17:21:00.100] info: [x] (T0123ABCDEF) Counting unreads in D0ABCDEFGHI because last_read changed to 1791879300.000001
+        """
+        XCTAssertEqual(SlackLog.lastRead(channelID: "D0ABCDEFGHI", in: log), "1791879300.000001")
+        XCTAssertEqual(SlackLog.lastRead(channelID: "C0ZZZZZZZZZ", in: log), "1791879600.000100")
+        XCTAssertNil(SlackLog.lastRead(channelID: "C0NOTTHERE0", in: log))
+    }
+
     func testChannelIsReadFromTheLoggedNotification() {
         let log = """
         [17:14:09.001] info: showing notification

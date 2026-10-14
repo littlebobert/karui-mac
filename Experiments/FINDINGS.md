@@ -86,3 +86,7 @@ Bundle identifier `jp.naver.line.mac`. Not feasible. The notification identifies
 Confirmed end to end on 2026-10-14: a Spark email's notification reached a locked Mac, the Mac sent its link through iCloud, and a tap on the iPhone opened Spark on that email. Spark notifies the Mac while the person is away, which is the case that matters; while the person is active on the Mac, Spark may hold the iPhone's push back.
 
 The fingerprint's inputs are the notification's title, subtitle, and body as each platform's notification carries them. Spark's title is the sender as the mail shows it (an address when there is no name) on both. On the iPhone, the Shortcut's Body field is the one to use: Karui's stored History body is the subtitle and body joined for display, and fingerprinting that was the first mismatch.
+
+## Knowing an item was read
+
+Each app leaves a sign on the Mac once the item is read, on any device: Spark sets the email's `unseen` column to 0; Slack logs `Counting unreads in <channel> because last_read changed to <ts>` to `logs/default/webapp-console.log` as the channel's read marker moves, so the message is read once the marker is at or past its ts; Messages sets `is_read` on the message. A notification leaving Notification Center is a fourth sign, whatever the reason: Karui's own rule is that a cleared alert was seen.

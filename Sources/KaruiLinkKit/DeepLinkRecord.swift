@@ -13,6 +13,8 @@ public struct DeepLinkRecord: Codable, Equatable, Sendable {
     public var opensExactContent: Bool
     public var deliveredAt: Date
     public var expiresAt: Date
+    /// When the item was read on the Mac, so the iPhone's alert about it can go.
+    public var readAt: Date?
 
     public init(
         fingerprint: String,
@@ -20,7 +22,8 @@ public struct DeepLinkRecord: Codable, Equatable, Sendable {
         url: URL,
         opensExactContent: Bool,
         deliveredAt: Date,
-        expiresAt: Date? = nil
+        expiresAt: Date? = nil,
+        readAt: Date? = nil
     ) {
         self.fingerprint = fingerprint
         self.app = app
@@ -28,6 +31,7 @@ public struct DeepLinkRecord: Codable, Equatable, Sendable {
         self.opensExactContent = opensExactContent
         self.deliveredAt = deliveredAt
         self.expiresAt = expiresAt ?? deliveredAt.addingTimeInterval(Self.lifetime)
+        self.readAt = readAt
     }
 }
 
@@ -40,4 +44,5 @@ public enum DeepLinkRecordSchema {
     public static let opensExactContent = "opensExactContent"
     public static let deliveredAt = "deliveredAt"
     public static let expiresAt = "expiresAt"
+    public static let readAt = "readAt"
 }

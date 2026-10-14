@@ -9,10 +9,17 @@ final class HarvestLog {
     struct Entry: Identifiable {
         let id = UUID()
         let link: DeepLinkRecord
+        var readAt: Date?
     }
 
     private(set) var entries: [Entry] = []
     private static let capacity = 200
+
+    func markRead(fingerprint: String, at date: Date = Date()) {
+        for index in entries.indices where entries[index].link.fingerprint == fingerprint {
+            entries[index].readAt = date
+        }
+    }
 
     func append(_ link: DeepLinkRecord) {
         entries.insert(Entry(link: link), at: 0)

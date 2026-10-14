@@ -12,6 +12,7 @@ DEFINE SCHEMA
         expiresAt         TIMESTAMP,
         fingerprint       STRING,
         opensExactContent INT64,
+        readAt            TIMESTAMP QUERYABLE,
         url               ENCRYPTED STRING,
         GRANT WRITE TO "_creator",
         GRANT CREATE TO "_icloud",

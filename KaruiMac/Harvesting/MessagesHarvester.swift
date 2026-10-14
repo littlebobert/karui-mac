@@ -10,7 +10,7 @@ struct MessagesHarvester: NotificationHarvester {
     let bundleIdentifiers = Set(KnownApp.messages.macBundleIdentifiers)
     var chatDatabase = ChatDatabase.standard
 
-    func harvest(_ record: NotificationRecord) async -> DeepLinkRecord? {
+    func harvest(_ record: NotificationRecord) async -> HarvestedLink? {
         guard let guid = record.userInfo["CKBBContextKeyMessageGUID"] ?? record.identifier else { return nil }
         do {
             let handles = try chatDatabase.handles(forMessageGUID: guid)
@@ -18,11 +18,20 @@ struct MessagesHarvester: NotificationHarvester {
                 SafeDiagnosticLog.shared.record("messages: no chat found for the notification")
                 return nil
             }
-            return record.deepLink(as: .messages, url: url, opensExactContent: true)
+            return HarvestedLink(
+                link: record.deepLink(as: .messages, url: url, opensExactContent: true),
+                readProbe: .messages(guid: guid),
+                notificationID: record.id
+            )
         } catch {
             SafeDiagnosticLog.shared.record("messages: chat.db read failed: \(error)")
             return nil
         }
+    }
+
+    func isRead(_ probe: ReadProbe) async -> Bool? {
+        guard case .messages(let guid) = probe else { return nil }
+        return try? chatDatabase.isRead(messageGUID: guid)
     }
 }
 
@@ -59,5 +68,13 @@ struct ChatDatabase: Sendable {
             order by handle.id
             """, [.text(guid)])
         return rows.compactMap { $0[0].text }
+    }
+
+    /// Messages marks a message read once its chat is opened, on any device.
+    func isRead(messageGUID guid: String) throws -> Bool? {
+        let database = try SQLiteDatabase.opening(url)
+        let rows = try database.rows("select is_read from message where guid = ?1", [.text(guid)])
+        guard let isRead = rows.first?[0].integer else { return nil }
+        return isRead != 0
     }
 }
