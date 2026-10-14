@@ -556,21 +556,20 @@ private struct ItemsList: View {
                     .width(12)
                     // Movable like the others; its width stays fixed.
                     .customizationID("unread")
-                    .disabledCustomizationBehavior(.resize)
-                    TableColumn(L10n.string("App"), value: \.app) { item in
-                        Text(item.app).foregroundStyle(.secondary)
-                    }
-                    .width(min: 60, ideal: 92, max: 112)
-                    .customizationID("app")
                     TableColumn(L10n.string("Category"), value: \.categoryRank) { item in
                         VerdictBadge(verdict: item.verdict, chosen: item.chosenCategory, isWaiting: item.isWaitingForVerdict)
                     }
-                    .width(min: 70, ideal: 100, max: 118)
+                    .width(min: 76, ideal: 96, max: 104)
                     .customizationID("category")
+                    TableColumn(L10n.string("App"), value: \.app) { item in
+                        Text(item.app).foregroundStyle(.secondary)
+                    }
+                    .width(min: 70, ideal: 96, max: 112)
+                    .customizationID("app")
                     TableColumn(L10n.string("Sender"), value: \.sender) { item in
                         Text(item.sender).lineLimit(1).truncationMode(.tail)
                     }
-                    .width(min: 70, ideal: 130, max: 220)
+                    .width(min: 90, ideal: 150, max: 170)
                     .customizationID("sender")
                     TableColumn(L10n.string("Notification"), value: \.compactLine) { item in
                         Text(item.compactLine).lineLimit(1).truncationMode(.tail)
@@ -580,7 +579,7 @@ private struct ItemsList: View {
                         Text(item.deliveredAt, format: Calendar.current.isDateInToday(item.deliveredAt) ? .dateTime.hour().minute() : .dateTime.month(.abbreviated).day().hour().minute())
                             .foregroundStyle(.secondary)
                     }
-                    .width(min: 56, ideal: 72, max: 84)
+                    .width(min: 56, ideal: 72, max: 76)
                     .customizationID("time")
                 }
                 .modifier(ItemActions(coordinator: coordinator))
