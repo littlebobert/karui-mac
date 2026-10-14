@@ -2,7 +2,7 @@
 
 The Mac companion to [Karui](https://karui.jp), the notification filter for iPhone. It watches the notifications that reach this Mac and works out where each one opens, so that tapping Karui's alert on the iPhone lands on the exact email in Spark, the exact message in Slack, or the right conversation in Messages.
 
-Early days: it finds links and shows them in its window. Sending them to the iPhone, and showing the iPhone's sorted notifications here, come next.
+Its window is the day's notifications from those apps, as Notification Center has them, with what Karui on the iPhone decided about each (a `Verdict` record per notification, sent by the iPhone when Settings → Karui for Mac → Show History on your Mac is on), whether each has been read, and the link that opens it. With the iPhone's *Include notifications only your iPhone gets* switch on, notifications from apps the Mac doesn't have appear too, from their encrypted text in the verdict, without a link. On launch it also catches up on the last day's notifications, so a relaunch or an update loses nothing.
 
 ## Download
 

@@ -1,3 +1,4 @@
+import KaruiLinkKit
 import SwiftUI
 
 enum InboxWindow {
@@ -12,7 +13,7 @@ struct InboxView: View {
             if !coordinator.fullDiskAccess.isGranted {
                 FullDiskAccessCard(fullDiskAccess: coordinator.fullDiskAccess)
             }
-            HarvestedLinksView(log: coordinator.harvestLog)
+            InboxList(inbox: coordinator.inbox)
         }
         .padding(20)
         .frame(minWidth: 560, minHeight: 400)
@@ -53,45 +54,101 @@ private struct FullDiskAccessCard: View {
     }
 }
 
-private struct HarvestedLinksView: View {
-    let log: HarvestLog
+/// The day's notifications with Karui's verdict on each, newest first.
+private struct InboxList: View {
+    let inbox: Inbox
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text(L10n.string("Links found"))
+            Text(L10n.string("Today"))
                 .font(.headline)
-            if log.entries.isEmpty {
-                Text(L10n.string("Nothing yet. Links appear here as notifications from Messages, Spark, and Slack arrive on this Mac."))
+            if inbox.items.isEmpty {
+                Text(L10n.string("Nothing yet. Notifications from Messages, Spark, and Slack appear here as they arrive on this Mac, with what Karui on your iPhone decided about each."))
                     .foregroundStyle(.secondary)
                 Spacer()
             } else {
-                List(log.entries) { entry in
-                    HStack(alignment: .top) {
-                        VStack(alignment: .leading, spacing: 2) {
-                            Text(entry.link.app)
-                            Text(entry.link.url.absoluteString)
-                                .font(.caption)
-                                .foregroundStyle(.secondary)
-                                .lineLimit(1)
-                                .truncationMode(.middle)
-                            Text(L10n.string(entry.readAt != nil ? "Read here; cleared on the iPhone" : entry.link.opensExactContent ? "Opens the exact item" : "Opens the conversation"))
-                                .font(.caption)
-                                .foregroundStyle(.secondary)
-                        }
-                        Spacer()
-                        Text(entry.link.deliveredAt, style: .time)
-                            .foregroundStyle(.secondary)
-                        Button(L10n.string("Open")) {
-                            NSWorkspace.shared.open(entry.link.url)
-                        }
-                        Button(L10n.string("Copy Link")) {
-                            NSPasteboard.general.clearContents()
-                            NSPasteboard.general.setString(entry.link.url.absoluteString, forType: .string)
-                        }
-                    }
-                    .padding(.vertical, 2)
+                List(inbox.items) { item in
+                    InboxRow(item: item)
                 }
             }
         }
+    }
+}
+
+private struct InboxRow: View {
+    let item: Inbox.Item
+
+    var body: some View {
+        HStack(alignment: .top, spacing: 10) {
+            Circle()
+                .fill(item.isUnread ? Color.accentColor : Color.clear)
+                .frame(width: 8, height: 8)
+                .padding(.top, 6)
+            VStack(alignment: .leading, spacing: 2) {
+                HStack(spacing: 6) {
+                    Text(item.app)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                    VerdictBadge(verdict: item.verdict, isWaiting: item.isWaitingForVerdict)
+                }
+                if let title = item.title, !title.isEmpty {
+                    Text(title).fontWeight(.semibold)
+                }
+                if let subtitle = item.subtitle, !subtitle.isEmpty {
+                    Text(subtitle)
+                }
+                if let body = item.body, !body.isEmpty {
+                    Text(body)
+                        .foregroundStyle(.secondary)
+                        .lineLimit(2)
+                }
+                if let reason = item.verdict?.reason, !reason.isEmpty {
+                    Text(reason)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                        .lineLimit(2)
+                }
+                if item.readAt != nil {
+                    Text(L10n.string("Read here; cleared on the iPhone"))
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+            }
+            Spacer()
+            VStack(alignment: .trailing, spacing: 6) {
+                Text(item.deliveredAt, style: .time)
+                    .foregroundStyle(.secondary)
+                if let link = item.link {
+                    HStack {
+                        Button(L10n.string("Open")) {
+                            NSWorkspace.shared.open(link.url)
+                        }
+                        Button(L10n.string("Copy Link")) {
+                            NSPasteboard.general.clearContents()
+                            NSPasteboard.general.setString(link.url.absoluteString, forType: .string)
+                        }
+                    }
+                }
+            }
+        }
+        .padding(.vertical, 3)
+    }
+}
+
+/// Karui's category, in its colors; "Sorting…" until the iPhone's verdict arrives.
+private struct VerdictBadge: View {
+    let verdict: VerdictRecord?
+    let isWaiting: Bool
+
+    var body: some View {
+        let (label, color): (String, Color) = switch verdict?.category {
+        case "notifyNow": (L10n.string("Important"), Color(red: 0.72, green: 0.32, blue: 0.22))
+        case "summary": (L10n.string("Neutral"), Color(red: 0.22, green: 0.37, blue: 0.29))
+        case "silence": (L10n.string("Spam"), Color.secondary)
+        default: (L10n.string(isWaiting ? "Sorting…" : "Not on the iPhone"), Color.secondary)
+        }
+        Text(label)
+            .font(.caption.weight(.semibold))
+            .foregroundStyle(color)
     }
 }

@@ -54,13 +54,17 @@ actor DeepLinkSync {
         return status
     }
 
-    func send(_ link: DeepLinkRecord) async {
+    /// Sends the link; the record on iCloud, after. A link sent before (by this Mac
+    /// before a relaunch, or by another Mac) is left as it is, read mark included,
+    /// and comes back so the caller can see whether it's already read.
+    @discardableResult
+    func send(_ link: DeepLinkRecord) async -> DeepLinkRecord? {
         if !status.isAvailable {
             await refreshStatus()
         }
         guard status.isAvailable, let database else {
             SafeDiagnosticLog.shared.record("sync: skipped, iCloud \(status)")
-            return
+            return nil
         }
         let record = CKRecord(
             recordType: DeepLinkRecordSchema.recordType,
@@ -73,14 +77,24 @@ actor DeepLinkSync {
         record[DeepLinkRecordSchema.deliveredAt] = link.deliveredAt
         record[DeepLinkRecordSchema.expiresAt] = link.expiresAt
         do {
-            let results = try await database.modifyRecords(saving: [record], deleting: [], savePolicy: .allKeys)
-            if let saved = try results.saveResults[record.recordID]?.get() {
-                savedRecords[link.fingerprint] = saved
+            let results = try await database.modifyRecords(saving: [record], deleting: [], savePolicy: .ifServerRecordUnchanged)
+            let saved: CKRecord
+            do {
+                saved = try results.saveResults[record.recordID]?.get() ?? record
+            } catch let error as CKError where error.code == .serverRecordChanged {
+                // Already there; the server's copy is the truth, read mark and all.
+                guard let serverRecord = error.serverRecord else { throw error }
+                saved = serverRecord
             }
+            savedRecords[link.fingerprint] = saved
             expiryStore.remember(recordName: link.fingerprint, expiresAt: link.expiresAt)
-            SafeDiagnosticLog.shared.record("sync: sent \(link.app) link")
+            var sent = link
+            sent.readAt = saved[DeepLinkRecordSchema.readAt] as? Date
+            SafeDiagnosticLog.shared.record("sync: sent \(link.app) link\(sent.readAt == nil ? "" : ", already read")")
+            return sent
         } catch {
             SafeDiagnosticLog.shared.record("sync: send failed: \(error.localizedDescription)")
+            return nil
         }
     }
 

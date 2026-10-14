@@ -6,7 +6,7 @@ final class AppCoordinator {
     let settings = AppSettings()
     let fullDiskAccess = FullDiskAccess()
     let loginItem = LoginItem()
-    let harvestLog = HarvestLog()
+    let inbox = Inbox()
     let autoUpdates = AutoUpdateService()
     let sync = DeepLinkSync()
     let syncStatus = SyncStatus()
@@ -22,6 +22,9 @@ final class AppCoordinator {
         MessagesHarvester()
     ])
     private let readWatcher = ReadWatcher()
+    private lazy var verdicts = VerdictStore { [weak self] verdicts in
+        Task { @MainActor in self?.inbox.apply(verdicts) }
+    }
     private var watcher: NotificationDatabaseWatcher?
     private var watchTask: Task<Void, Never>?
     private var readPollTask: Task<Void, Never>?
@@ -89,14 +92,22 @@ final class AppCoordinator {
         )
         self.watcher = watcher
         let harvesters = harvesters
-        let log = harvestLog
+        let inbox = inbox
         let sync = sync
         let readWatcher = readWatcher
+        let verdicts = verdicts
+        Task { await verdicts.start() }
         watchTask = Task {
             for await event in watcher.events() {
                 switch event {
-                case .appeared(let record):
-                    SafeDiagnosticLog.shared.record("watcher: \(record.bundleIdentifier) appeared")
+                case .appeared(let record), .backfilled(let record):
+                    if case .appeared = event {
+                        SafeDiagnosticLog.shared.record("watcher: \(record.bundleIdentifier) appeared")
+                    }
+                    // Shown with or without a link; the verdict is the iPhone's to send.
+                    if let app = KnownApp(macBundleIdentifier: record.bundleIdentifier) {
+                        inbox.add(record, as: app)
+                    }
                     guard let harvested = await harvesters.harvest(record) else { continue }
                     let link = harvested.link
                     // Field lengths and the fingerprint's start, to compare with the iPhone's
@@ -105,14 +116,18 @@ final class AppCoordinator {
                         "harvest: \(link.app) \(link.opensExactContent ? "exact" : "conversation") · \(link.fingerprint.prefix(12))"
                         + " · title \(record.title?.count ?? 0), subtitle \(record.subtitle?.count ?? 0), body \(record.body?.count ?? 0)"
                     )
-                    log.append(link)
-                    await sync.send(link)
-                    await readWatcher.track(harvested)
+                    inbox.setLink(link, for: record)
+                    let sent = await sync.send(link)
+                    if let readAt = sent?.readAt {
+                        inbox.markRead(fingerprint: link.fingerprint, at: readAt)
+                    } else {
+                        await readWatcher.track(harvested)
+                    }
                 case .disappeared(let id):
                     // Cleared here, or removed by its app once read: seen either way.
                     for harvested in await readWatcher.notificationDisappeared(id: id) {
                         SafeDiagnosticLog.shared.record("read: \(harvested.link.app), notification gone")
-                        log.markRead(fingerprint: harvested.link.fingerprint)
+                        inbox.markRead(fingerprint: harvested.link.fingerprint)
                         await sync.markRead(fingerprint: harvested.link.fingerprint)
                     }
                 }
@@ -123,7 +138,7 @@ final class AppCoordinator {
                 try? await Task.sleep(for: Self.readPollInterval)
                 for harvested in await readWatcher.poll(using: harvesters) {
                     SafeDiagnosticLog.shared.record("read: \(harvested.link.app), in its app")
-                    log.markRead(fingerprint: harvested.link.fingerprint)
+                    inbox.markRead(fingerprint: harvested.link.fingerprint)
                     await sync.markRead(fingerprint: harvested.link.fingerprint)
                 }
             }

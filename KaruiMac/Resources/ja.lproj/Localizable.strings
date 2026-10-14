@@ -29,3 +29,10 @@
 "Each link goes to your iPhone through your iCloud account, with a fingerprint of the notification. The notification's text never leaves this Mac." = "各リンクは通知のフィンガープリントとともに、あなたのiCloudアカウントを通じてiPhoneに送られます。通知の本文がこのMacから出ることはありません。";
 "Copy Diagnostics" = "診断情報をコピー";
 "Read here; cleared on the iPhone" = "ここで既読。iPhoneの通知を消去";
+"Today" = "今日";
+"Nothing yet. Notifications from Messages, Spark, and Slack appear here as they arrive on this Mac, with what Karui on your iPhone decided about each." = "まだありません。メッセージ、Spark、Slackの通知がこのMacに届くと、iPhoneのKaruiが下した判断とともにここに表示されます。";
+"Important" = "重要";
+"Neutral" = "普通";
+"Spam" = "迷惑";
+"Sorting…" = "仕分け中…";
+"Not on the iPhone" = "iPhoneには届いていません";
