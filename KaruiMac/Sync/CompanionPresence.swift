@@ -51,10 +51,12 @@ actor CompanionPresence {
     }
 
     /// Stable across launches, so the iPhone sees one Mac, not one per launch.
-    private var identifier: String {
-        if let existing = defaults.string(forKey: Self.identifierKey) { return existing }
+    private var identifier: String { Self.identifier(defaults: defaults) }
+
+    static func identifier(defaults: UserDefaults = .standard) -> String {
+        if let existing = defaults.string(forKey: identifierKey) { return existing }
         let created = UUID().uuidString
-        defaults.set(created, forKey: Self.identifierKey)
+        defaults.set(created, forKey: identifierKey)
         return created
     }
 }

@@ -11,6 +11,10 @@ final class AppCoordinator {
     let sync = DeepLinkSync()
     let syncStatus = SyncStatus()
     private let presence = CompanionPresence()
+    private let correspondents = CorrespondentSync(
+        sources: [SparkCorrespondents(), MessagesCorrespondents()],
+        companionIdentifier: CompanionPresence.identifier()
+    )
 
     private let harvesters = HarvesterRegistry(harvesters: [
         SparkHarvester(),
@@ -35,11 +39,14 @@ final class AppCoordinator {
         let sync = sync
         let syncStatus = syncStatus
         let presence = presence
+        let correspondents = correspondents
         Task {
             syncStatus.status = await sync.refreshStatus()
             await sync.deleteExpired()
             if syncStatus.status.isAvailable {
                 await presence.start()
+                // Needs Full Disk Access for Messages; Spark's part works without it.
+                await correspondents.start()
             }
         }
     }

@@ -9,6 +9,7 @@
 /* Begin PBXBuildFile section */
 		03A9D4824CFC0492AF517084 /* Harvester.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8640EA18112E9AC366300AA /* Harvester.swift */; };
 		0E8ACEBE68E76745938B38FE /* AppSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 53FC48A0DD6C2ECF2AF9D224 /* AppSettings.swift */; };
+		10CAE366D1D1CFAE81007222 /* CorrespondentSources.swift in Sources */ = {isa = PBXBuildFile; fileRef = A557411D5121D7AA92246BF3 /* CorrespondentSources.swift */; };
 		12AE2ADF169EEC27C715B492 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = AFB92E764E41E683274F5389 /* AppDelegate.swift */; };
 		256F450297662965424AE8A3 /* CompanionPresence.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7CDCA27785FCD626FF554343 /* CompanionPresence.swift */; };
 		26445B3E9165FAB91EBDFDBB /* KaruiLinkKit in Frameworks */ = {isa = PBXBuildFile; productRef = 1EEF910B98DBB071B7129E5A /* KaruiLinkKit */; };
@@ -23,7 +24,9 @@
 		5916F4769E5F40D48B463BFF /* Sparkle in Frameworks */ = {isa = PBXBuildFile; productRef = 782A9236982375E69B998D37 /* Sparkle */; };
 		6F1F477087C760E2E8B83643 /* SlackHarvester.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0368E20A347FBE53765A797B /* SlackHarvester.swift */; };
 		71FCA40B8355B8319BD331C2 /* MessagesLinkTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5986291BE197CA76F4D6CA8E /* MessagesLinkTests.swift */; };
+		81CB8D99097C43010B9E2FC2 /* CorrespondentTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17304FF1E3D049F3C656DA86 /* CorrespondentTests.swift */; };
 		820F35FC5B53F16C8C79C1D5 /* NotificationDatabase.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2EF2A3CF2E9957E0C0B42B3 /* NotificationDatabase.swift */; };
+		8DEB9C643FA7D9081602AD21 /* CorrespondentSync.swift in Sources */ = {isa = PBXBuildFile; fileRef = DF4BF525FF076257FB084C2A /* CorrespondentSync.swift */; };
 		993CD23DDD32E5C0C303FEBC /* SparkLinkTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1234CDFEE07EA21BAA319888 /* SparkLinkTests.swift */; };
 		A665DA8B77CE7BEE0C570BE2 /* SQLiteDatabase.swift in Sources */ = {isa = PBXBuildFile; fileRef = 256E396E924DE9AB3935ABB5 /* SQLiteDatabase.swift */; };
 		AD28793611CC3ED7547620EB /* ReadWatcher.swift in Sources */ = {isa = PBXBuildFile; fileRef = B7677F16AEA0B585F6963745 /* ReadWatcher.swift */; };
@@ -59,6 +62,7 @@
 		0368E20A347FBE53765A797B /* SlackHarvester.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SlackHarvester.swift; sourceTree = "<group>"; };
 		045F69213E6EF7BFBE2D4750 /* HarvestLog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HarvestLog.swift; sourceTree = "<group>"; };
 		1234CDFEE07EA21BAA319888 /* SparkLinkTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SparkLinkTests.swift; sourceTree = "<group>"; };
+		17304FF1E3D049F3C656DA86 /* CorrespondentTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CorrespondentTests.swift; sourceTree = "<group>"; };
 		18C03C189FC251D0F185F180 /* KaruiMac.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = KaruiMac.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		1E81C403E1EA25EF28338C97 /* MenuBarMenu.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuBarMenu.swift; sourceTree = "<group>"; };
 		256E396E924DE9AB3935ABB5 /* SQLiteDatabase.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SQLiteDatabase.swift; sourceTree = "<group>"; };
@@ -81,12 +85,14 @@
 		9FBC7F39D73658B323FE3E33 /* AutoUpdateService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AutoUpdateService.swift; sourceTree = "<group>"; };
 		A1A75765EC9DF2745AF8F9FD /* DeepLinkSync.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeepLinkSync.swift; sourceTree = "<group>"; };
 		A2EF2A3CF2E9957E0C0B42B3 /* NotificationDatabase.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationDatabase.swift; sourceTree = "<group>"; };
+		A557411D5121D7AA92246BF3 /* CorrespondentSources.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CorrespondentSources.swift; sourceTree = "<group>"; };
 		AFB92E764E41E683274F5389 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		B7677F16AEA0B585F6963745 /* ReadWatcher.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReadWatcher.swift; sourceTree = "<group>"; };
 		B8640EA18112E9AC366300AA /* Harvester.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Harvester.swift; sourceTree = "<group>"; };
 		BAA22D646B0B0086568E6C34 /* FullDiskAccess.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FullDiskAccess.swift; sourceTree = "<group>"; };
 		C424AFD49EBE5C89997B8D7C /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		DD78E6FA806C0CC6D07E2BEF /* SyncStatus.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SyncStatus.swift; sourceTree = "<group>"; };
+		DF4BF525FF076257FB084C2A /* CorrespondentSync.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CorrespondentSync.swift; sourceTree = "<group>"; };
 		F3632FBB53F7B8E38A5FFB1B /* Localizable.strings */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = Localizable.strings; path = ja.lproj/Localizable.strings; sourceTree = "<group>"; };
 		F9695E99FA85CB7DC2E8B73A /* SparkHarvester.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SparkHarvester.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -107,6 +113,7 @@
 		02C21CE0C51221B7CBBF9BF0 /* KaruiMacTests */ = {
 			isa = PBXGroup;
 			children = (
+				17304FF1E3D049F3C656DA86 /* CorrespondentTests.swift */,
 				5986291BE197CA76F4D6CA8E /* MessagesLinkTests.swift */,
 				57E3E9CF0788DE8E74AA72D0 /* NotificationPayloadTests.swift */,
 				4C44EC3DE17DE1FCA7463F4E /* SlackLinkTests.swift */,
@@ -161,6 +168,7 @@
 			isa = PBXGroup;
 			children = (
 				FCB80132059B74A9F4483512 /* App */,
+				F29B4464B039467766E88540 /* Correspondents */,
 				816B0FF06B203EE1220A5BE1 /* Harvesting */,
 				8A7DF89B2D17028784BFF4AC /* Inbox */,
 				69F5FD8E5F62FE9E958DDD80 /* Resources */,
@@ -197,6 +205,15 @@
 				DD78E6FA806C0CC6D07E2BEF /* SyncStatus.swift */,
 			);
 			path = Sync;
+			sourceTree = "<group>";
+		};
+		F29B4464B039467766E88540 /* Correspondents */ = {
+			isa = PBXGroup;
+			children = (
+				A557411D5121D7AA92246BF3 /* CorrespondentSources.swift */,
+				DF4BF525FF076257FB084C2A /* CorrespondentSync.swift */,
+			);
+			path = Correspondents;
 			sourceTree = "<group>";
 		};
 		FCB80132059B74A9F4483512 /* App */ = {
@@ -327,6 +344,8 @@
 				54758AD1ACDF40494DD0EB17 /* AutoUpdateService.swift in Sources */,
 				C347228A7259723AA47FB4B8 /* CloudKitEntitlement.swift in Sources */,
 				256F450297662965424AE8A3 /* CompanionPresence.swift in Sources */,
+				10CAE366D1D1CFAE81007222 /* CorrespondentSources.swift in Sources */,
+				8DEB9C643FA7D9081602AD21 /* CorrespondentSync.swift in Sources */,
 				29D7C805F698B12B4188AB8B /* DeepLinkSync.swift in Sources */,
 				450373E70A90D9E47C01B39A /* FullDiskAccess.swift in Sources */,
 				E9B5E387C6FF08932E58F756 /* HarvestLog.swift in Sources */,
@@ -353,6 +372,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				81CB8D99097C43010B9E2FC2 /* CorrespondentTests.swift in Sources */,
 				71FCA40B8355B8319BD331C2 /* MessagesLinkTests.swift in Sources */,
 				D66550355B02294EBB91F582 /* NotificationPayloadTests.swift in Sources */,
 				C18F4894F38E02C8FB692626 /* SlackLinkTests.swift in Sources */,
