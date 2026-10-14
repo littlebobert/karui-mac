@@ -19,7 +19,7 @@ final class InboxWindowController: NSWindowController, NSWindowDelegate {
         window.title = "Karui"
         window.isReleasedWhenClosed = false
         window.contentMinSize = NSSize(width: 640, height: 400)
-        window.setFrameAutosaveName("KaruiInbox")
+        if !DemoMode.isActive { window.setFrameAutosaveName("KaruiInbox") }
         window.contentView = NSHostingView(rootView: InboxView(coordinator: coordinator))
         super.init(window: window)
         window.delegate = self

@@ -216,6 +216,14 @@ final class Inbox {
 
     func item(id: String) -> Item? { items.first { $0.id == id } }
 
+    /// Everything at once, for the demo; nothing is written to disk.
+    func replaceItems(_ newItems: [Item]) {
+        items = newItems
+        selection = []
+        openGroupID = nil
+        openItemID = nil
+    }
+
     /// A notification this Mac got, from Notification Center. Returns whether it was new.
     @discardableResult
     func add(_ record: NotificationRecord, as app: KnownApp) -> Bool {

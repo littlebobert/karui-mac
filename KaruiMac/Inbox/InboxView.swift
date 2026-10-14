@@ -6,7 +6,7 @@ struct InboxView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
-            if !coordinator.fullDiskAccess.isGranted {
+            if !coordinator.fullDiskAccess.isGranted && !DemoMode.isActive {
                 FullDiskAccessCard(fullDiskAccess: coordinator.fullDiskAccess)
                     .padding([.horizontal, .top], 16)
             }
@@ -48,6 +48,8 @@ struct InboxView: View {
             }
         }
         .animation(.easeInOut(duration: 0.2), value: coordinator.inbox.toast?.id)
+        // Larger type in the site's screenshots, which are shown smaller than life.
+        .dynamicTypeSize(DemoMode.isActive ? .xLarge : .large)
         .onReceive(NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)) { _ in
             coordinator.applicationDidBecomeActive()
         }
@@ -537,7 +539,7 @@ private struct ItemsList: View {
     let coordinator: AppCoordinator
     let items: [Inbox.Item]
     /// The columns' widths and order, kept across launches.
-    @AppStorage("inbox.columns") private var columns: TableColumnCustomization<Inbox.Item>
+    @AppStorage(DemoMode.isActive ? "inbox.columns.demo" : "inbox.columns") private var columns: TableColumnCustomization<Inbox.Item>
 
     var body: some View {
         @Bindable var inbox = coordinator.inbox
@@ -551,15 +553,18 @@ private struct ItemsList: View {
                             .frame(width: 8, height: 8)
                     }
                     .width(12)
+                    // Part of the customization so it keeps its place; not movable itself.
+                    .customizationID("unread")
+                    .disabledCustomizationBehavior(.all)
                     TableColumn(L10n.string("App"), value: \.app) { item in
                         Text(item.app).foregroundStyle(.secondary)
                     }
-                    .width(min: 50, ideal: 70)
+                    .width(min: 60, ideal: 92, max: 112)
                     .customizationID("app")
                     TableColumn(L10n.string("Category"), value: \.categoryRank) { item in
                         VerdictBadge(verdict: item.verdict, chosen: item.chosenCategory, isWaiting: item.isWaitingForVerdict)
                     }
-                    .width(min: 60, ideal: 110)
+                    .width(min: 70, ideal: 100, max: 118)
                     .customizationID("category")
                     TableColumn(L10n.string("Notification"), value: \.compactLine) { item in
                         Text(item.compactLine).lineLimit(1).truncationMode(.tail)
@@ -569,7 +574,7 @@ private struct ItemsList: View {
                         Text(item.deliveredAt, format: Calendar.current.isDateInToday(item.deliveredAt) ? .dateTime.hour().minute() : .dateTime.month(.abbreviated).day().hour().minute())
                             .foregroundStyle(.secondary)
                     }
-                    .width(min: 50, ideal: 110)
+                    .width(min: 56, ideal: 72, max: 84)
                     .customizationID("time")
                 }
                 .modifier(ItemActions(coordinator: coordinator))

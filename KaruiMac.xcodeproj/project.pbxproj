@@ -12,6 +12,7 @@
 		0E8ACEBE68E76745938B38FE /* AppSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 53FC48A0DD6C2ECF2AF9D224 /* AppSettings.swift */; };
 		10CAE366D1D1CFAE81007222 /* CorrespondentSources.swift in Sources */ = {isa = PBXBuildFile; fileRef = A557411D5121D7AA92246BF3 /* CorrespondentSources.swift */; };
 		12AE2ADF169EEC27C715B492 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = AFB92E764E41E683274F5389 /* AppDelegate.swift */; };
+		23020A8966F305767CA6C564 /* DemoMode.swift in Sources */ = {isa = PBXBuildFile; fileRef = 23A1E5BDB996F7E881DA0021 /* DemoMode.swift */; };
 		256F450297662965424AE8A3 /* CompanionPresence.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7CDCA27785FCD626FF554343 /* CompanionPresence.swift */; };
 		26445B3E9165FAB91EBDFDBB /* KaruiLinkKit in Frameworks */ = {isa = PBXBuildFile; productRef = 1EEF910B98DBB071B7129E5A /* KaruiLinkKit */; };
 		29D7C805F698B12B4188AB8B /* DeepLinkSync.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1A75765EC9DF2745AF8F9FD /* DeepLinkSync.swift */; };
@@ -70,6 +71,7 @@
 		17304FF1E3D049F3C656DA86 /* CorrespondentTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CorrespondentTests.swift; sourceTree = "<group>"; };
 		18C03C189FC251D0F185F180 /* KaruiMac.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = KaruiMac.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		1E81C403E1EA25EF28338C97 /* MenuBarMenu.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuBarMenu.swift; sourceTree = "<group>"; };
+		23A1E5BDB996F7E881DA0021 /* DemoMode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DemoMode.swift; sourceTree = "<group>"; };
 		256E396E924DE9AB3935ABB5 /* SQLiteDatabase.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SQLiteDatabase.swift; sourceTree = "<group>"; };
 		29A29143D3E9AA889152D714 /* Localization.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Localization.swift; sourceTree = "<group>"; };
 		4B466F1F135069DD48A1473B /* AppCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppCoordinator.swift; sourceTree = "<group>"; };
@@ -238,6 +240,7 @@
 				AFB92E764E41E683274F5389 /* AppDelegate.swift */,
 				53FC48A0DD6C2ECF2AF9D224 /* AppSettings.swift */,
 				9FBC7F39D73658B323FE3E33 /* AutoUpdateService.swift */,
+				23A1E5BDB996F7E881DA0021 /* DemoMode.swift */,
 				BAA22D646B0B0086568E6C34 /* FullDiskAccess.swift */,
 				61B11DFC924A31F1D18275E7 /* KaruiMacApp.swift */,
 				29A29143D3E9AA889152D714 /* Localization.swift */,
@@ -364,6 +367,7 @@
 				10CAE366D1D1CFAE81007222 /* CorrespondentSources.swift in Sources */,
 				8DEB9C643FA7D9081602AD21 /* CorrespondentSync.swift in Sources */,
 				29D7C805F698B12B4188AB8B /* DeepLinkSync.swift in Sources */,
+				23020A8966F305767CA6C564 /* DemoMode.swift in Sources */,
 				450373E70A90D9E47C01B39A /* FullDiskAccess.swift in Sources */,
 				03A9D4824CFC0492AF517084 /* Harvester.swift in Sources */,
 				04B9EDA56D644A72178963F7 /* Inbox.swift in Sources */,

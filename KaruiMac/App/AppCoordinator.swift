@@ -6,7 +6,7 @@ final class AppCoordinator {
     let settings = AppSettings()
     let fullDiskAccess = FullDiskAccess()
     let loginItem = LoginItem()
-    let inbox = Inbox(store: InboxStore())
+    let inbox = DemoMode.isActive ? Inbox(defaults: UserDefaults(suiteName: "demo") ?? .standard, store: nil) : Inbox(store: InboxStore())
     let autoUpdates = AutoUpdateService()
     let sync = DeepLinkSync()
     let syncStatus = SyncStatus()
@@ -46,6 +46,20 @@ final class AppCoordinator {
     func start() {
         guard !hasStarted else { return }
         hasStarted = true
+        if DemoMode.isActive {
+            DemoMode.configure(inbox)
+            showInbox()
+            if let window = inboxWindow.window {
+                window.setContentSize(DemoMode.windowSize)
+                window.center()
+                NSApp.activate(ignoringOtherApps: true)
+                window.makeKeyAndOrderFront(nil)
+                if let file = DemoMode.windowFile {
+                    try? "\(window.windowNumber)".write(toFile: file, atomically: true, encoding: .utf8)
+                }
+            }
+            return
+        }
         SafeDiagnosticLog.shared.record("app: start")
         fullDiskAccess.refresh()
         startWatchingIfPossible()
@@ -67,6 +81,7 @@ final class AppCoordinator {
     }
 
     func refreshSyncStatus() {
+        guard !DemoMode.isActive else { return }
         let sync = sync
         let syncStatus = syncStatus
         Task { syncStatus.status = await sync.refreshStatus() }
@@ -75,6 +90,7 @@ final class AppCoordinator {
     /// Full Disk Access is granted in System Settings, so it's rechecked each time
     /// the person comes back to the app.
     func applicationDidBecomeActive() {
+        guard !DemoMode.isActive else { return }
         fullDiskAccess.refresh()
         startWatchingIfPossible()
     }
