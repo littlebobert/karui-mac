@@ -19,6 +19,11 @@ final class Inbox {
         var subtitle: String?
         var body: String?
         var deliveredAt: Date
+        /// Who else is in the chat, as the iPhone's Shortcut listed them; from the verdict.
+        var recipients: String?
+        /// The sender as the Shortcut named them, when the iPhone sent it; History's
+        /// Senders view groups by this rather than the title.
+        var senderName: String?
         var link: DeepLinkRecord?
         var readAt: Date?
         var verdict: VerdictRecord?
@@ -56,7 +61,10 @@ final class Inbox {
         }
 
         /// Who it's from, for grouping: the title in mail and messaging apps.
-        var sender: String { title?.trimmingCharacters(in: .whitespacesAndNewlines) ?? "" }
+        var sender: String {
+            let named = senderName?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+            return named.isEmpty ? (title?.trimmingCharacters(in: .whitespacesAndNewlines) ?? "") : named
+        }
 
         /// The thread, the way Karui for iPhone's History groups it: an email thread
         /// by its subject without the "Re:", a workplace channel by its title, a
@@ -83,7 +91,17 @@ final class Inbox {
                 }
                 return ("\(app)|app", app)
             case .messaging:
-                if !subtitle.isEmpty { return ("\(app)|chat|\(Conversation.normalized(subtitle))", subtitle) }
+                let people = Conversation.people(in: recipients)
+                let name: String
+                if !subtitle.isEmpty {
+                    name = subtitle
+                } else if people.count >= 2 {
+                    name = ListFormatter.localizedString(byJoining: Conversation.names(in: recipients))
+                } else {
+                    name = title
+                }
+                if people.count >= 2 { return ("\(app)|group|" + people.sorted().joined(separator: ","), name) }
+                if !subtitle.isEmpty { return ("\(app)|chat|\(Conversation.normalized(subtitle))", name) }
             }
             if !title.isEmpty { return ("\(app)|chat|\(Conversation.normalized(title))", title) }
             return ("\(app)|app", app)
@@ -371,10 +389,12 @@ final class Inbox {
                     app: Self.appName(verdict.app),
                     fingerprint: verdict.fingerprint,
                     title: verdict.title,
-                    subtitle: nil,
+                    subtitle: verdict.subtitle,
                     body: verdict.body,
                     deliveredAt: verdict.triagedAt
                 )
+                item.recipients = verdict.recipients
+                item.senderName = verdict.sender
                 item.verdict = verdict
                 item.readAt = verdict.readAt
                 insert(item)
@@ -437,6 +457,8 @@ final class Inbox {
         var touched = Set<String>()
         for index in items.indices where items[index].fingerprint == fingerprint {
             items[index].verdict = verdict
+            if items[index].recipients == nil { items[index].recipients = verdict.recipients }
+            if items[index].senderName == nil { items[index].senderName = verdict.sender }
             if items[index].chosenCategory == verdict.category { items[index].chosenCategory = nil }
             if let readAt = verdict.readAt, items[index].readAt == nil { items[index].readAt = readAt }
             touched.insert(items[index].id)
@@ -506,5 +528,18 @@ enum Conversation {
     static func normalized(_ value: some StringProtocol) -> String {
         value.trimmingCharacters(in: .whitespacesAndNewlines)
             .folding(options: [.caseInsensitive, .diacriticInsensitive], locale: .current)
+    }
+
+    /// The people a notification lists as recipients, as the iPhone's Shortcut gives
+    /// them: names separated by commas, semicolons, newlines, or 、.
+    static func names(in recipients: String?) -> [String] {
+        (recipients ?? "")
+            .split(whereSeparator: { [",", "\n", ";", "、"].contains($0) })
+            .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+            .filter { !$0.isEmpty }
+    }
+
+    static func people(in recipients: String?) -> Set<String> {
+        Set(names(in: recipients).map(normalized))
     }
 }

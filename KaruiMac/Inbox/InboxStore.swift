@@ -13,6 +13,8 @@ final class InboxEntry {
     var subtitle: String?
     var body: String?
     var deliveredAt: Date
+    var recipients: String?
+    var senderName: String?
     var linkURL: String?
     var opensExactContent: Bool
     var readAt: Date?
@@ -33,6 +35,8 @@ final class InboxEntry {
         subtitle = item.subtitle
         body = item.body
         deliveredAt = item.deliveredAt
+        recipients = item.recipients
+        senderName = item.senderName
         linkURL = item.link?.url.absoluteString
         opensExactContent = item.link?.opensExactContent ?? false
         readAt = item.readAt
@@ -47,6 +51,8 @@ final class InboxEntry {
     }
 
     func update(from item: Inbox.Item) {
+        recipients = item.recipients
+        senderName = item.senderName
         linkURL = item.link?.url.absoluteString
         opensExactContent = item.link?.opensExactContent ?? false
         readAt = item.readAt
@@ -71,13 +77,15 @@ final class InboxEntry {
                 deliveredAt: deliveredAt, readAt: readAt
             )
         }
+        item.recipients = recipients
+        item.senderName = senderName
         item.readAt = readAt
         item.chosenCategory = chosenCategory
         if let verdictCategory, let verdictTriagedAt {
             item.verdict = VerdictRecord(
                 fingerprint: fingerprint, app: app, category: verdictCategory, interest: verdictInterest,
                 reason: verdictReason ?? "", triagedAt: verdictTriagedAt, isUnread: verdictIsUnread,
-                title: verdictTitle, body: verdictBody, readAt: readAt
+                title: verdictTitle, body: verdictBody, readAt: readAt, subtitle: subtitle, sender: senderName, recipients: recipients
             )
         }
         return item

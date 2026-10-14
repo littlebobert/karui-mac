@@ -17,6 +17,11 @@ public struct VerdictRecord: Codable, Equatable, Sendable {
     public var isUnread: Bool
     public var title: String?
     public var body: String?
+    /// The rest of the notification, for grouping threads the way the iPhone does:
+    /// the subtitle, the sender, and the recipients the Shortcut listed.
+    public var subtitle: String?
+    public var sender: String?
+    public var recipients: String?
     /// Set by the Mac: read there, a category the person chose there, or deleted
     /// there. The iPhone applies them to History and clears them on its next send.
     public var readAt: Date?
@@ -35,8 +40,14 @@ public struct VerdictRecord: Codable, Equatable, Sendable {
         body: String? = nil,
         readAt: Date? = nil,
         requestedCategory: String? = nil,
-        deletedAt: Date? = nil
+        deletedAt: Date? = nil,
+        subtitle: String? = nil,
+        sender: String? = nil,
+        recipients: String? = nil
     ) {
+        self.subtitle = subtitle
+        self.sender = sender
+        self.recipients = recipients
         self.fingerprint = fingerprint
         self.app = app
         self.category = category
@@ -74,6 +85,9 @@ public enum VerdictRecordSchema {
     /// Encrypted, and only for apps the Mac doesn't have.
     public static let title = "title"
     public static let body = "body"
+    public static let subtitle = "subtitle"
+    public static let sender = "sender"
+    public static let recipients = "recipients"
     public static let readAt = "readAt"
     public static let requestedCategory = "requestedCategory"
     public static let deletedAt = "deletedAt"

@@ -150,7 +150,10 @@ actor VerdictStore {
             body: record.encryptedValues[VerdictRecordSchema.body] as? String,
             readAt: record[VerdictRecordSchema.readAt] as? Date,
             requestedCategory: record[VerdictRecordSchema.requestedCategory] as? String,
-            deletedAt: record[VerdictRecordSchema.deletedAt] as? Date
+            deletedAt: record[VerdictRecordSchema.deletedAt] as? Date,
+            subtitle: record.encryptedValues[VerdictRecordSchema.subtitle] as? String,
+            sender: record.encryptedValues[VerdictRecordSchema.sender] as? String,
+            recipients: record.encryptedValues[VerdictRecordSchema.recipients] as? String
         )
     }
 }
