@@ -19,6 +19,7 @@
 		48BC8B8FE8B3454F291F732C /* InboxView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 59EF49CEA27DDE8349D1BB63 /* InboxView.swift */; };
 		506A24EE70DB7B87395F9679 /* SparkHarvester.swift in Sources */ = {isa = PBXBuildFile; fileRef = F9695E99FA85CB7DC2E8B73A /* SparkHarvester.swift */; };
 		54758AD1ACDF40494DD0EB17 /* AutoUpdateService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9FBC7F39D73658B323FE3E33 /* AutoUpdateService.swift */; };
+		58B843671087828476A17A1A /* AppIconSource.png in Resources */ = {isa = PBXBuildFile; fileRef = 6CA9E859EEC0683C3C84FEEB /* AppIconSource.png */; };
 		5916F4769E5F40D48B463BFF /* Sparkle in Frameworks */ = {isa = PBXBuildFile; productRef = 782A9236982375E69B998D37 /* Sparkle */; };
 		6F1F477087C760E2E8B83643 /* SlackHarvester.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0368E20A347FBE53765A797B /* SlackHarvester.swift */; };
 		71FCA40B8355B8319BD331C2 /* MessagesLinkTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5986291BE197CA76F4D6CA8E /* MessagesLinkTests.swift */; };
@@ -71,6 +72,7 @@
 		5986291BE197CA76F4D6CA8E /* MessagesLinkTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MessagesLinkTests.swift; sourceTree = "<group>"; };
 		59EF49CEA27DDE8349D1BB63 /* InboxView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InboxView.swift; sourceTree = "<group>"; };
 		61B11DFC924A31F1D18275E7 /* KaruiMacApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KaruiMacApp.swift; sourceTree = "<group>"; };
+		6CA9E859EEC0683C3C84FEEB /* AppIconSource.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = AppIconSource.png; sourceTree = "<group>"; };
 		6E0F2603A038F4EABE382CD4 /* CloudKitEntitlement.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CloudKitEntitlement.swift; sourceTree = "<group>"; };
 		7C291DB86FBAE44252DBF29D /* karui-mac */ = {isa = PBXFileReference; lastKnownFileType = folder; name = "karui-mac"; path = .; sourceTree = SOURCE_ROOT; };
 		7CDCA27785FCD626FF554343 /* CompanionPresence.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CompanionPresence.swift; sourceTree = "<group>"; };
@@ -133,6 +135,7 @@
 		69F5FD8E5F62FE9E958DDD80 /* Resources */ = {
 			isa = PBXGroup;
 			children = (
+				6CA9E859EEC0683C3C84FEEB /* AppIconSource.png */,
 				C424AFD49EBE5C89997B8D7C /* Assets.xcassets */,
 				F3632FBB53F7B8E38A5FFB1B /* Localizable.strings */,
 			);
@@ -305,6 +308,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				58B843671087828476A17A1A /* AppIconSource.png in Resources */,
 				41DDECE3C0F720A32A5B6505 /* Assets.xcassets in Resources */,
 				C45B77EA4308A5C8BF071917 /* Localizable.strings in Resources */,
 			);

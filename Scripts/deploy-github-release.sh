@@ -1,0 +1,479 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+RELEASE_ENV_FILE="${RELEASE_ENV_FILE:-$ROOT_DIR/.env.release}"
+if [[ -f "$RELEASE_ENV_FILE" ]]; then
+  set -a
+  # shellcheck disable=SC1090
+  source "$RELEASE_ENV_FILE"
+  set +a
+fi
+
+REPO="${GITHUB_REPO:-littlebobert/karui-mac}"
+WEBSITE_DIR="${WEBSITE_DIR:-$ROOT_DIR/../littlebobert.github.io}"
+LANDING_PAGE="${LANDING_PAGE:-$WEBSITE_DIR/karui-mac.html}"
+APPCAST_PATH="${APPCAST_PATH:-$WEBSITE_DIR/karui-mac-appcast.xml}"
+APPCAST_PRODUCT_LINK="${APPCAST_PRODUCT_LINK:-https://karui.jp/mac}"
+SPARKLE_ACCOUNT="${SPARKLE_ACCOUNT:-karui}"
+OPENAI_MODEL="${OPENAI_MODEL:-gpt-5.6}"
+OPENAI_REASONING_EFFORT="${OPENAI_REASONING_EFFORT:-high}"
+ANTHROPIC_MODEL="${ANTHROPIC_MODEL:-claude-opus-5}"
+PUBLIC_LANDING_URL="${PUBLIC_LANDING_URL:-https://karui.jp/mac}"
+PUBLIC_APPCAST_URL="${PUBLIC_APPCAST_URL:-https://littlebobert.github.io/karui-mac-appcast.xml}"
+
+# Fast-forward both repositories before reading any versions, so a release made
+# from another machine doesn't leave this checkout behind origin.
+sync_repository() {
+  local dir="$1" label="$2" branch
+  branch="$(git -C "$dir" branch --show-current)"
+  [[ -n "$branch" ]] || { echo "error: $label is on a detached HEAD" >&2; exit 1; }
+  [[ -z "$(git -C "$dir" status --porcelain)" ]] || { echo "error: $label working tree must be clean before deployment" >&2; exit 1; }
+  git -C "$dir" pull --ff-only origin "$branch" || { echo "error: could not fast-forward $label; resolve it manually" >&2; exit 1; }
+}
+
+if [[ "${KARUI_MAC_DEPLOY_SYNCED:-}" != 1 && " $* " != *" -h "* && " $* " != *" --help "* ]]; then
+  KARUI_MAC_HEAD_BEFORE_SYNC="$(git -C "$ROOT_DIR" rev-parse HEAD)"
+  sync_repository "$ROOT_DIR" "Karui for Mac"
+  sync_repository "$WEBSITE_DIR" "website"
+  if [[ "$(git -C "$ROOT_DIR" rev-parse HEAD)" != "$KARUI_MAC_HEAD_BEFORE_SYNC" ]]; then
+    # The pull may have changed this script or project.yml; restart from the new copy.
+    KARUI_MAC_DEPLOY_SYNCED=1 exec "$ROOT_DIR/Scripts/deploy-github-release.sh" "$@"
+  fi
+fi
+
+CURRENT_VERSION="$(ruby -e 'puts File.read(ARGV[0])[/MARKETING_VERSION: "([^"]+)"/, 1]' "$ROOT_DIR/project.yml")"
+CURRENT_BUILD="$(ruby -e 'puts File.read(ARGV[0])[/CURRENT_PROJECT_VERSION: "([0-9]+)"/, 1]' "$ROOT_DIR/project.yml")"
+VERSION_ARG=""
+NOTES_FILE_ARG=""
+DRY_RUN=false
+NOTES=()
+
+usage() {
+  cat <<'EOF'
+Usage:
+  ./Scripts/deploy-github-release.sh [version] --notes "Change" [--notes "Another change"]
+  ./Scripts/deploy-github-release.sh [version] --notes-file PATH
+  ./Scripts/deploy-github-release.sh --dry-run --notes "Change"
+
+Without a version, bumps the patch version and increments the numeric build.
+With an explicit version, uses that version and still increments the build.
+
+The script validates the repositories, updates versions and release notes,
+compiles tests and creates a notarized build, commits/pushes Karui for Mac, creates the GitHub release,
+translates the notes to Japanese with OpenAI (Anthropic Opus 5 fallback), generates and deploys the
+    Sparkle appcast and bilingual landing-page changelog, then redownloads and verifies the public artifact.
+
+Translation keys are loaded from .env.release (or RELEASE_ENV_FILE):
+  OPENAI_API_KEY=...
+  ANTHROPIC_API_KEY=...   # optional fallback when OpenAI is missing or fails
+EOF
+}
+
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --notes)
+      shift
+      [[ $# -gt 0 ]] || { echo "error: --notes requires text" >&2; exit 1; }
+      NOTES+=("$1")
+      ;;
+    --notes-file)
+      shift
+      [[ $# -gt 0 ]] || { echo "error: --notes-file requires a path" >&2; exit 1; }
+      NOTES_FILE_ARG="$1"
+      ;;
+    --dry-run)
+      DRY_RUN=true
+      ;;
+    -h|--help)
+      usage
+      exit 0
+      ;;
+    -*)
+      echo "error: unknown option: $1" >&2
+      usage >&2
+      exit 1
+      ;;
+    *)
+      [[ -z "$VERSION_ARG" ]] || { echo "error: only one version may be supplied" >&2; exit 1; }
+      VERSION_ARG="${1#v}"
+      ;;
+  esac
+  shift
+done
+
+for command in curl gh git python3 ruby xcodebuild xcodegen xmllint; do
+  command -v "$command" >/dev/null || { echo "error: missing required command: $command" >&2; exit 1; }
+done
+[[ "$CURRENT_VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || { echo "error: invalid current version: $CURRENT_VERSION" >&2; exit 1; }
+[[ "$CURRENT_BUILD" =~ ^[0-9]+$ ]] || { echo "error: invalid current build: $CURRENT_BUILD" >&2; exit 1; }
+
+if [[ -n "$VERSION_ARG" ]]; then
+  VERSION="$VERSION_ARG"
+else
+  IFS='.' read -r major minor patch <<<"$CURRENT_VERSION"
+  VERSION="$major.$minor.$((10#$patch + 1))"
+fi
+[[ "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || { echo "error: invalid release version: $VERSION" >&2; exit 1; }
+BUILD="$((10#$CURRENT_BUILD + 1))"
+TAG="${RELEASE_TAG:-$VERSION}"
+RELEASE_DIR="$ROOT_DIR/.build/releases"
+RELEASE_ZIP="$RELEASE_DIR/Karui-$VERSION-mac.zip"
+NOTES_FILE="$RELEASE_DIR/release-notes-$VERSION.md"
+NOTES_TRANSLATIONS_FILE="$RELEASE_DIR/release-notes-$VERSION-translations.json"
+TRANSLATION_RESPONSE_FILE="$RELEASE_DIR/release-notes-$VERSION-translation-response.json"
+DOWNLOAD_URL="https://github.com/$REPO/releases/download/$TAG/Karui-$VERSION-mac.zip"
+KARUI_MAC_BRANCH="$(git -C "$ROOT_DIR" branch --show-current)"
+WEBSITE_BRANCH="$(git -C "$WEBSITE_DIR" branch --show-current)"
+
+[[ -n "$KARUI_MAC_BRANCH" && -n "$WEBSITE_BRANCH" ]] || { echo "error: detached HEAD is not supported" >&2; exit 1; }
+[[ -f "$LANDING_PAGE" ]] || { echo "error: landing page not found: $LANDING_PAGE" >&2; exit 1; }
+[[ -z "$(git -C "$ROOT_DIR" status --porcelain)" ]] || { echo "error: Karui for Mac working tree must be clean before deployment" >&2; exit 1; }
+[[ -z "$(git -C "$WEBSITE_DIR" status --porcelain)" ]] || { echo "error: website working tree must be clean before deployment" >&2; exit 1; }
+[[ "$(git -C "$ROOT_DIR" rev-parse HEAD)" == "$(git -C "$ROOT_DIR" rev-parse "origin/$KARUI_MAC_BRANCH")" ]] || { echo "error: Karui for Mac branch is not synchronized with origin" >&2; exit 1; }
+[[ "$(git -C "$WEBSITE_DIR" rev-parse HEAD)" == "$(git -C "$WEBSITE_DIR" rev-parse "origin/$WEBSITE_BRANCH")" ]] || { echo "error: website branch is not synchronized with origin" >&2; exit 1; }
+gh auth status >/dev/null
+gh release view "$TAG" --repo "$REPO" >/dev/null 2>&1 && { echo "error: GitHub release $TAG already exists" >&2; exit 1; }
+
+mkdir -p "$RELEASE_DIR"
+if [[ -n "$NOTES_FILE_ARG" ]]; then
+  [[ -f "$NOTES_FILE_ARG" ]] || { echo "error: notes file not found: $NOTES_FILE_ARG" >&2; exit 1; }
+  cp "$NOTES_FILE_ARG" "$NOTES_FILE"
+elif [[ ${#NOTES[@]} -gt 0 ]]; then
+  {
+    for note in "${NOTES[@]}"; do echo "- $note"; done
+  } > "$NOTES_FILE"
+else
+  echo "error: provide at least one --notes value or --notes-file" >&2
+  exit 1
+fi
+
+if [[ "$DRY_RUN" == true ]]; then
+  echo "Dry run passed: $CURRENT_VERSION ($CURRENT_BUILD) -> $VERSION ($BUILD)"
+  echo "GitHub release: $REPO tag $TAG"
+  echo "Landing page: $LANDING_PAGE"
+  echo "Appcast: $APPCAST_PATH"
+  if [[ -n "${OPENAI_API_KEY:-}" ]]; then
+    echo "Release notes will be translated to Japanese with $OPENAI_MODEL (Anthropic $ANTHROPIC_MODEL fallback if configured)."
+  elif [[ -n "${ANTHROPIC_API_KEY:-}" ]]; then
+    echo "Release notes will be translated to Japanese with Anthropic $ANTHROPIC_MODEL."
+  else
+    echo "Release notes translation requires OPENAI_API_KEY and/or ANTHROPIC_API_KEY in .env.release."
+  fi
+  exit 0
+fi
+
+if [[ -z "${OPENAI_API_KEY:-}" && -z "${ANTHROPIC_API_KEY:-}" ]]; then
+  echo "error: set OPENAI_API_KEY and/or ANTHROPIC_API_KEY in .env.release to translate release notes" >&2
+  exit 1
+fi
+
+translate_release_notes() {
+  local provider="$1"
+  local response_file="$2"
+  local request_file="$RELEASE_DIR/release-notes-$VERSION-$provider-request.json"
+
+  python3 - "$provider" "$OPENAI_MODEL" "$OPENAI_REASONING_EFFORT" "$ANTHROPIC_MODEL" "$VERSION" "$NOTES_FILE" "$request_file" <<'PY'
+import json, sys
+from pathlib import Path
+
+provider, openai_model, effort, anthropic_model, version, notes_path, request_path = sys.argv[1:8]
+notes = []
+for line in open(notes_path):
+    line = line.strip()
+    if line.startswith("- "):
+        notes.append(line[2:].strip())
+    elif line:
+        notes.append(line)
+if not notes:
+    raise SystemExit("error: release notes contain no items")
+prompt = f"""
+Translate these English release notes for Karui for Mac (Mac版Karui) {version} into natural Japanese.
+Return JSON only with this exact shape:
+{{"en":["same English items, unchanged"],"ja":["Japanese translations"]}}
+Keep the same number and order of items. Copy every English item exactly into en.
+Write complete, concise Japanese sentences without Markdown bullet markers.
+English release notes:
+{json.dumps(notes, ensure_ascii=False)}
+""".strip()
+
+if provider == "openai":
+    body = {
+        "model": openai_model,
+        "input": [{"role": "user", "content": [{"type": "input_text", "text": prompt}]}],
+        "reasoning": {"effort": effort},
+    }
+elif provider == "anthropic":
+    schema = {
+        "type": "object",
+        "properties": {
+            "en": {"type": "array", "items": {"type": "string"}},
+            "ja": {"type": "array", "items": {"type": "string"}},
+        },
+        "required": ["en", "ja"],
+        "additionalProperties": False,
+    }
+    body = {
+        "model": anthropic_model,
+        "max_tokens": 4096,
+        "messages": [{"role": "user", "content": prompt}],
+        "output_config": {"format": {"type": "json_schema", "schema": schema}},
+    }
+else:
+    raise SystemExit(f"error: unknown translation provider: {provider}")
+
+Path(request_path).write_text(json.dumps(body))
+print(provider)
+PY
+
+  case "$provider" in
+    openai)
+      echo "Translating release notes to Japanese with $OPENAI_MODEL ($OPENAI_REASONING_EFFORT reasoning)..."
+      if ! curl -fsS https://api.openai.com/v1/responses \
+          -H "Authorization: Bearer ${OPENAI_API_KEY}" \
+          -H "Content-Type: application/json" \
+          -d @"$request_file" > "$response_file"; then
+        echo "warning: OpenAI translation request failed" >&2
+        rm -f "$request_file" "$response_file"
+        return 1
+      fi
+      ;;
+    anthropic)
+      echo "Translating release notes to Japanese with Anthropic $ANTHROPIC_MODEL..."
+      if ! curl -fsS https://api.anthropic.com/v1/messages \
+          -H "x-api-key: ${ANTHROPIC_API_KEY}" \
+          -H "anthropic-version: 2023-06-01" \
+          -H "Content-Type: application/json" \
+          -d @"$request_file" > "$response_file"; then
+        echo "warning: Anthropic translation request failed" >&2
+        rm -f "$request_file" "$response_file"
+        return 1
+      fi
+      ;;
+    *)
+      echo "error: unknown translation provider: $provider" >&2
+      return 1
+      ;;
+  esac
+  rm -f "$request_file"
+
+  if ! python3 - "$provider" "$response_file" "$NOTES_TRANSLATIONS_FILE" <<'PY'
+import json, sys
+
+provider, response_path, output_path = sys.argv[1:4]
+data = json.load(open(response_path))
+
+def strip_fences(text: str) -> str:
+    text = text.strip()
+    if text.startswith("```"):
+        lines = text.splitlines()
+        text = "\n".join(lines[1:-1] if lines[-1].startswith("```") else lines[1:])
+    return text.strip()
+
+if provider == "openai":
+    text = (data.get("output_text") or "").strip()
+    if not text:
+        text = "\n".join(
+            part.get("text", "")
+            for item in data.get("output", [])
+            for part in item.get("content", [])
+            if part.get("text")
+        ).strip()
+elif provider == "anthropic":
+    text = "\n".join(
+        part.get("text", "")
+        for part in data.get("content", [])
+        if part.get("type") == "text" and part.get("text")
+    ).strip()
+else:
+    raise SystemExit(f"error: unknown translation provider: {provider}")
+
+text = strip_fences(text)
+if not text:
+    raise SystemExit(f"error: {provider} returned an empty translation response")
+
+notes = json.loads(text)
+en, ja = notes.get("en") or [], notes.get("ja") or []
+if not en or len(en) != len(ja):
+    raise SystemExit(f"error: {provider} returned {len(ja)} Japanese notes for {len(en)} English notes")
+json.dump({"en": en, "ja": ja}, open(output_path, "w"), ensure_ascii=False)
+print(f"Translated {len(en)} release-note item(s) with {provider}.")
+PY
+  then
+    rm -f "$response_file"
+    return 1
+  fi
+  rm -f "$response_file"
+  return 0
+}
+
+TRANSLATED=false
+if [[ -n "${OPENAI_API_KEY:-}" ]]; then
+  if translate_release_notes openai "$TRANSLATION_RESPONSE_FILE"; then
+    TRANSLATED=true
+  elif [[ -n "${ANTHROPIC_API_KEY:-}" ]]; then
+    echo "Falling back to Anthropic $ANTHROPIC_MODEL..."
+  else
+    echo "error: OpenAI translation failed and ANTHROPIC_API_KEY is not set" >&2
+    exit 1
+  fi
+fi
+
+if [[ "$TRANSLATED" != true ]]; then
+  if [[ -n "${ANTHROPIC_API_KEY:-}" ]]; then
+    if ! translate_release_notes anthropic "$TRANSLATION_RESPONSE_FILE"; then
+      echo "error: Anthropic translation failed" >&2
+      exit 1
+    fi
+  else
+    echo "error: no translation provider succeeded" >&2
+    exit 1
+  fi
+fi
+
+"$ROOT_DIR/Scripts/bump-version.sh" "$VERSION" "$BUILD"
+
+python3 - "$ROOT_DIR/README.md" "$VERSION" "$DOWNLOAD_URL" <<'PY'
+from pathlib import Path
+import re, sys
+readme_path = Path(sys.argv[1])
+version = sys.argv[2]
+download_url = sys.argv[3]
+readme = readme_path.read_text()
+pattern = re.compile(r'\[Download Karui for Mac [^]]+ for Apple Silicon\]\(https://github\.com/[^)]+/releases/download/[^/]+/Karui-[^)]+-mac\.zip\)')
+replacement = f'[Download Karui for Mac {version} for Apple Silicon]({download_url})'
+readme, count = pattern.subn(replacement, readme, count=1)
+if count == 0:
+    # The first release adds the section; later ones replace the link.
+    marker = "## Build and run"
+    if marker not in readme:
+        raise SystemExit("error: README has neither a download line nor the Build and run section")
+    readme = readme.replace(marker, f"## Download\n\n{replacement}\n\n{marker}", 1)
+elif count != 1:
+    raise SystemExit("error: README download marker was found more than once")
+readme_path.write_text(readme)
+PY
+
+python3 - "$LANDING_PAGE" "$VERSION" "$DOWNLOAD_URL" "$NOTES_TRANSLATIONS_FILE" <<'PY'
+from pathlib import Path
+import datetime, html, json, re, sys
+page_path = Path(sys.argv[1])
+version = sys.argv[2]
+download_url = sys.argv[3]
+translations = json.loads(Path(sys.argv[4]).read_text())
+en_notes, ja_notes = translations["en"], translations["ja"]
+if not en_notes or len(en_notes) != len(ja_notes):
+    raise SystemExit("error: bilingual release-note counts do not match")
+page = page_path.read_text()
+page, download_count = re.subn(r'href="https://github\.com/littlebobert/karui-mac/releases/[^"]+"', f'href="{download_url}"', page, count=1)
+version_pattern = re.compile(r'<span class="download-version" data-label-en="\([^"]+\)" data-label-ja="（[^"]+）">\([^<]+\)</span>')
+page, version_count = version_pattern.subn(lambda match: f'<span class="download-version" data-label-en="(version {version})" data-label-ja="（バージョン {version}）">(version {version})</span>', page, count=1)
+if download_count != 1 or version_count != 1:
+    raise SystemExit("error: landing-page download/version markers were not found exactly once")
+items = "\n".join(
+    f'          <li data-label-en="{html.escape(en, quote=True)}" data-label-ja="{html.escape(ja, quote=True)}">{html.escape(en)}</li>'
+    for en, ja in zip(en_notes, ja_notes)
+)
+english_months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"]
+today = datetime.date.today()
+date_en = f"{english_months[today.month - 1]} {today.day}, {today.year}"
+date_ja = f"{today.year}年{today.month}月{today.day}日"
+date_line = f'        <span class="release-date" data-label-en="{date_en}" data-label-ja="{date_ja}">{date_en}</span>'
+entry = f'''        <h2>{html.escape(version)}</h2>\n{date_line}\n        <ul>\n{items}\n        </ul>\n'''
+marker = '        <summary data-label-en="Changelog" data-label-ja="変更履歴">Changelog</summary>\n'
+if marker not in page:
+    raise SystemExit("error: changelog marker not found")
+page = page.replace(marker, marker + entry, 1)
+page_path.write_text(page)
+PY
+
+xcodebuild -project "$ROOT_DIR/KaruiMac.xcodeproj" -scheme KaruiMac -configuration Debug \
+  -derivedDataPath "$ROOT_DIR/.build/DeployTests" -destination 'platform=macOS,arch=arm64' build-for-testing
+if [[ "${RUN_HOSTED_TESTS:-0}" == "1" ]]; then
+  python3 - "$ROOT_DIR" <<'PY'
+import os, signal, subprocess, sys
+root = sys.argv[1]
+command = [
+    "xcodebuild", "-project", f"{root}/KaruiMac.xcodeproj", "-scheme", "KaruiMac",
+    "-configuration", "Debug", "-derivedDataPath", f"{root}/.build/DeployTests",
+    "-destination", "platform=macOS,arch=arm64", "test-without-building",
+]
+process = subprocess.Popen(command, start_new_session=True)
+try:
+    result = process.wait(timeout=120)
+except subprocess.TimeoutExpired:
+    os.killpg(process.pid, signal.SIGTERM)
+    try:
+        process.wait(timeout=5)
+    except subprocess.TimeoutExpired:
+        os.killpg(process.pid, signal.SIGKILL)
+    raise SystemExit("error: hosted tests exceeded the two-minute safety timeout")
+if result != 0:
+    raise SystemExit(result)
+PY
+fi
+"$ROOT_DIR/Scripts/build-release.sh"
+"$ROOT_DIR/Scripts/notarize-release.sh"
+
+APP="$ROOT_DIR/.build/ReleaseDerivedData/Build/Products/Release/Karui.app"
+[[ "$(/usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' "$APP/Contents/Info.plist")" == "$VERSION" ]] || { echo "error: built version mismatch" >&2; exit 1; }
+[[ "$(/usr/libexec/PlistBuddy -c 'Print :CFBundleVersion' "$APP/Contents/Info.plist")" == "$BUILD" ]] || { echo "error: built build-number mismatch" >&2; exit 1; }
+[[ -f "$RELEASE_ZIP" && -f "$RELEASE_ZIP.sha256" ]] || { echo "error: release artifact missing" >&2; exit 1; }
+
+SPARKLE_GENERATE_APPCAST="${SPARKLE_GENERATE_APPCAST:-$ROOT_DIR/.build/ReleaseDerivedData/SourcePackages/artifacts/sparkle/Sparkle/bin/generate_appcast}"
+APPCAST_WORK="$ROOT_DIR/.build/appcast"
+rm -rf "$APPCAST_WORK"
+mkdir -p "$APPCAST_WORK"
+cp "$RELEASE_ZIP" "$APPCAST_WORK/"
+cp "$NOTES_FILE" "$APPCAST_WORK/Karui-$VERSION-mac.md"
+[[ -f "$APPCAST_PATH" ]] && cp "$APPCAST_PATH" "$APPCAST_WORK/appcast.xml"
+"$SPARKLE_GENERATE_APPCAST" \
+  --account "$SPARKLE_ACCOUNT" \
+  --download-url-prefix "https://github.com/$REPO/releases/download/$TAG/" \
+  --embed-release-notes \
+  --link "$APPCAST_PRODUCT_LINK" \
+  --maximum-deltas 0 \
+  --versions "$BUILD" \
+  -o "$APPCAST_WORK/appcast.xml" \
+  "$APPCAST_WORK"
+cp "$APPCAST_WORK/appcast.xml" "$APPCAST_PATH"
+
+rm -f "$NOTES_FILE" "$NOTES_TRANSLATIONS_FILE" "$TRANSLATION_RESPONSE_FILE"
+git -C "$ROOT_DIR" add -A
+git -C "$ROOT_DIR" commit -m "Release Karui for Mac $VERSION"
+git -C "$ROOT_DIR" push origin "$KARUI_MAC_BRANCH"
+gh release create "$TAG" "$RELEASE_ZIP" "$RELEASE_ZIP.sha256" \
+  --repo "$REPO" --target "$KARUI_MAC_BRANCH" --title "Karui for Mac $VERSION" --notes-file "$APPCAST_WORK/Karui-$VERSION-mac.md"
+
+LANDING_RELATIVE="${LANDING_PAGE#"$WEBSITE_DIR"/}"
+APPCAST_RELATIVE="${APPCAST_PATH#"$WEBSITE_DIR"/}"
+git -C "$WEBSITE_DIR" add "$LANDING_RELATIVE" "$APPCAST_RELATIVE"
+git -C "$WEBSITE_DIR" commit -m "Publish Karui for Mac $VERSION"
+git -C "$WEBSITE_DIR" push origin "$WEBSITE_BRANCH"
+
+VERIFY_DIR="$(mktemp -d /tmp/karui-mac-release.XXXXXX)"
+trap 'rm -rf "$VERIFY_DIR"' EXIT
+curl -fL "$DOWNLOAD_URL" -o "$VERIFY_DIR/Karui-$VERSION-mac.zip"
+EXPECTED="$(cut -d' ' -f1 "$RELEASE_ZIP.sha256")"
+ACTUAL="$(shasum -a 256 "$VERIFY_DIR/Karui-$VERSION-mac.zip" | cut -d' ' -f1)"
+[[ "$EXPECTED" == "$ACTUAL" ]] || { echo "error: public checksum mismatch" >&2; exit 1; }
+/usr/bin/unzip -q "$VERIFY_DIR/Karui-$VERSION-mac.zip" -d "$VERIFY_DIR/extracted"
+codesign --verify --deep --strict --verbose=2 "$VERIFY_DIR/extracted/Karui.app"
+xcrun stapler validate "$VERIFY_DIR/extracted/Karui.app"
+spctl --assess --type execute --verbose=4 "$VERIFY_DIR/extracted/Karui.app"
+
+for attempt in {1..24}; do
+  if curl -fL "$PUBLIC_APPCAST_URL" -o "$VERIFY_DIR/appcast.xml" 2>/dev/null && \
+     curl -fL "$PUBLIC_LANDING_URL" -o "$VERIFY_DIR/landing.html" 2>/dev/null && \
+     xmllint --noout "$VERIFY_DIR/appcast.xml" && \
+     grep -Fq "<sparkle:version>$BUILD</sparkle:version>" "$VERIFY_DIR/appcast.xml" && \
+     grep -Fq "$DOWNLOAD_URL" "$VERIFY_DIR/landing.html"; then
+    echo "Published and verified Karui for Mac $VERSION ($BUILD)"
+    echo "https://github.com/$REPO/releases/tag/$TAG"
+    exit 0
+  fi
+  sleep 10
+done
+
+echo "error: release is published, but the public website/feed did not verify within four minutes" >&2
+exit 1
