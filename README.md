@@ -4,6 +4,10 @@ The Mac companion to [Karui](https://karui.jp), the notification filter for iPho
 
 Early days: it finds links and shows them in its window. Sending them to the iPhone, and showing the iPhone's sorted notifications here, come next.
 
+## Download
+
+[Download Karui for Mac 0.2.0 for Apple Silicon](https://github.com/littlebobert/karui-mac/releases/download/0.2.0/Karui-0.2.0-mac.zip)
+
 ## Build and run
 
 Requires Xcode 27 and [XcodeGen](https://github.com/yonaskolb/XcodeGen).
