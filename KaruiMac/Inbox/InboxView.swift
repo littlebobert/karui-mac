@@ -31,6 +31,13 @@ struct InboxView: View {
         .onChange(of: windowTitle, initial: true) { _, title in
             coordinator.setInboxWindowTitle(title)
         }
+        // Selecting one notification reads it, as in Mail. A multiple selection
+        // doesn't, so Select All stays a way to act on many without reading them.
+        .onChange(of: coordinator.inbox.selection) { _, selection in
+            if selection.count == 1, let id = selection.first {
+                coordinator.markRead([id])
+            }
+        }
         .overlay(alignment: .bottom) {
             if let toast = coordinator.inbox.toast {
                 HStack(spacing: 12) {
@@ -579,7 +586,7 @@ private struct ItemsList: View {
                         Text(item.deliveredAt, format: Calendar.current.isDateInToday(item.deliveredAt) ? .dateTime.hour().minute() : .dateTime.month(.abbreviated).day().hour().minute())
                             .foregroundStyle(.secondary)
                     }
-                    .width(min: 56, ideal: 72, max: 76)
+                    .width(min: 56, ideal: 76, max: 170)
                     .customizationID("time")
                 }
                 .modifier(ItemActions(coordinator: coordinator))
