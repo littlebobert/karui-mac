@@ -135,6 +135,30 @@ WEBSITE_BRANCH="$(git -C "$WEBSITE_DIR" branch --show-current)"
 gh auth status >/dev/null
 gh release view "$TAG" --repo "$REPO" >/dev/null 2>&1 && { echo "error: GitHub release $TAG already exists" >&2; exit 1; }
 
+# The iPhone app pins KaruiLinkKit to a release tag. What the two sides must agree
+# on lives in the package and the CloudKit schema; when a release changes either,
+# the iPhone app has to be re-pinned and shipped too. Everything else is Mac-only.
+git -C "$ROOT_DIR" fetch --tags --quiet origin
+PREVIOUS_TAG="$(git -C "$ROOT_DIR" describe --tags --abbrev=0 2>/dev/null || true)"
+KIT_CHANGES=""
+if [[ -n "$PREVIOUS_TAG" ]]; then
+  KIT_CHANGES="$(git -C "$ROOT_DIR" diff --stat "$PREVIOUS_TAG"..HEAD -- Sources/KaruiLinkKit Package.swift CloudKit/schema.ckdb)"
+fi
+kit_change_notice() {
+  if [[ -n "$KIT_CHANGES" ]]; then
+    echo
+    echo "NOTE: the shared package or CloudKit schema changed since $PREVIOUS_TAG:"
+    echo "$KIT_CHANGES"
+    echo "Re-pin KaruiLinkKit in the iPhone app's project.yml to $TAG and ship it; the"
+    echo "two sides must agree on the fingerprint and the records. If the schema changed,"
+    echo "deploy CloudKit/schema.ckdb to Production first."
+    echo
+  else
+    echo "KaruiLinkKit and the CloudKit schema are unchanged since ${PREVIOUS_TAG:-the start}; the iPhone app needs no release."
+  fi
+}
+kit_change_notice
+
 mkdir -p "$RELEASE_DIR"
 if [[ -n "$NOTES_FILE_ARG" ]]; then
   [[ -f "$NOTES_FILE_ARG" ]] || { echo "error: notes file not found: $NOTES_FILE_ARG" >&2; exit 1; }
@@ -470,6 +494,7 @@ for attempt in {1..24}; do
      grep -Fq "$DOWNLOAD_URL" "$VERIFY_DIR/landing.html"; then
     echo "Published and verified Karui for Mac $VERSION ($BUILD)"
     echo "https://github.com/$REPO/releases/tag/$TAG"
+    kit_change_notice
     exit 0
   fi
   sleep 10
