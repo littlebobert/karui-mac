@@ -553,9 +553,9 @@ private struct ItemsList: View {
                             .frame(width: 8, height: 8)
                     }
                     .width(12)
-                    // Part of the customization so it keeps its place; not movable itself.
+                    // Movable like the others; its width stays fixed.
                     .customizationID("unread")
-                    .disabledCustomizationBehavior(.all)
+                    .disabledCustomizationBehavior(.resize)
                     TableColumn(L10n.string("App"), value: \.app) { item in
                         Text(item.app).foregroundStyle(.secondary)
                     }
