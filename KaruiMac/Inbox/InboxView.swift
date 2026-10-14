@@ -77,7 +77,8 @@ struct InboxView: View {
         let shown = inbox.visibleItems
         let unread = shown.filter(\.isUnread).count
         let count = L10n.format("%d notifications", shown.count)
-        return unread == 0 ? count : count + " · " + L10n.format("%d unread", unread)
+        let line = unread == 0 ? count : count + " · " + L10n.format("%d unread", unread)
+        return inbox.syncNote.map { line + " · " + $0 } ?? line
     }
 }
 

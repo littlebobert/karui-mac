@@ -146,6 +146,8 @@ final class Inbox {
         let undo: @MainActor () -> Void
     }
     var toast: Toast?
+    /// What Sync Now is up to, for the status line; nil when nothing was asked.
+    var syncNote: String?
 
     init(defaults: UserDefaults = .standard, store: InboxStore? = nil) {
         self.defaults = defaults

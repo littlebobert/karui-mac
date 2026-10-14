@@ -25,9 +25,14 @@ final class AppCoordinator {
     private lazy var verdicts = VerdictStore(
         awaiting: { [weak self] in await MainActor.run { self?.inbox.fingerprintsAwaitingVerdict() ?? [] } },
         found: { [weak self] verdicts in
-            Task { @MainActor in self?.inbox.apply(verdicts) }
+            Task { @MainActor in
+                self?.inbox.apply(verdicts)
+                self?.noteVerdictsArrived()
+            }
         }
     )
+    /// When Sync Now last asked the iPhone, so verdicts arriving soon after count as its answer.
+    private var syncRequestedAt: Date?
     private var watcher: NotificationDatabaseWatcher?
     private var watchTask: Task<Void, Never>?
     private var readPollTask: Task<Void, Never>?
@@ -124,6 +129,45 @@ final class AppCoordinator {
         guard !settings.showsDockIcon else { return }
         NSApp.setActivationPolicy(.accessory)
     }
+
+    // MARK: Sync Now
+
+    /// Asks the iPhone to send its History and take the Mac's actions now, and
+    /// fetches the day's verdicts here right away. The ask is a silent push, which
+    /// iOS delivers when it sees fit, so the status line says what has happened.
+    func syncNow() {
+        guard !DemoMode.isActive else { return }
+        inbox.syncNote = L10n.string("Asking your iPhone…")
+        let presence = presence
+        let verdicts = verdicts
+        let sync = sync
+        Task {
+            let asked = await presence.requestSync()
+            await MainActor.run {
+                if asked {
+                    self.syncRequestedAt = Date()
+                    self.inbox.syncNote = L10n.format("Asked the iPhone at %@", Self.timeFormatter.string(from: Date()))
+                } else {
+                    self.inbox.syncNote = L10n.string("Could not reach iCloud")
+                }
+            }
+            await sync.deleteExpired()
+            await verdicts.fetch()
+        }
+    }
+
+    private func noteVerdictsArrived() {
+        guard let syncRequestedAt, Date().timeIntervalSince(syncRequestedAt) < 10 * 60 else { return }
+        self.syncRequestedAt = nil
+        inbox.syncNote = L10n.format("Synced at %@", Self.timeFormatter.string(from: Date()))
+    }
+
+    private static let timeFormatter: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.timeStyle = .short
+        formatter.dateStyle = .none
+        return formatter
+    }()
 
     // MARK: Actions on the inbox, applied here at once and sent to the iPhone.
 

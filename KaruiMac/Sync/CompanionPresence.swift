@@ -50,6 +50,25 @@ actor CompanionPresence {
         }
     }
 
+    /// Asks the iPhone to sync now: stamps the record, which the iPhone's
+    /// subscription turns into a silent push. Returns whether the stamp was saved.
+    func requestSync(at date: Date = Date()) async -> Bool {
+        guard let database else { return false }
+        let record = CKRecord(
+            recordType: CompanionRecordSchema.recordType,
+            recordID: CKRecord.ID(recordName: identifier)
+        )
+        record[CompanionRecordSchema.syncRequestedAt] = date
+        do {
+            _ = try await database.modifyRecords(saving: [record], deleting: [], savePolicy: .changedKeys)
+            SafeDiagnosticLog.shared.record("presence: sync requested")
+            return true
+        } catch {
+            SafeDiagnosticLog.shared.record("presence: sync request failed: \(error.localizedDescription)")
+            return false
+        }
+    }
+
     /// Stable across launches, so the iPhone sees one Mac, not one per launch.
     private var identifier: String { Self.identifier(defaults: defaults) }
 

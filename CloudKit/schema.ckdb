@@ -69,6 +69,7 @@ DEFINE SCHEMA
         apps              LIST<STRING>,
         lastSeenAt        TIMESTAMP,
         name              STRING,
+        syncRequestedAt   TIMESTAMP QUERYABLE,
         GRANT WRITE TO "_creator",
         GRANT CREATE TO "_icloud",
         GRANT READ TO "_icloud"

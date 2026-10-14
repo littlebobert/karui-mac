@@ -39,6 +39,9 @@ struct KaruiMacApp: App {
                         .keyboardShortcut(.delete, modifiers: .command)
                 }
                 .disabled(selection.isEmpty)
+                Divider()
+                Button(L10n.string("Sync Now")) { coordinator.syncNow() }
+                    .keyboardShortcut("r", modifiers: .command)
             }
             // No help book: the Help menu points at the site and the bug report.
             CommandGroup(replacing: .help) {

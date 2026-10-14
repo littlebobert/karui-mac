@@ -83,3 +83,8 @@
 "Mark as Spam" = "スパムにする";
 "Karui for Mac Help" = "Mac版Karuiヘルプ";
 "Report a Bug…" = "バグを報告…";
+"Sync Now" = "今すぐ同期";
+"Asking your iPhone…" = "iPhoneに依頼中…";
+"Asked the iPhone at %@" = "%@にiPhoneへ依頼";
+"Synced at %@" = "%@に同期";
+"Could not reach iCloud" = "iCloudに接続できません";
