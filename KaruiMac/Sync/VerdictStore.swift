@@ -103,6 +103,8 @@ actor VerdictStore {
         case read
         case category(String)
         case delete
+        /// A deletion taken back before the iPhone acted on it, or restored after.
+        case undelete
     }
 
     func apply(_ action: Action, to fingerprints: [String]) async {
@@ -117,6 +119,7 @@ actor VerdictStore {
                 case .read: record[VerdictRecordSchema.readAt] = now
                 case .category(let category): record[VerdictRecordSchema.requestedCategory] = category
                 case .delete: record[VerdictRecordSchema.deletedAt] = now
+                case .undelete: record[VerdictRecordSchema.deletedAt] = nil
                 }
                 record[VerdictRecordSchema.actionAt] = now
             }

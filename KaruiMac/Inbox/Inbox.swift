@@ -104,6 +104,17 @@ final class Inbox {
     var selection: Set<String> = []
     /// The app, sender, or thread opened from its list; nil at the list.
     var openGroupID: String?
+    /// A notification opened in full, when it has nowhere else to open.
+    var openItemID: String?
+
+    /// A banner at the bottom of the window with a way to take an action back,
+    /// for as long as taking it back is clean.
+    struct Toast: Identifiable {
+        let id = UUID()
+        let message: String
+        let undo: @MainActor () -> Void
+    }
+    var toast: Toast?
 
     init(defaults: UserDefaults = .standard, store: InboxStore? = nil) {
         self.defaults = defaults
@@ -165,6 +176,12 @@ final class Inbox {
 
     static func id(for record: NotificationRecord) -> String { "notification-\(record.id)" }
 
+    /// An app with no name is shown as Unknown rather than as nothing.
+    static func appName(_ name: String) -> String {
+        let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
+        return trimmed.isEmpty ? L10n.string("Unknown") : trimmed
+    }
+
     func item(id: String) -> Item? { items.first { $0.id == id } }
 
     /// A notification this Mac got, from Notification Center. Returns whether it was new.
@@ -174,7 +191,7 @@ final class Inbox {
         guard !items.contains(where: { $0.id == id }) else { return false }
         let item = Item(
             id: id,
-            app: app.rawValue,
+            app: Self.appName(app.rawValue),
             fingerprint: record.deepLink(as: app, url: URL(string: "about:blank")!, opensExactContent: false).fingerprint,
             title: record.title,
             subtitle: record.subtitle,
@@ -204,7 +221,7 @@ final class Inbox {
             } else if verdict.title != nil || verdict.body != nil {
                 var item = Item(
                     id: verdict.fingerprint,
-                    app: verdict.app,
+                    app: Self.appName(verdict.app),
                     fingerprint: verdict.fingerprint,
                     title: verdict.title,
                     subtitle: nil,
@@ -249,10 +266,19 @@ final class Inbox {
         persist(ids)
     }
 
-    func remove(ids: Set<String>) {
+    /// The items, removed; for putting back on undo.
+    @discardableResult
+    func remove(ids: Set<String>) -> [Item] {
+        let removed = items.filter { ids.contains($0.id) }
         items.removeAll { ids.contains($0.id) }
         selection.subtract(ids)
         store?.delete(ids: ids)
+        return removed
+    }
+
+    func restore(_ removed: [Item]) {
+        for item in removed { insert(item) }
+        store?.save(removed)
     }
 
     func setVerdict(_ verdict: VerdictRecord, for fingerprint: String, persisting: Bool = true) {

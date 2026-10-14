@@ -85,6 +85,19 @@ final class AppCoordinator {
         inboxWindow.present()
     }
 
+    /// "Karui", or the name of what the inbox has open after it.
+    func setInboxWindowTitle(_ title: String) {
+        inboxWindow.window?.title = title
+    }
+
+    /// Deletes the notification open in full and goes back to the list, which it
+    /// has left; Undo brings it back there.
+    func deleteOpenItem() {
+        guard let id = inbox.openItemID else { return }
+        inbox.openItemID = nil
+        delete([id])
+    }
+
     func inboxWindowAppeared() {
         NSApp.setActivationPolicy(.regular)
     }
@@ -120,12 +133,49 @@ final class AppCoordinator {
         Task { await verdicts.apply(.category(category), to: items.map(\.fingerprint)) }
     }
 
+    /// How long a deletion waits before the iPhone is told, so Undo can take it back whole.
+    private static let deleteGracePeriod: Duration = .seconds(5)
+    private var pendingDeletes: [UUID: Task<Void, Never>] = [:]
+
     func delete(_ ids: Set<String>) {
-        let items = inbox.items.filter { ids.contains($0.id) }
-        guard !items.isEmpty else { return }
-        inbox.remove(ids: ids)
+        let removed = inbox.remove(ids: ids)
+        guard !removed.isEmpty else { return }
+        let token = UUID()
         let verdicts = verdicts
-        Task { await verdicts.apply(.delete, to: items.map(\.fingerprint)) }
+        let fingerprints = removed.map(\.fingerprint)
+        pendingDeletes[token] = Task {
+            try? await Task.sleep(for: Self.deleteGracePeriod)
+            guard !Task.isCancelled else { return }
+            await verdicts.apply(.delete, to: fingerprints)
+            await MainActor.run { self.pendingDeletes.removeValue(forKey: token) }
+        }
+        inboxWindow.window?.undoManager?.registerUndo(withTarget: self) { coordinator in
+            coordinator.undoDelete(token: token, removed: removed)
+        }
+        inboxWindow.window?.undoManager?.setActionName(L10n.string("Delete"))
+        let toast = Inbox.Toast(message: L10n.format("%d deleted", removed.count)) { [weak self] in
+            self?.inboxWindow.window?.undoManager?.undo()
+        }
+        inbox.toast = toast
+        Task { [weak self] in
+            try? await Task.sleep(for: Self.deleteGracePeriod)
+            if self?.inbox.toast?.id == toast.id { self?.inbox.toast = nil }
+        }
+    }
+
+    private func undoDelete(token: UUID, removed: [Inbox.Item]) {
+        inbox.toast = nil
+        inbox.restore(removed)
+        if let pending = pendingDeletes.removeValue(forKey: token) {
+            // Not yet sent: nothing to take back on iCloud.
+            pending.cancel()
+        } else {
+            let verdicts = verdicts
+            Task { await verdicts.apply(.undelete, to: removed.map(\.fingerprint)) }
+        }
+        inboxWindow.window?.undoManager?.registerUndo(withTarget: self) { coordinator in
+            coordinator.delete(Set(removed.map(\.id)))
+        }
     }
 
     private func startWatchingIfPossible() {
