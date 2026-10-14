@@ -556,6 +556,11 @@ private struct GroupsList: View {
         .contextMenu(forSelectionType: String.self) { _ in } primaryAction: { ids in
             if let id = ids.first { openGroupID = id }
         }
+        .onKeyPress(.return) {
+            guard selection.count == 1, let id = selection.first else { return .ignored }
+            openGroupID = id
+            return .handled
+        }
     }
 }
 
@@ -657,6 +662,11 @@ private struct ItemActions: ViewModifier {
             }
             .onExitCommand {
                 inbox.selection = []
+            }
+            .onKeyPress(.return) {
+                guard inbox.selection.count == 1 else { return .ignored }
+                coordinator.openSelection()
+                return .handled
             }
     }
 }

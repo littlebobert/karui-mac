@@ -44,6 +44,10 @@ struct KaruiMacApp: App {
                 }
                 .disabled(selection.isEmpty)
                 Divider()
+                Button(L10n.string("Back")) { coordinator.goBack() }
+                    .keyboardShortcut("[", modifiers: .command)
+                    .disabled(!coordinator.canGoBack)
+                Divider()
                 Button(L10n.string("Sync Now")) { coordinator.syncNow() }
                     .keyboardShortcut("r", modifiers: .command)
             }

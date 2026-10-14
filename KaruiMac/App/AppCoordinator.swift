@@ -183,6 +183,23 @@ final class AppCoordinator {
 
     // MARK: Opening
 
+    /// One level up: the list from an open notification, the groups from an open group.
+    func goBack() {
+        if inbox.openItemID != nil {
+            inbox.openItemID = nil
+        } else if inbox.openGroupID != nil {
+            inbox.openGroupID = nil
+        }
+    }
+
+    var canGoBack: Bool { inbox.openItemID != nil || inbox.openGroupID != nil }
+
+    /// Return on a selection: one notification opens, one group opens.
+    func openSelection() {
+        let selected = inbox.selectedItems
+        if selected.count == 1, let item = selected.first { open(item) }
+    }
+
     /// Opens the item where it has somewhere to open, or shows it in full. A
     /// Messages notification without a link still tries its conversation, by the
     /// sender, the way the iPhone does.
