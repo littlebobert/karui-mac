@@ -1,0 +1,101 @@
+name: KaruiMac
+options:
+  bundleIdPrefix: com.justin.henry
+  developmentLanguage: en
+  deploymentTarget:
+    macOS: "15.0"
+packages:
+  Sparkle:
+    url: https://github.com/sparkle-project/Sparkle
+    exactVersion: 2.9.4
+  # KaruiLinkKit's Package.swift is at the repository root so the iPhone app can
+  # depend on it by this repository's URL.
+  KaruiLinkKit:
+    path: .
+settings:
+  base:
+    SWIFT_VERSION: "6.0"
+    MACOSX_DEPLOYMENT_TARGET: "15.0"
+    MARKETING_VERSION: "0.1.0"
+    CURRENT_PROJECT_VERSION: "1"
+    ARCHS: arm64
+    ONLY_ACTIVE_ARCH: NO
+    CODE_SIGN_STYLE: Manual
+    CODE_SIGN_IDENTITY: "Developer ID Application: Justin Henry Garcia (XDWKSAH7W3)"
+    DEVELOPMENT_TEAM: XDWKSAH7W3
+    ENABLE_HARDENED_RUNTIME: YES
+    CODE_SIGN_INJECT_BASE_ENTITLEMENTS: NO
+    ENABLE_USER_SCRIPT_SANDBOXING: NO
+targets:
+  KaruiMac:
+    type: application
+    platform: macOS
+    sources:
+      - path: KaruiMac
+        excludes:
+          - Resources/Info.plist
+          - Resources/KaruiMac.entitlements
+    info:
+      path: KaruiMac/Resources/Info.plist
+      properties:
+        CFBundleDisplayName: Karui
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
+        LSApplicationCategoryType: public.app-category.productivity
+        LSUIElement: false
+        NSHumanReadableCopyright: Copyright © 2026 Justin Garcia
+        SUFeedURL: https://littlebobert.github.io/karui-mac-appcast.xml
+        SUPublicEDKey: 4YVKyR8C7OOHnRaFwP5KGegGT87xMAA/MgmZjvlXVjI=
+        SUEnableAutomaticChecks: true
+        SUAllowsAutomaticUpdates: false
+        SUAutomaticallyUpdate: false
+        SUVerifyUpdateBeforeExtraction: true
+    entitlements:
+      path: KaruiMac/Resources/KaruiMac.entitlements
+      properties:
+        # Karui's container, shared with the iPhone app. A Developer ID app always
+        # uses the Production environment, so the iPhone app must too to meet it.
+        com.apple.developer.icloud-services: [CloudKit]
+        com.apple.developer.icloud-container-identifiers: [iCloud.com.justin.henry.karui]
+        com.apple.developer.icloud-container-environment: Production
+    dependencies:
+      - package: Sparkle
+        product: Sparkle
+      - package: KaruiLinkKit
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.justin.henry.karui.mac
+        PRODUCT_NAME: Karui
+        # The product is Karui.app; the module keeps the target's name for `@testable import KaruiMac`.
+        PRODUCT_MODULE_NAME: KaruiMac
+        GENERATE_INFOPLIST_FILE: NO
+        CODE_SIGN_ENTITLEMENTS: KaruiMac/Resources/KaruiMac.entitlements
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        # iCloud is a restricted entitlement, so unlike Kehai this app carries a
+        # Developer ID provisioning profile, named "Karui Mac" in the portal.
+        PROVISIONING_PROFILE_SPECIFIER: Karui Mac
+  KaruiMacTests:
+    type: bundle.unit-test
+    platform: macOS
+    sources:
+      - path: KaruiMacTests
+    dependencies:
+      - target: KaruiMac
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.justin.henry.karui.mac.tests
+        CODE_SIGN_STYLE: Automatic
+        CODE_SIGN_IDENTITY: Apple Development
+        GENERATE_INFOPLIST_FILE: YES
+        # The app's product is Karui.app, not KaruiMac.app, which the default host path assumes.
+        TEST_HOST: $(BUILT_PRODUCTS_DIR)/Karui.app/Contents/MacOS/Karui
+        BUNDLE_LOADER: $(TEST_HOST)
+schemes:
+  KaruiMac:
+    build:
+      targets:
+        KaruiMac: all
+        KaruiMacTests: [test]
+    test:
+      targets:
+        - KaruiMacTests

@@ -1,0 +1,9 @@
+.build/
+.swiftpm/
+.derivedData*/
+DerivedData/
+.env.release
+KaruiMac.xcodeproj/xcuserdata/
+*.xcuserstate
+.DS_Store
+__pycache__/

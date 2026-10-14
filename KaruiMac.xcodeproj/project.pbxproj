@@ -1,0 +1,645 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		03A9D4824CFC0492AF517084 /* Harvester.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8640EA18112E9AC366300AA /* Harvester.swift */; };
+		0E8ACEBE68E76745938B38FE /* AppSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 53FC48A0DD6C2ECF2AF9D224 /* AppSettings.swift */; };
+		12AE2ADF169EEC27C715B492 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = AFB92E764E41E683274F5389 /* AppDelegate.swift */; };
+		256F450297662965424AE8A3 /* CompanionPresence.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7CDCA27785FCD626FF554343 /* CompanionPresence.swift */; };
+		26445B3E9165FAB91EBDFDBB /* KaruiLinkKit in Frameworks */ = {isa = PBXBuildFile; productRef = 1EEF910B98DBB071B7129E5A /* KaruiLinkKit */; };
+		29D7C805F698B12B4188AB8B /* DeepLinkSync.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1A75765EC9DF2745AF8F9FD /* DeepLinkSync.swift */; };
+		351CCFEAAFC9F7E04A808ADE /* KaruiMacApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 61B11DFC924A31F1D18275E7 /* KaruiMacApp.swift */; };
+		41DDECE3C0F720A32A5B6505 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = C424AFD49EBE5C89997B8D7C /* Assets.xcassets */; };
+		450373E70A90D9E47C01B39A /* FullDiskAccess.swift in Sources */ = {isa = PBXBuildFile; fileRef = BAA22D646B0B0086568E6C34 /* FullDiskAccess.swift */; };
+		48BC8B8FE8B3454F291F732C /* InboxView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 59EF49CEA27DDE8349D1BB63 /* InboxView.swift */; };
+		506A24EE70DB7B87395F9679 /* SparkHarvester.swift in Sources */ = {isa = PBXBuildFile; fileRef = F9695E99FA85CB7DC2E8B73A /* SparkHarvester.swift */; };
+		54758AD1ACDF40494DD0EB17 /* AutoUpdateService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9FBC7F39D73658B323FE3E33 /* AutoUpdateService.swift */; };
+		5916F4769E5F40D48B463BFF /* Sparkle in Frameworks */ = {isa = PBXBuildFile; productRef = 782A9236982375E69B998D37 /* Sparkle */; };
+		6F1F477087C760E2E8B83643 /* SlackHarvester.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0368E20A347FBE53765A797B /* SlackHarvester.swift */; };
+		71FCA40B8355B8319BD331C2 /* MessagesLinkTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5986291BE197CA76F4D6CA8E /* MessagesLinkTests.swift */; };
+		820F35FC5B53F16C8C79C1D5 /* NotificationDatabase.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2EF2A3CF2E9957E0C0B42B3 /* NotificationDatabase.swift */; };
+		993CD23DDD32E5C0C303FEBC /* SparkLinkTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1234CDFEE07EA21BAA319888 /* SparkLinkTests.swift */; };
+		A665DA8B77CE7BEE0C570BE2 /* SQLiteDatabase.swift in Sources */ = {isa = PBXBuildFile; fileRef = 256E396E924DE9AB3935ABB5 /* SQLiteDatabase.swift */; };
+		B36C02CF03B1CE1739258C8D /* MessagesHarvester.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9789D39272AA5E1B1CC4C22B /* MessagesHarvester.swift */; };
+		B683E35184D1A6B6FAD22A3C /* MenuBarMenu.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1E81C403E1EA25EF28338C97 /* MenuBarMenu.swift */; };
+		BDE1F47D809D94B97D3ADDFC /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01B64433CF565459941ABCA4 /* SettingsView.swift */; };
+		C18F4894F38E02C8FB692626 /* SlackLinkTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C44EC3DE17DE1FCA7463F4E /* SlackLinkTests.swift */; };
+		C2E50012B0D354A658E91189 /* SyncStatus.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD78E6FA806C0CC6D07E2BEF /* SyncStatus.swift */; };
+		C347228A7259723AA47FB4B8 /* CloudKitEntitlement.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6E0F2603A038F4EABE382CD4 /* CloudKitEntitlement.swift */; };
+		C45B77EA4308A5C8BF071917 /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = F3632FBB53F7B8E38A5FFB1B /* Localizable.strings */; };
+		CE9B510965CA78D9CD0F8D89 /* LoginItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5223EA087C8D20E54B0D5DDF /* LoginItem.swift */; };
+		D1453266EDBE1F7502E7FA75 /* AppCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B466F1F135069DD48A1473B /* AppCoordinator.swift */; };
+		D5D5164D472F70C79643EE6A /* Localization.swift in Sources */ = {isa = PBXBuildFile; fileRef = 29A29143D3E9AA889152D714 /* Localization.swift */; };
+		D66550355B02294EBB91F582 /* NotificationPayloadTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57E3E9CF0788DE8E74AA72D0 /* NotificationPayloadTests.swift */; };
+		E00EE92CA4A237CC5AE01FB8 /* NotificationDatabaseWatcher.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B9727746C8262B05FCF0C07 /* NotificationDatabaseWatcher.swift */; };
+		E620E1F707D6E244E25C8E3E /* SafeDiagnosticLog.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01510FEECF5D3DCE0DED30E6 /* SafeDiagnosticLog.swift */; };
+		E9B5E387C6FF08932E58F756 /* HarvestLog.swift in Sources */ = {isa = PBXBuildFile; fileRef = 045F69213E6EF7BFBE2D4750 /* HarvestLog.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		7A3E98CD6DF95A6D84DC0528 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 24D73F57A921B20471E39A8A /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 781E1234160443AB96849EC6;
+			remoteInfo = KaruiMac;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXFileReference section */
+		01510FEECF5D3DCE0DED30E6 /* SafeDiagnosticLog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SafeDiagnosticLog.swift; sourceTree = "<group>"; };
+		01B64433CF565459941ABCA4 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
+		0368E20A347FBE53765A797B /* SlackHarvester.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SlackHarvester.swift; sourceTree = "<group>"; };
+		045F69213E6EF7BFBE2D4750 /* HarvestLog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HarvestLog.swift; sourceTree = "<group>"; };
+		1234CDFEE07EA21BAA319888 /* SparkLinkTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SparkLinkTests.swift; sourceTree = "<group>"; };
+		18C03C189FC251D0F185F180 /* KaruiMac.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = KaruiMac.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		1E81C403E1EA25EF28338C97 /* MenuBarMenu.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuBarMenu.swift; sourceTree = "<group>"; };
+		256E396E924DE9AB3935ABB5 /* SQLiteDatabase.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SQLiteDatabase.swift; sourceTree = "<group>"; };
+		29A29143D3E9AA889152D714 /* Localization.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Localization.swift; sourceTree = "<group>"; };
+		4B466F1F135069DD48A1473B /* AppCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppCoordinator.swift; sourceTree = "<group>"; };
+		4B9727746C8262B05FCF0C07 /* NotificationDatabaseWatcher.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationDatabaseWatcher.swift; sourceTree = "<group>"; };
+		4C44EC3DE17DE1FCA7463F4E /* SlackLinkTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SlackLinkTests.swift; sourceTree = "<group>"; };
+		5223EA087C8D20E54B0D5DDF /* LoginItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoginItem.swift; sourceTree = "<group>"; };
+		53FC48A0DD6C2ECF2AF9D224 /* AppSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppSettings.swift; sourceTree = "<group>"; };
+		57E3E9CF0788DE8E74AA72D0 /* NotificationPayloadTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationPayloadTests.swift; sourceTree = "<group>"; };
+		5986291BE197CA76F4D6CA8E /* MessagesLinkTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MessagesLinkTests.swift; sourceTree = "<group>"; };
+		59EF49CEA27DDE8349D1BB63 /* InboxView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InboxView.swift; sourceTree = "<group>"; };
+		61B11DFC924A31F1D18275E7 /* KaruiMacApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KaruiMacApp.swift; sourceTree = "<group>"; };
+		6E0F2603A038F4EABE382CD4 /* CloudKitEntitlement.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CloudKitEntitlement.swift; sourceTree = "<group>"; };
+		7C291DB86FBAE44252DBF29D /* karui-mac */ = {isa = PBXFileReference; lastKnownFileType = folder; name = "karui-mac"; path = .; sourceTree = SOURCE_ROOT; };
+		7CDCA27785FCD626FF554343 /* CompanionPresence.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CompanionPresence.swift; sourceTree = "<group>"; };
+		8971A5A194FC9644337F7A93 /* KaruiMacTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = KaruiMacTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		9789D39272AA5E1B1CC4C22B /* MessagesHarvester.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MessagesHarvester.swift; sourceTree = "<group>"; };
+		9FBC7F39D73658B323FE3E33 /* AutoUpdateService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AutoUpdateService.swift; sourceTree = "<group>"; };
+		A1A75765EC9DF2745AF8F9FD /* DeepLinkSync.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeepLinkSync.swift; sourceTree = "<group>"; };
+		A2EF2A3CF2E9957E0C0B42B3 /* NotificationDatabase.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationDatabase.swift; sourceTree = "<group>"; };
+		AFB92E764E41E683274F5389 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
+		B8640EA18112E9AC366300AA /* Harvester.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Harvester.swift; sourceTree = "<group>"; };
+		BAA22D646B0B0086568E6C34 /* FullDiskAccess.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FullDiskAccess.swift; sourceTree = "<group>"; };
+		C424AFD49EBE5C89997B8D7C /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		DD78E6FA806C0CC6D07E2BEF /* SyncStatus.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SyncStatus.swift; sourceTree = "<group>"; };
+		F3632FBB53F7B8E38A5FFB1B /* Localizable.strings */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = Localizable.strings; path = ja.lproj/Localizable.strings; sourceTree = "<group>"; };
+		F9695E99FA85CB7DC2E8B73A /* SparkHarvester.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SparkHarvester.swift; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		9E35A308F327A4DD3C082B1B /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				5916F4769E5F40D48B463BFF /* Sparkle in Frameworks */,
+				26445B3E9165FAB91EBDFDBB /* KaruiLinkKit in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		02C21CE0C51221B7CBBF9BF0 /* KaruiMacTests */ = {
+			isa = PBXGroup;
+			children = (
+				5986291BE197CA76F4D6CA8E /* MessagesLinkTests.swift */,
+				57E3E9CF0788DE8E74AA72D0 /* NotificationPayloadTests.swift */,
+				4C44EC3DE17DE1FCA7463F4E /* SlackLinkTests.swift */,
+				1234CDFEE07EA21BAA319888 /* SparkLinkTests.swift */,
+			);
+			path = KaruiMacTests;
+			sourceTree = "<group>";
+		};
+		277C14CCB635AAA2E2CB7D80 /* Packages */ = {
+			isa = PBXGroup;
+			children = (
+				7C291DB86FBAE44252DBF29D /* karui-mac */,
+			);
+			name = Packages;
+			sourceTree = "<group>";
+		};
+		575EFB0AE06CB7910CB9DF70 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				18C03C189FC251D0F185F180 /* KaruiMac.app */,
+				8971A5A194FC9644337F7A93 /* KaruiMacTests.xctest */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		69F5FD8E5F62FE9E958DDD80 /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				C424AFD49EBE5C89997B8D7C /* Assets.xcassets */,
+				F3632FBB53F7B8E38A5FFB1B /* Localizable.strings */,
+			);
+			path = Resources;
+			sourceTree = "<group>";
+		};
+		816B0FF06B203EE1220A5BE1 /* Harvesting */ = {
+			isa = PBXGroup;
+			children = (
+				B8640EA18112E9AC366300AA /* Harvester.swift */,
+				9789D39272AA5E1B1CC4C22B /* MessagesHarvester.swift */,
+				A2EF2A3CF2E9957E0C0B42B3 /* NotificationDatabase.swift */,
+				4B9727746C8262B05FCF0C07 /* NotificationDatabaseWatcher.swift */,
+				0368E20A347FBE53765A797B /* SlackHarvester.swift */,
+				F9695E99FA85CB7DC2E8B73A /* SparkHarvester.swift */,
+				256E396E924DE9AB3935ABB5 /* SQLiteDatabase.swift */,
+			);
+			path = Harvesting;
+			sourceTree = "<group>";
+		};
+		8841FD3FBFB3A4099D49DFBF /* KaruiMac */ = {
+			isa = PBXGroup;
+			children = (
+				FCB80132059B74A9F4483512 /* App */,
+				816B0FF06B203EE1220A5BE1 /* Harvesting */,
+				8A7DF89B2D17028784BFF4AC /* Inbox */,
+				69F5FD8E5F62FE9E958DDD80 /* Resources */,
+				CE95B3523B7979876B61ACBF /* Sync */,
+			);
+			path = KaruiMac;
+			sourceTree = "<group>";
+		};
+		8A7DF89B2D17028784BFF4AC /* Inbox */ = {
+			isa = PBXGroup;
+			children = (
+				045F69213E6EF7BFBE2D4750 /* HarvestLog.swift */,
+				59EF49CEA27DDE8349D1BB63 /* InboxView.swift */,
+			);
+			path = Inbox;
+			sourceTree = "<group>";
+		};
+		A6BBC588D47826803BE9AB21 = {
+			isa = PBXGroup;
+			children = (
+				8841FD3FBFB3A4099D49DFBF /* KaruiMac */,
+				02C21CE0C51221B7CBBF9BF0 /* KaruiMacTests */,
+				277C14CCB635AAA2E2CB7D80 /* Packages */,
+				575EFB0AE06CB7910CB9DF70 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		CE95B3523B7979876B61ACBF /* Sync */ = {
+			isa = PBXGroup;
+			children = (
+				6E0F2603A038F4EABE382CD4 /* CloudKitEntitlement.swift */,
+				7CDCA27785FCD626FF554343 /* CompanionPresence.swift */,
+				A1A75765EC9DF2745AF8F9FD /* DeepLinkSync.swift */,
+				DD78E6FA806C0CC6D07E2BEF /* SyncStatus.swift */,
+			);
+			path = Sync;
+			sourceTree = "<group>";
+		};
+		FCB80132059B74A9F4483512 /* App */ = {
+			isa = PBXGroup;
+			children = (
+				4B466F1F135069DD48A1473B /* AppCoordinator.swift */,
+				AFB92E764E41E683274F5389 /* AppDelegate.swift */,
+				53FC48A0DD6C2ECF2AF9D224 /* AppSettings.swift */,
+				9FBC7F39D73658B323FE3E33 /* AutoUpdateService.swift */,
+				BAA22D646B0B0086568E6C34 /* FullDiskAccess.swift */,
+				61B11DFC924A31F1D18275E7 /* KaruiMacApp.swift */,
+				29A29143D3E9AA889152D714 /* Localization.swift */,
+				5223EA087C8D20E54B0D5DDF /* LoginItem.swift */,
+				1E81C403E1EA25EF28338C97 /* MenuBarMenu.swift */,
+				01510FEECF5D3DCE0DED30E6 /* SafeDiagnosticLog.swift */,
+				01B64433CF565459941ABCA4 /* SettingsView.swift */,
+			);
+			path = App;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		781E1234160443AB96849EC6 /* KaruiMac */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 2FDD7AC66A492DACE3159505 /* Build configuration list for PBXNativeTarget "KaruiMac" */;
+			buildPhases = (
+				0D5C8345D428A85D05E7E3B0 /* Sources */,
+				4F669BF4E607930B0D35D923 /* Resources */,
+				9E35A308F327A4DD3C082B1B /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = KaruiMac;
+			packageProductDependencies = (
+				782A9236982375E69B998D37 /* Sparkle */,
+				1EEF910B98DBB071B7129E5A /* KaruiLinkKit */,
+			);
+			productName = KaruiMac;
+			productReference = 18C03C189FC251D0F185F180 /* KaruiMac.app */;
+			productType = "com.apple.product-type.application";
+		};
+		DC4CA46DF1B5A43FE5081B9D /* KaruiMacTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 7F8081DAFF6D8674396800CE /* Build configuration list for PBXNativeTarget "KaruiMacTests" */;
+			buildPhases = (
+				A71BDC68DF3B2D2BC3B651B8 /* Sources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				ABDD10DA75DD2A6DBE156A24 /* PBXTargetDependency */,
+			);
+			name = KaruiMacTests;
+			packageProductDependencies = (
+			);
+			productName = KaruiMacTests;
+			productReference = 8971A5A194FC9644337F7A93 /* KaruiMacTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		24D73F57A921B20471E39A8A /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = YES;
+				LastUpgradeCheck = 1430;
+				TargetAttributes = {
+					781E1234160443AB96849EC6 = {
+						DevelopmentTeam = XDWKSAH7W3;
+						ProvisioningStyle = Manual;
+					};
+					DC4CA46DF1B5A43FE5081B9D = {
+						DevelopmentTeam = XDWKSAH7W3;
+						ProvisioningStyle = Automatic;
+					};
+				};
+			};
+			buildConfigurationList = 05BBFD8F4A078989FB77F29A /* Build configuration list for PBXProject "KaruiMac" */;
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				Base,
+				en,
+				ja,
+			);
+			mainGroup = A6BBC588D47826803BE9AB21;
+			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				B6E31A8F769FF43048C33933 /* XCRemoteSwiftPackageReference "Sparkle" */,
+				AD19EA179538A5D8A2C81B05 /* XCLocalSwiftPackageReference "." */,
+			);
+			preferredProjectObjectVersion = 77;
+			productRefGroup = 575EFB0AE06CB7910CB9DF70 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				781E1234160443AB96849EC6 /* KaruiMac */,
+				DC4CA46DF1B5A43FE5081B9D /* KaruiMacTests */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		4F669BF4E607930B0D35D923 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				41DDECE3C0F720A32A5B6505 /* Assets.xcassets in Resources */,
+				C45B77EA4308A5C8BF071917 /* Localizable.strings in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		0D5C8345D428A85D05E7E3B0 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				D1453266EDBE1F7502E7FA75 /* AppCoordinator.swift in Sources */,
+				12AE2ADF169EEC27C715B492 /* AppDelegate.swift in Sources */,
+				0E8ACEBE68E76745938B38FE /* AppSettings.swift in Sources */,
+				54758AD1ACDF40494DD0EB17 /* AutoUpdateService.swift in Sources */,
+				C347228A7259723AA47FB4B8 /* CloudKitEntitlement.swift in Sources */,
+				256F450297662965424AE8A3 /* CompanionPresence.swift in Sources */,
+				29D7C805F698B12B4188AB8B /* DeepLinkSync.swift in Sources */,
+				450373E70A90D9E47C01B39A /* FullDiskAccess.swift in Sources */,
+				E9B5E387C6FF08932E58F756 /* HarvestLog.swift in Sources */,
+				03A9D4824CFC0492AF517084 /* Harvester.swift in Sources */,
+				48BC8B8FE8B3454F291F732C /* InboxView.swift in Sources */,
+				351CCFEAAFC9F7E04A808ADE /* KaruiMacApp.swift in Sources */,
+				D5D5164D472F70C79643EE6A /* Localization.swift in Sources */,
+				CE9B510965CA78D9CD0F8D89 /* LoginItem.swift in Sources */,
+				B683E35184D1A6B6FAD22A3C /* MenuBarMenu.swift in Sources */,
+				B36C02CF03B1CE1739258C8D /* MessagesHarvester.swift in Sources */,
+				820F35FC5B53F16C8C79C1D5 /* NotificationDatabase.swift in Sources */,
+				E00EE92CA4A237CC5AE01FB8 /* NotificationDatabaseWatcher.swift in Sources */,
+				A665DA8B77CE7BEE0C570BE2 /* SQLiteDatabase.swift in Sources */,
+				E620E1F707D6E244E25C8E3E /* SafeDiagnosticLog.swift in Sources */,
+				BDE1F47D809D94B97D3ADDFC /* SettingsView.swift in Sources */,
+				6F1F477087C760E2E8B83643 /* SlackHarvester.swift in Sources */,
+				506A24EE70DB7B87395F9679 /* SparkHarvester.swift in Sources */,
+				C2E50012B0D354A658E91189 /* SyncStatus.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		A71BDC68DF3B2D2BC3B651B8 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				71FCA40B8355B8319BD331C2 /* MessagesLinkTests.swift in Sources */,
+				D66550355B02294EBB91F582 /* NotificationPayloadTests.swift in Sources */,
+				C18F4894F38E02C8FB692626 /* SlackLinkTests.swift in Sources */,
+				993CD23DDD32E5C0C303FEBC /* SparkLinkTests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		ABDD10DA75DD2A6DBE156A24 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 781E1234160443AB96849EC6 /* KaruiMac */;
+			targetProxy = 7A3E98CD6DF95A6D84DC0528 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		64796C84B8F81F2F87E2E415 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@loader_path/../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.justin.henry.karui.mac.tests;
+				SDKROOT = macosx;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Karui.app/Contents/MacOS/Karui";
+			};
+			name = Release;
+		};
+		A64FF334A2F8A293CAE7ED1B /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@loader_path/../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.justin.henry.karui.mac.tests;
+				SDKROOT = macosx;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Karui.app/Contents/MacOS/Karui";
+			};
+			name = Debug;
+		};
+		B0502E3899C6467877D4C42C /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ARCHS = arm64;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_IDENTITY = "Developer ID Application: Justin Henry Garcia (XDWKSAH7W3)";
+				CODE_SIGN_INJECT_BASE_ENTITLEMENTS = NO;
+				CODE_SIGN_STYLE = Manual;
+				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 1;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				DEVELOPMENT_TEAM = XDWKSAH7W3;
+				ENABLE_HARDENED_RUNTIME = YES;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = NO;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"$(inherited)",
+					"DEBUG=1",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 15.0;
+				MARKETING_VERSION = 0.1.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = NO;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 6.0;
+			};
+			name = Debug;
+		};
+		D98F8E2944106955BCA17DA1 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ARCHS = arm64;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_IDENTITY = "Developer ID Application: Justin Henry Garcia (XDWKSAH7W3)";
+				CODE_SIGN_INJECT_BASE_ENTITLEMENTS = NO;
+				CODE_SIGN_STYLE = Manual;
+				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 1;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				DEVELOPMENT_TEAM = XDWKSAH7W3;
+				ENABLE_HARDENED_RUNTIME = YES;
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = NO;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 15.0;
+				MARKETING_VERSION = 0.1.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = NO;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_VERSION = 6.0;
+			};
+			name = Release;
+		};
+		ED6A3D53620424BCFCCF2636 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = KaruiMac/Resources/KaruiMac.entitlements;
+				COMBINE_HIDPI_IMAGES = YES;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = KaruiMac/Resources/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.justin.henry.karui.mac;
+				PRODUCT_MODULE_NAME = KaruiMac;
+				PRODUCT_NAME = Karui;
+				PROVISIONING_PROFILE_SPECIFIER = "Karui Mac";
+				SDKROOT = macosx;
+			};
+			name = Debug;
+		};
+		F38DE5D7B3D784C4D2242DF0 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = KaruiMac/Resources/KaruiMac.entitlements;
+				COMBINE_HIDPI_IMAGES = YES;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = KaruiMac/Resources/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.justin.henry.karui.mac;
+				PRODUCT_MODULE_NAME = KaruiMac;
+				PRODUCT_NAME = Karui;
+				PROVISIONING_PROFILE_SPECIFIER = "Karui Mac";
+				SDKROOT = macosx;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		05BBFD8F4A078989FB77F29A /* Build configuration list for PBXProject "KaruiMac" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				B0502E3899C6467877D4C42C /* Debug */,
+				D98F8E2944106955BCA17DA1 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		2FDD7AC66A492DACE3159505 /* Build configuration list for PBXNativeTarget "KaruiMac" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				ED6A3D53620424BCFCCF2636 /* Debug */,
+				F38DE5D7B3D784C4D2242DF0 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		7F8081DAFF6D8674396800CE /* Build configuration list for PBXNativeTarget "KaruiMacTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				A64FF334A2F8A293CAE7ED1B /* Debug */,
+				64796C84B8F81F2F87E2E415 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+/* End XCConfigurationList section */
+
+/* Begin XCLocalSwiftPackageReference section */
+		AD19EA179538A5D8A2C81B05 /* XCLocalSwiftPackageReference "." */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = .;
+		};
+/* End XCLocalSwiftPackageReference section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		B6E31A8F769FF43048C33933 /* XCRemoteSwiftPackageReference "Sparkle" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/sparkle-project/Sparkle";
+			requirement = {
+				kind = exactVersion;
+				version = 2.9.4;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		1EEF910B98DBB071B7129E5A /* KaruiLinkKit */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = KaruiLinkKit;
+		};
+		782A9236982375E69B998D37 /* Sparkle */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = B6E31A8F769FF43048C33933 /* XCRemoteSwiftPackageReference "Sparkle" */;
+			productName = Sparkle;
+		};
+/* End XCSwiftPackageProductDependency section */
+	};
+	rootObject = 24D73F57A921B20471E39A8A /* Project object */;
+}

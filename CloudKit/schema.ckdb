@@ -1,0 +1,35 @@
+DEFINE SCHEMA
+
+    RECORD TYPE DeepLink (
+        "___createTime"   TIMESTAMP,
+        "___createdBy"    REFERENCE,
+        "___etag"         STRING,
+        "___modTime"      TIMESTAMP,
+        "___modifiedBy"   REFERENCE,
+        "___recordID"     REFERENCE QUERYABLE,
+        app               STRING,
+        deliveredAt       TIMESTAMP,
+        expiresAt         TIMESTAMP,
+        fingerprint       STRING,
+        opensExactContent INT64,
+        url               ENCRYPTED STRING,
+        GRANT WRITE TO "_creator",
+        GRANT CREATE TO "_icloud",
+        GRANT READ TO "_icloud"
+    );
+
+    RECORD TYPE Companion (
+        "___createTime"   TIMESTAMP,
+        "___createdBy"    REFERENCE,
+        "___etag"         STRING,
+        "___modTime"      TIMESTAMP,
+        "___modifiedBy"   REFERENCE,
+        "___recordID"     REFERENCE QUERYABLE,
+        appVersion        STRING,
+        apps              LIST<STRING>,
+        lastSeenAt        TIMESTAMP,
+        name              STRING,
+        GRANT WRITE TO "_creator",
+        GRANT CREATE TO "_icloud",
+        GRANT READ TO "_icloud"
+    );
