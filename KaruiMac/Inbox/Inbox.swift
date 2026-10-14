@@ -57,10 +57,36 @@ final class Inbox {
 
         /// Who it's from, for grouping: the title in mail and messaging apps.
         var sender: String { title?.trimmingCharacters(in: .whitespacesAndNewlines) ?? "" }
-        /// The conversation: a subject, a channel, a group chat's name; the sender when there is none.
-        var thread: String {
-            let subtitle = subtitle?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
-            return subtitle.isEmpty ? sender : subtitle
+
+        /// The thread, the way Karui for iPhone's History groups it: an email thread
+        /// by its subject without the "Re:", a workplace channel by its title, a
+        /// social post by its text, a chat by the group's name in the subtitle or
+        /// else the person in the title. The key folds case and accents; the name
+        /// is what's shown.
+        var conversation: (key: String, name: String) {
+            let app = self.app
+            let title = sender
+            let subtitle = self.subtitle?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+            let body = self.body?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+            switch Conversation.kind(of: app) {
+            case .email:
+                // The iPhone sends subject and body as one text, subject first.
+                let subject = Conversation.threadSubject(subtitle.isEmpty ? String(body.prefix { $0 != "\n" }) : subtitle)
+                if !subject.isEmpty { return ("\(app)|thread|\(Conversation.normalized(subject))", subject) }
+            case .workplace:
+                if !title.isEmpty { return ("\(app)|chat|\(Conversation.normalized(title))", title) }
+            case .social:
+                let post = Conversation.postKey(body)
+                if !post.isEmpty {
+                    let shown = body.replacingOccurrences(of: "\n", with: " ")
+                    return ("\(app)|post|\(post)", shown.count > 60 ? String(shown.prefix(60)).trimmingCharacters(in: .whitespaces) + "…" : shown)
+                }
+                return ("\(app)|app", app)
+            case .messaging:
+                if !subtitle.isEmpty { return ("\(app)|chat|\(Conversation.normalized(subtitle))", subtitle) }
+            }
+            if !title.isEmpty { return ("\(app)|chat|\(Conversation.normalized(title))", title) }
+            return ("\(app)|app", app)
         }
 
         func matches(_ search: String) -> Bool {
@@ -85,8 +111,10 @@ final class Inbox {
     struct Group: Identifiable, Hashable {
         let id: String
         let title: String
+        let app: String
         let items: [Item]
 
+        var count: Int { items.count }
         var unreadCount: Int { items.filter(\.isUnread).count }
         var newestAt: Date { items.map(\.deliveredAt).max() ?? .distantPast }
 
@@ -121,6 +149,29 @@ final class Inbox {
             defaults.set(first.order == .forward, forKey: "inbox.sortAscending")
         }
     }
+    /// The group views' sort, newest first until a header is clicked; kept like the items'.
+    var groupSortOrder: [KeyPathComparator<Group>] {
+        didSet {
+            guard let first = groupSortOrder.first, let column = Self.groupSortColumns.first(where: { $0.keyPath == first.keyPath }) else { return }
+            defaults.set(column.name, forKey: "inbox.groupSortColumn")
+            defaults.set(first.order == .forward, forKey: "inbox.groupSortAscending")
+        }
+    }
+    private static let groupSortColumns: [(name: String, keyPath: PartialKeyPath<Group>)] = [
+        ("name", \.title), ("app", \.app), ("count", \.count), ("unread", \.unreadCount), ("newest", \.newestAt)
+    ]
+    private static func savedGroupSortOrder(_ defaults: UserDefaults) -> [KeyPathComparator<Group>] {
+        let order: SortOrder = defaults.object(forKey: "inbox.groupSortAscending") == nil || defaults.bool(forKey: "inbox.groupSortAscending") ? .forward : .reverse
+        switch defaults.string(forKey: "inbox.groupSortColumn") {
+        case "name": return [KeyPathComparator(\.title, order: order)]
+        case "app": return [KeyPathComparator(\.app, order: order)]
+        case "count": return [KeyPathComparator(\.count, order: order)]
+        case "unread": return [KeyPathComparator(\.unreadCount, order: order)]
+        case "newest": return [KeyPathComparator(\.newestAt, order: order)]
+        default: return [KeyPathComparator(\.newestAt, order: .reverse)]
+        }
+    }
+
     private static let sortColumns: [(name: String, keyPath: PartialKeyPath<Item>)] = [
         ("app", \.app), ("category", \.categoryRank), ("sender", \.sender), ("notification", \.compactLine), ("time", \.deliveredAt)
     ]
@@ -170,6 +221,7 @@ final class Inbox {
         barDisplayMode = defaults.string(forKey: "inbox.barDisplayMode").flatMap(BarDisplayMode.init(rawValue:)) ?? .iconAndText
         showsOnlyOpenable = defaults.bool(forKey: "inbox.showsOnlyOpenable")
         sortOrder = Self.savedSortOrder(defaults)
+        groupSortOrder = Self.savedGroupSortOrder(defaults)
     }
 
     /// The items the toolbar's bulk actions apply to: the open group's, or the filtered day.
@@ -195,13 +247,13 @@ final class Inbox {
         let items = filtered
         switch grouping {
         case .none:
-            return [Group(id: "all", title: "", items: items)]
+            return [Group(id: "all", title: "", app: "", items: items)]
         case .apps:
-            return grouped(items, by: \.app)
+            return grouped(items) { ($0.app, $0.app) }
         case .senders:
-            return grouped(items, by: \.sender)
+            return grouped(items) { ("\($0.app)|sender|\(Conversation.normalized($0.sender))", $0.sender) }
         case .threads:
-            return grouped(items) { "\($0.app) · \($0.thread)" }
+            return grouped(items) { let c = $0.conversation; return (c.key, c.name) }
         }
     }
 
@@ -213,15 +265,16 @@ final class Inbox {
         return !chosen.isEmpty && chosen.allSatisfy { $0.category == category }
     }
 
-    private func grouped(_ items: [Item], by key: (Item) -> String) -> [Group] {
+    private func grouped(_ items: [Item], by key: (Item) -> (key: String, name: String)) -> [Group] {
         var order: [String] = []
+        var names: [String: String] = [:]
         var buckets: [String: [Item]] = [:]
         for item in items {
-            let key = key(item)
-            if buckets[key] == nil { order.append(key) }
+            let (key, name) = key(item)
+            if buckets[key] == nil { order.append(key); names[key] = name }
             buckets[key, default: []].append(item)
         }
-        return order.map { Group(id: $0, title: $0, items: buckets[$0] ?? []) }
+        return order.map { Group(id: $0, title: names[$0] ?? $0, app: buckets[$0]?.first?.app ?? "", items: buckets[$0] ?? []) }
     }
 
     static func id(for record: NotificationRecord) -> String { "notification-\(record.id)" }
@@ -414,5 +467,44 @@ final class Inbox {
     private func update(_ id: String, _ change: (inout Item) -> Void) {
         guard let index = items.firstIndex(where: { $0.id == id }) else { return }
         change(&items[index])
+    }
+}
+
+/// How an app's notifications name a conversation; the same rules as Karui for
+/// iPhone's `ConversationCooldown`, by the app's display name.
+enum Conversation {
+    enum Kind { case messaging, email, workplace, social }
+
+    static func kind(of app: String) -> Kind {
+        let key = normalized(app)
+        if ["mail", "gmail", "outlook", "spark", "メール"].contains(key) { return .email }
+        if ["slack", "microsoft teams", "discord", "chatwork"].contains(key) { return .workplace }
+        if key == "x" { return .social }
+        return .messaging
+    }
+
+    /// A post's opening, enough to tell posts apart, folded for matching.
+    static func postKey(_ body: String) -> String {
+        String(normalized(body.replacingOccurrences(of: "\n", with: " ")).prefix(80)).trimmingCharacters(in: .whitespaces)
+    }
+
+    /// An email thread's subject without the reply and forward prefixes that vary
+    /// along it: "Re: Re: Q3 budget" and "Fwd: Q3 budget" are one thread.
+    static func threadSubject(_ subject: String) -> String {
+        var subject = subject.trimmingCharacters(in: .whitespacesAndNewlines)
+        let prefix = try! NSRegularExpression(
+            pattern: "^(re|fw|fwd|aw|sv|tr|wg|回复|答复|返信|転送|답장|전달)(\\s*\\[\\d+\\])?\\s*[:：]\\s*",
+            options: [.caseInsensitive]
+        )
+        while let match = prefix.firstMatch(in: subject, range: NSRange(subject.startIndex..., in: subject)),
+              let range = Range(match.range, in: subject) {
+            subject = String(subject[range.upperBound...]).trimmingCharacters(in: .whitespaces)
+        }
+        return subject
+    }
+
+    static func normalized(_ value: some StringProtocol) -> String {
+        value.trimmingCharacters(in: .whitespacesAndNewlines)
+            .folding(options: [.caseInsensitive, .diacriticInsensitive], locale: .current)
     }
 }

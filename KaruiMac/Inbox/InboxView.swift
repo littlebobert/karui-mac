@@ -505,44 +505,56 @@ private struct EmptyNote: View {
     }
 }
 
-/// Apps, senders, or threads: each with how many notifications, how many unread,
-/// and the newest's time. Clicking one opens it.
+/// Apps, senders, or threads as a table: the name, the app, how many, how many
+/// unread, and the newest's time. Columns sort and move like the notifications'.
+/// A double-click opens the group.
 private struct GroupsList: View {
     let inbox: Inbox
     @Binding var openGroupID: String?
+    @State private var selection: Set<String> = []
+    @AppStorage(DemoMode.isActive ? "inbox.groupColumns.demo" : "inbox.groupColumns") private var columns: TableColumnCustomization<Inbox.Group>
 
     var body: some View {
-        List(inbox.groups) { group in
-            Button {
-                openGroupID = group.id
-            } label: {
-                HStack(spacing: 10) {
-                    Circle()
-                        .fill(group.unreadCount > 0 ? Color.accentColor : Color.clear)
-                        .frame(width: 8, height: 8)
-                    Text(group.title)
-                        .fontWeight(group.unreadCount > 0 ? .semibold : .regular)
-                        .lineLimit(1)
-                    Spacer()
-                    if group.unreadCount > 0 {
-                        Text(L10n.format("%d unread", group.unreadCount))
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
-                    }
-                    Text("\(group.items.count)")
-                        .font(.caption.monospacedDigit())
-                        .foregroundStyle(.secondary)
-                    Text(group.newestAt, style: .time)
-                        .foregroundStyle(.secondary)
-                        .frame(width: 56, alignment: .trailing)
-                    Image(systemName: "chevron.right")
-                        .font(.caption)
-                        .foregroundStyle(.tertiary)
-                }
-                .padding(.vertical, 2)
-                .contentShape(Rectangle())
+        @Bindable var inbox = inbox
+        let groups = inbox.groups.sorted(using: inbox.groupSortOrder)
+        Table(groups, selection: $selection, sortOrder: $inbox.groupSortOrder, columnCustomization: $columns) {
+            TableColumn("") { group in
+                Circle()
+                    .fill(group.unreadCount > 0 ? Color.accentColor : Color.clear)
+                    .frame(width: 8, height: 8)
             }
-            .buttonStyle(.plain)
+            .width(12)
+            .customizationID("unread-dot")
+            .disabledCustomizationBehavior(.resize)
+            TableColumn(L10n.string("Name"), value: \.title) { group in
+                Text(group.title).fontWeight(group.unreadCount > 0 ? .semibold : .regular).lineLimit(1).truncationMode(.tail)
+            }
+            .width(min: 120, ideal: 240)
+            .customizationID("name")
+            TableColumn(L10n.string("App"), value: \.app) { group in
+                Text(group.app).foregroundStyle(.secondary)
+            }
+            .width(min: 70, ideal: 96, max: 140)
+            .customizationID("app")
+            TableColumn(L10n.string("Count"), value: \.count) { group in
+                Text("\(group.count)").font(.body.monospacedDigit()).foregroundStyle(.secondary)
+            }
+            .width(min: 50, ideal: 60, max: 80)
+            .customizationID("count")
+            TableColumn(L10n.string("Unread"), value: \.unreadCount) { group in
+                Text(group.unreadCount > 0 ? "\(group.unreadCount)" : "").font(.body.monospacedDigit()).foregroundStyle(.secondary)
+            }
+            .width(min: 50, ideal: 64, max: 80)
+            .customizationID("unreadCount")
+            TableColumn(L10n.string("Newest"), value: \.newestAt) { group in
+                Text(group.newestAt, format: Calendar.current.isDateInToday(group.newestAt) ? .dateTime.hour().minute() : .dateTime.month(.abbreviated).day().hour().minute())
+                    .foregroundStyle(.secondary)
+            }
+            .width(min: 56, ideal: 76, max: 170)
+            .customizationID("newest")
+        }
+        .contextMenu(forSelectionType: String.self) { _ in } primaryAction: { ids in
+            if let id = ids.first { openGroupID = id }
         }
     }
 }

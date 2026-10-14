@@ -90,3 +90,6 @@
 "Could not reach iCloud" = "iCloudに接続できません";
 "Badge with unread count" = "未読数をバッジで表示";
 "Sender" = "送信者";
+"Name" = "名前";
+"Count" = "件数";
+"Newest" = "最新";

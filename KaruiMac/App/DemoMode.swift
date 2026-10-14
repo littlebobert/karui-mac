@@ -84,6 +84,7 @@ enum DemoMode {
     static func configure(_ inbox: Inbox) {
         // The table's columns start from their default widths each time.
         UserDefaults.standard.removeObject(forKey: "inbox.columns.demo")
+        UserDefaults.standard.removeObject(forKey: "inbox.groupColumns.demo")
         inbox.replaceItems(items())
         inbox.grouping = .none
         inbox.search = ""
@@ -95,6 +96,9 @@ enum DemoMode {
         switch view {
         case "compact":
             inbox.isCompact = true
+        case "threads":
+            inbox.isCompact = true
+            inbox.grouping = .threads
         case "detail":
             inbox.isCompact = false
             // Yuki's LINE message, read here: the line about the iPhone's alert shows.
