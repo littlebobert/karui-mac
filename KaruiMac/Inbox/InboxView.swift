@@ -567,6 +567,11 @@ private struct ItemsList: View {
                     }
                     .width(min: 70, ideal: 100, max: 118)
                     .customizationID("category")
+                    TableColumn(L10n.string("Sender"), value: \.sender) { item in
+                        Text(item.sender).lineLimit(1).truncationMode(.tail)
+                    }
+                    .width(min: 70, ideal: 130, max: 220)
+                    .customizationID("sender")
                     TableColumn(L10n.string("Notification"), value: \.compactLine) { item in
                         Text(item.compactLine).lineLimit(1).truncationMode(.tail)
                     }

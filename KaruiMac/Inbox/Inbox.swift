@@ -38,9 +38,9 @@ final class Inbox {
         var category: String? { chosenCategory ?? verdict?.category }
         /// The category as a column sorts it: Important, Neutral, Spam, then none.
         var categoryRank: Int { Inbox.categories.firstIndex(of: category ?? "") ?? Inbox.categories.count }
-        /// The title, subtitle, and body on one line, for a compact row.
+        /// The subtitle and body on one line, for a compact row; the sender has its own column.
         var compactLine: String {
-            [title, subtitle, body]
+            [subtitle, body]
                 .compactMap { $0?.trimmingCharacters(in: .whitespacesAndNewlines) }
                 .filter { !$0.isEmpty }
                 .joined(separator: " · ")
@@ -121,13 +121,14 @@ final class Inbox {
         }
     }
     private static let sortColumns: [(name: String, keyPath: PartialKeyPath<Item>)] = [
-        ("app", \.app), ("category", \.categoryRank), ("notification", \.compactLine), ("time", \.deliveredAt)
+        ("app", \.app), ("category", \.categoryRank), ("sender", \.sender), ("notification", \.compactLine), ("time", \.deliveredAt)
     ]
     private static func savedSortOrder(_ defaults: UserDefaults) -> [KeyPathComparator<Item>] {
         let order: SortOrder = defaults.object(forKey: "inbox.sortAscending") == nil || defaults.bool(forKey: "inbox.sortAscending") ? .forward : .reverse
         switch defaults.string(forKey: "inbox.sortColumn") {
         case "app": return [KeyPathComparator(\.app, order: order)]
         case "category": return [KeyPathComparator(\.categoryRank, order: order)]
+        case "sender": return [KeyPathComparator(\.sender, order: order)]
         case "notification": return [KeyPathComparator(\.compactLine, order: order)]
         case "time": return [KeyPathComparator(\.deliveredAt, order: order)]
         default: return [KeyPathComparator(\.deliveredAt, order: .reverse)]
@@ -217,6 +218,9 @@ final class Inbox {
     }
 
     func item(id: String) -> Item? { items.first { $0.id == id } }
+
+    /// Unread across everything held, whatever the filters show.
+    var unreadCount: Int { items.filter(\.isUnread).count }
 
     /// Everything at once, for the demo; nothing is written to disk.
     func replaceItems(_ newItems: [Item]) {

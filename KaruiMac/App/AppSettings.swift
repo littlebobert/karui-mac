@@ -7,6 +7,7 @@ final class AppSettings {
     private enum Key {
         static let showsMenuBarItem = "showsMenuBarItem"
         static let showsDockIcon = "showsDockIcon"
+        static let showsUnreadBadge = "showsUnreadBadge"
     }
 
     private let defaults: UserDefaults
@@ -26,9 +27,15 @@ final class AppSettings {
         }
     }
 
+    /// The unread count on the Dock icon and beside the menu bar item.
+    var showsUnreadBadge: Bool {
+        didSet { defaults.set(showsUnreadBadge, forKey: Key.showsUnreadBadge) }
+    }
+
     init(defaults: UserDefaults = .standard) {
         self.defaults = defaults
         showsMenuBarItem = defaults.bool(forKey: Key.showsMenuBarItem)
         showsDockIcon = defaults.object(forKey: Key.showsDockIcon) as? Bool ?? true
+        showsUnreadBadge = defaults.object(forKey: Key.showsUnreadBadge) as? Bool ?? true
     }
 }

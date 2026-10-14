@@ -88,3 +88,5 @@
 "Asked the iPhone at %@" = "%@にiPhoneへ依頼";
 "Synced at %@" = "%@に同期";
 "Could not reach iCloud" = "iCloudに接続できません";
+"Badge with unread count" = "未読数をバッジで表示";
+"Sender" = "送信者";

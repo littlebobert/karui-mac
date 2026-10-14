@@ -10,6 +10,7 @@ struct SettingsView: View {
             Section {
                 Toggle(L10n.string("Show in menu bar"), isOn: $settings.showsMenuBarItem)
                 Toggle(L10n.string("Show in Dock"), isOn: $settings.showsDockIcon)
+                Toggle(L10n.string("Badge with unread count"), isOn: $settings.showsUnreadBadge)
                 Toggle(
                     L10n.string("Start at login"),
                     isOn: Binding(

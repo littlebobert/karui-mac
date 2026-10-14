@@ -50,8 +50,12 @@ struct KaruiMacApp: App {
             }
         }
 
-        MenuBarExtra("Karui", systemImage: "bell.badge", isInserted: $settings.showsMenuBarItem) {
+        MenuBarExtra(isInserted: $settings.showsMenuBarItem) {
             MenuBarMenu(coordinator: appDelegate.coordinator)
+        } label: {
+            let unread = settings.showsUnreadBadge ? appDelegate.coordinator.inbox.unreadCount : 0
+            Image(systemName: unread > 0 ? "tray.full.fill" : "tray.fill")
+            if unread > 0 { Text(String(unread)) }
         }
     }
 }

@@ -48,9 +48,21 @@ final class AppCoordinator {
 
     var visibleInboxItems: [Inbox.Item] { inbox.visibleItems }
 
+    /// The Dock icon's badge follows the unread count while the setting is on.
+    /// Observation re-arms after each change, so this runs for the app's life.
+    private func keepDockBadgeCurrent() {
+        withObservationTracking {
+            let count = settings.showsUnreadBadge ? inbox.unreadCount : 0
+            NSApp.dockTile.badgeLabel = count > 0 ? String(count) : nil
+        } onChange: {
+            Task { @MainActor [weak self] in self?.keepDockBadgeCurrent() }
+        }
+    }
+
     func start() {
         guard !hasStarted else { return }
         hasStarted = true
+        keepDockBadgeCurrent()
         if DemoMode.isActive {
             DemoMode.configure(inbox)
             showInbox()
