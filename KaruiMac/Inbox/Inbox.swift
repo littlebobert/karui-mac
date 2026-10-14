@@ -97,7 +97,8 @@ final class Inbox {
     nonisolated static let categories = ["notifyNow", "summary", "silence"]
 
     private(set) var items: [Item] = []
-    private static let capacity = 3000
+    /// Well above a month of a busy iPhone; the month on disk is the real limit.
+    private static let capacity = 20_000
     private let defaults: UserDefaults
     private let store: InboxStore?
 
@@ -205,6 +206,12 @@ final class Inbox {
     }
 
     var selectedItems: [Item] { items.filter { selection.contains($0.id) } }
+
+    /// Whether every one of these items already has the category: nothing to mark.
+    func allHaveCategory(_ category: String, ids: Set<String>) -> Bool {
+        let chosen = items.filter { ids.contains($0.id) }
+        return !chosen.isEmpty && chosen.allSatisfy { $0.category == category }
+    }
 
     private func grouped(_ items: [Item], by key: (Item) -> String) -> [Group] {
         var order: [String] = []

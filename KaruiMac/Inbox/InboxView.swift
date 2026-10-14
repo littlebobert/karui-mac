@@ -78,13 +78,15 @@ struct InboxView: View {
     /// many of them are unread.
     private var statusLine: String {
         let inbox = coordinator.inbox
+        let line: String
         if !inbox.selection.isEmpty {
-            return L10n.format("%d selected", inbox.selection.count)
+            line = L10n.format("%d selected", inbox.selection.count)
+        } else {
+            let shown = inbox.visibleItems
+            let unread = shown.filter(\.isUnread).count
+            let count = L10n.format("%d notifications", shown.count)
+            line = unread == 0 ? count : count + " · " + L10n.format("%d unread", unread)
         }
-        let shown = inbox.visibleItems
-        let unread = shown.filter(\.isUnread).count
-        let count = L10n.format("%d notifications", shown.count)
-        let line = unread == 0 ? count : count + " · " + L10n.format("%d unread", unread)
         return inbox.syncNote.map { line + " · " + $0 } ?? line
     }
 }
@@ -141,13 +143,16 @@ private struct ControlBar: View {
                 .disabled(!inbox.visibleItems.contains { $0.isUnread })
             } else {
                 BarMenuButton(mode: inbox.barDisplayMode, label: L10n.string("Mark as"), symbol: "tag") {
-                    [
-                        .item(L10n.string("Important")) { coordinator.setCategory("notifyNow", inbox.selection) },
-                        .item(L10n.string("Neutral")) { coordinator.setCategory("summary", inbox.selection) },
-                        .item(L10n.string("Spam")) { coordinator.setCategory("silence", inbox.selection) },
-                        .separator,
-                        .item(L10n.string("Read")) { coordinator.markRead(inbox.selection) }
+                    var entries: [BarMenuEntry] = [
+                        .item(L10n.string("Important"), isEnabled: !inbox.allHaveCategory("notifyNow", ids: inbox.selection)) { coordinator.setCategory("notifyNow", inbox.selection) },
+                        .item(L10n.string("Neutral"), isEnabled: !inbox.allHaveCategory("summary", ids: inbox.selection)) { coordinator.setCategory("summary", inbox.selection) },
+                        .item(L10n.string("Spam"), isEnabled: !inbox.allHaveCategory("silence", ids: inbox.selection)) { coordinator.setCategory("silence", inbox.selection) }
                     ]
+                    // Read only when something selected is still unread.
+                    if inbox.selectedItems.contains(where: \.isUnread) {
+                        entries += [.separator, .item(L10n.string("Read")) { coordinator.markRead(inbox.selection) }]
+                    }
+                    return entries
                 }
                 BarButton(mode: inbox.barDisplayMode, label: L10n.string("Delete"), symbol: "trash", role: .destructive) {
                     coordinator.delete(inbox.selection)
@@ -208,9 +213,9 @@ private struct DetailBar: View {
             Spacer()
             BarMenuButton(mode: inbox.barDisplayMode, label: L10n.string("Mark as"), symbol: "tag") {
                 var entries: [BarMenuEntry] = [
-                    .item(L10n.string("Important")) { coordinator.setCategory("notifyNow", [item.id]) },
-                    .item(L10n.string("Neutral")) { coordinator.setCategory("summary", [item.id]) },
-                    .item(L10n.string("Spam")) { coordinator.setCategory("silence", [item.id]) }
+                    .item(L10n.string("Important"), isEnabled: item.category != "notifyNow") { coordinator.setCategory("notifyNow", [item.id]) },
+                    .item(L10n.string("Neutral"), isEnabled: item.category != "summary") { coordinator.setCategory("summary", [item.id]) },
+                    .item(L10n.string("Spam"), isEnabled: item.category != "silence") { coordinator.setCategory("silence", [item.id]) }
                 ]
                 if item.isUnread {
                     entries += [.separator, .item(L10n.string("Read")) { coordinator.markRead([item.id]) }]
@@ -234,7 +239,7 @@ private struct DetailBar: View {
 
 /// What a bar menu holds: items with an optional check, headers, separators.
 enum BarMenuEntry {
-    case item(String, isOn: Bool? = nil, action: @MainActor () -> Void)
+    case item(String, isOn: Bool? = nil, isEnabled: Bool = true, action: @MainActor () -> Void)
     case header(String)
     case separator
 }
@@ -263,11 +268,13 @@ private struct BarMenuButton: View {
     private func show() {
         guard let view = anchor.view else { return }
         let menu = NSMenu()
+        menu.autoenablesItems = false
         for entry in entries() {
             switch entry {
-            case let .item(title, isOn, action):
+            case let .item(title, isOn, isEnabled, action):
                 let item = ClosureMenuItem(title: title, action: action)
                 if let isOn { item.state = isOn ? .on : .off }
+                item.isEnabled = isEnabled
                 menu.addItem(item)
             case let .header(title):
                 menu.addItem(.sectionHeader(title: title))
@@ -609,11 +616,16 @@ private struct ItemActions: ViewModifier {
         content
             .contextMenu(forSelectionType: String.self) { ids in
                 let ids = ids.isEmpty ? inbox.selection : ids
-                Button(L10n.string("Mark as Read")) { coordinator.markRead(ids) }
+                if inbox.items.contains(where: { ids.contains($0.id) && $0.isUnread }) {
+                    Button(L10n.string("Mark as Read")) { coordinator.markRead(ids) }
+                }
                 Menu(L10n.string("Mark as")) {
                     Button(L10n.string("Important")) { coordinator.setCategory("notifyNow", ids) }
+                        .disabled(inbox.allHaveCategory("notifyNow", ids: ids))
                     Button(L10n.string("Neutral")) { coordinator.setCategory("summary", ids) }
+                        .disabled(inbox.allHaveCategory("summary", ids: ids))
                     Button(L10n.string("Spam")) { coordinator.setCategory("silence", ids) }
+                        .disabled(inbox.allHaveCategory("silence", ids: ids))
                 }
                 Divider()
                 Button(L10n.string("Delete"), role: .destructive) { coordinator.delete(ids) }
