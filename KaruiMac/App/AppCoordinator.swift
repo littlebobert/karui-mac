@@ -277,7 +277,9 @@ final class AppCoordinator {
                     }
                     // Kept from before a relaunch: the link is on iCloud already, so
                     // only the read-watch is picked up again, when it's still unread.
-                    if case .backfilled = event, let kept = inbox.item(id: Inbox.id(for: record)), kept.link != nil {
+                    if case .backfilled = event, let app = KnownApp(macBundleIdentifier: record.bundleIdentifier),
+                       let kept = inbox.item(id: Inbox.id(for: record)), kept.link != nil,
+                       kept.fingerprint == Inbox.fingerprint(for: record, as: app) {
                         if kept.readAt == nil, let harvested = await harvesters.harvest(record) {
                             await readWatcher.track(harvested)
                         }

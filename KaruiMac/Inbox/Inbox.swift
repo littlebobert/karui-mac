@@ -12,7 +12,7 @@ import Observation
 final class Inbox {
     struct Item: Identifiable {
         /// Notification Center's record ID, or the fingerprint for one only the iPhone got.
-        let id: String
+        var id: String
         let app: String
         let fingerprint: String
         let title: String?
@@ -153,7 +153,15 @@ final class Inbox {
     init(defaults: UserDefaults = .standard, store: InboxStore? = nil) {
         self.defaults = defaults
         self.store = store
-        items = store?.load() ?? []
+        items = (store?.load() ?? []).map { item in
+            // A link from another app was attached by a reused record ID (fixed in
+            // 0.4.5); such a link is dropped rather than opening the wrong thing.
+            guard let link = item.link, let app = KnownApp(rawValue: item.app),
+                  let scheme = link.url.scheme?.lowercased(), !app.linkSchemes.contains(scheme) else { return item }
+            var cleaned = item
+            cleaned.link = nil
+            return cleaned
+        }
         grouping = defaults.string(forKey: "inbox.grouping").flatMap(Grouping.init(rawValue:)) ?? .none
         isCompact = defaults.bool(forKey: "inbox.isCompact")
         shownCategories = defaults.stringArray(forKey: "inbox.shownCategories").map(Set.init) ?? Set(Inbox.categories)
@@ -230,15 +238,33 @@ final class Inbox {
         openItemID = nil
     }
 
+    static func fingerprint(for record: NotificationRecord, as app: KnownApp) -> String {
+        record.deepLink(as: app, url: URL(string: "about:blank")!, opensExactContent: false).fingerprint
+    }
+
     /// A notification this Mac got, from Notification Center. Returns whether it was new.
+    ///
+    /// Notification Center reuses a cleared notification's record ID for the next
+    /// one, so an item with this ID may be an older notification; it is kept under
+    /// another ID and the new one takes its place.
     @discardableResult
     func add(_ record: NotificationRecord, as app: KnownApp) -> Bool {
         let id = Self.id(for: record)
-        guard !items.contains(where: { $0.id == id }) else { return false }
+        let fingerprint = Self.fingerprint(for: record, as: app)
+        if let index = items.firstIndex(where: { $0.id == id }) {
+            guard items[index].fingerprint != fingerprint else { return false }
+            let stale = items[index]
+            var rekeyed = stale
+            rekeyed.id = "\(id)-\(stale.fingerprint.prefix(12))"
+            items[index] = rekeyed
+            store?.delete(ids: [id])
+            store?.save([rekeyed])
+            SafeDiagnosticLog.shared.record("inbox: record id reused, kept the earlier notification")
+        }
         let item = Item(
             id: id,
             app: Self.appName(app.rawValue),
-            fingerprint: record.deepLink(as: app, url: URL(string: "about:blank")!, opensExactContent: false).fingerprint,
+            fingerprint: fingerprint,
             title: record.title,
             subtitle: record.subtitle,
             body: record.body,
@@ -283,10 +309,15 @@ final class Inbox {
         persist(touched)
     }
 
+    /// The link goes with the notification it was harvested from, matched by
+    /// fingerprint, never by record ID alone (see `add`).
     func setLink(_ link: DeepLinkRecord, for record: NotificationRecord) {
         let id = Self.id(for: record)
-        update(id) { $0.link = link; $0.readAt = link.readAt ?? $0.readAt }
-        persist([id])
+        guard let index = items.firstIndex(where: { $0.id == id && $0.fingerprint == link.fingerprint })
+            ?? items.firstIndex(where: { $0.fingerprint == link.fingerprint }) else { return }
+        items[index].link = link
+        items[index].readAt = link.readAt ?? items[index].readAt
+        persist([items[index].id])
     }
 
     func markRead(fingerprint: String, at date: Date = Date()) {

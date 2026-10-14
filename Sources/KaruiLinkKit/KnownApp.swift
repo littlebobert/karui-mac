@@ -17,6 +17,15 @@ public enum KnownApp: String, CaseIterable, Sendable {
         }
     }
 
+    /// The URL schemes the Mac's links for the app use.
+    public var linkSchemes: [String] {
+        switch self {
+        case .messages: ["sms", "imessage"]
+        case .spark: ["readdle-spark"]
+        case .slack: ["slack"]
+        }
+    }
+
     public init?(macBundleIdentifier: String) {
         let identifier = macBundleIdentifier.lowercased()
         guard let app = Self.allCases.first(where: { $0.macBundleIdentifiers.contains(identifier) }) else {
