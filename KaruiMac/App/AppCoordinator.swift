@@ -291,7 +291,26 @@ final class AppCoordinator {
         }
     }
 
+    /// While Notification Center's database is missing, the probe runs again every
+    /// so often, and the watcher starts the moment macOS has made a new one.
+    private var missingDatabaseTask: Task<Void, Never>?
+
+    private func keepLookingForDatabase() {
+        guard fullDiskAccess.isDatabaseMissing, missingDatabaseTask == nil else { return }
+        missingDatabaseTask = Task { [weak self] in
+            while !Task.isCancelled {
+                try? await Task.sleep(for: .seconds(30))
+                guard let self else { return }
+                fullDiskAccess.refresh()
+                startWatchingIfPossible()
+                if !fullDiskAccess.isDatabaseMissing { break }
+            }
+            self?.missingDatabaseTask = nil
+        }
+    }
+
     private func startWatchingIfPossible() {
+        keepLookingForDatabase()
         guard fullDiskAccess.isGranted, watcher == nil else { return }
         let watcher = NotificationDatabaseWatcher(
             database: .standard,

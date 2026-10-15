@@ -8,6 +8,10 @@ import Observation
 @Observable
 final class FullDiskAccess {
     private(set) var isGranted = false
+    /// Notification Center's database isn't there: macOS makes a new one with the
+    /// next notification (it went missing on a Mac that ran out of disk space). Not
+    /// a permissions problem, and the app keeps checking for it.
+    private(set) var isDatabaseMissing = false
     /// Whether System Settings was opened from here, after which a relaunch is offered:
     /// macOS doesn't always apply the change to a running app.
     private(set) var hasOpenedSystemSettings = false
@@ -25,10 +29,17 @@ final class FullDiskAccess {
     }
 
     func refresh() {
-        isGranted = Self.canRead(probe)
-        if !isGranted {
+        let result = Self.probe(probe)
+        let granted = result == .readable
+        let missing = result == .missing
+        if granted != isGranted || missing != isDatabaseMissing {
+            SafeDiagnosticLog.shared.record("full disk access: \(result)")
+        }
+        isGranted = granted
+        isDatabaseMissing = missing
+        if result == .denied {
             // Only for the side effect of appearing in the list.
-            _ = Self.canRead(Self.registrationProbe)
+            _ = Self.probe(Self.registrationProbe)
         }
     }
 
@@ -54,11 +65,31 @@ final class FullDiskAccess {
         }
     }
 
-    private static func canRead(_ url: URL) -> Bool {
-        // EPERM without access; ENOENT on a Mac that has never had the file.
+    enum Probe: Equatable, CustomStringConvertible {
+        case readable, denied, missing
+        case failed(Int32)
+
+        var description: String {
+            switch self {
+            case .readable: "readable"
+            case .denied: "denied"
+            case .missing: "database missing"
+            case .failed(let code): "open failed, errno \(code) (\(String(cString: strerror(code))))"
+            }
+        }
+    }
+
+    /// EPERM or EACCES without access; ENOENT when the file isn't there.
+    private static func probe(_ url: URL) -> Probe {
         let descriptor = open(url.path, O_RDONLY)
-        guard descriptor >= 0 else { return false }
+        guard descriptor >= 0 else {
+            switch errno {
+            case EPERM, EACCES: return .denied
+            case ENOENT: return .missing
+            default: return .failed(errno)
+            }
+        }
         close(descriptor)
-        return true
+        return .readable
     }
 }

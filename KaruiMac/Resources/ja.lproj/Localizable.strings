@@ -93,3 +93,5 @@
 "Name" = "名前";
 "Count" = "件数";
 "Newest" = "最新";
+"Waiting for Notification Center" = "通知センターを待っています";
+"Notification Center’s database isn’t there right now; macOS makes a new one with the next notification, and Karui will pick it up. Full Disk Access is fine." = "通知センターのデータベースが今はありません。次の通知が届くとmacOSが新しく作り、Karuiはそれを読み始めます。フルディスクアクセスは問題ありません。";

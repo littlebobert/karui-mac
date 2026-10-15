@@ -7,8 +7,13 @@ struct InboxView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             if !coordinator.fullDiskAccess.isGranted && !DemoMode.isActive {
-                FullDiskAccessCard(fullDiskAccess: coordinator.fullDiskAccess)
-                    .padding([.horizontal, .top], 16)
+                if coordinator.fullDiskAccess.isDatabaseMissing {
+                    MissingDatabaseCard()
+                        .padding([.horizontal, .top], 16)
+                } else {
+                    FullDiskAccessCard(fullDiskAccess: coordinator.fullDiskAccess)
+                        .padding([.horizontal, .top], 16)
+                }
             }
             if let openItemID = coordinator.inbox.openItemID, let item = coordinator.inbox.item(id: openItemID) {
                 // One notification in full: its own bar, with nothing that belongs to a list.
@@ -378,6 +383,21 @@ private struct BarButton: View {
         }
         .buttonStyle(.borderless)
         .help(label)
+    }
+}
+
+/// Notification Center's database is gone, as it can be after the disk ran full.
+private struct MissingDatabaseCard: View {
+    var body: some View {
+        GroupBox {
+            VStack(alignment: .leading, spacing: 8) {
+                Text(L10n.string("Waiting for Notification Center"))
+                    .font(.headline)
+                Text(L10n.string("Notification Center’s database isn’t there right now; macOS makes a new one with the next notification, and Karui will pick it up. Full Disk Access is fine."))
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(4)
+        }
     }
 }
 
