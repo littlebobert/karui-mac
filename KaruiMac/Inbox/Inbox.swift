@@ -14,7 +14,7 @@ final class Inbox {
         /// Notification Center's record ID, or the fingerprint for one only the iPhone got.
         var id: String
         let app: String
-        let fingerprint: String
+        var fingerprint: String
         var title: String?
         var subtitle: String?
         var body: String?
@@ -316,6 +316,23 @@ final class Inbox {
         openItemID = nil
     }
 
+    /// The same notification seen by both devices can hash differently when one
+    /// app fills a field the other leaves empty (Spark for Mac says "No subject"
+    /// where Spark for iPhone says nothing). When the fingerprint doesn't match,
+    /// the same app, sender, and body within a few minutes is taken as the same
+    /// notification.
+    static let looseMatchWindow: TimeInterval = 15 * 60
+
+    static func looselyMatches(_ item: Item, app: String, title: String?, body: String?, at date: Date) -> Bool {
+        guard item.app == appName(app), abs(item.deliveredAt.timeIntervalSince(date)) <= looseMatchWindow else { return false }
+        let mine = NotificationFingerprint.normalize(item.title), theirs = NotificationFingerprint.normalize(title)
+        guard !mine.isEmpty, mine == theirs else { return false }
+        let myBody = NotificationFingerprint.normalize(item.body), theirBody = NotificationFingerprint.normalize(body)
+        guard !myBody.isEmpty, !theirBody.isEmpty else { return false }
+        // The iPhone sends subject and body as one text, subject first.
+        return myBody == theirBody || myBody.hasSuffix(theirBody) || theirBody.hasSuffix(myBody)
+    }
+
     static func fingerprint(for record: NotificationRecord, as app: KnownApp) -> String {
         record.deepLink(as: app, url: URL(string: "about:blank")!, opensExactContent: false).fingerprint
     }
@@ -341,7 +358,9 @@ final class Inbox {
         }
         // The iPhone's verdict may have arrived first and stand in for this
         // notification as a text-only item; it becomes this one, keeping its verdict.
-        if let index = items.firstIndex(where: { $0.fingerprint == fingerprint && $0.id != id }) {
+        if let index = items.firstIndex(where: { $0.fingerprint == fingerprint && $0.id != id })
+            ?? items.firstIndex(where: { !$0.id.hasPrefix("notification-")
+                                         && Self.looselyMatches($0, app: app.rawValue, title: record.title, body: record.body, at: record.deliveredAt ?? Date()) }) {
             let standIn = items[index]
             var merged = standIn
             merged.id = id
@@ -383,6 +402,17 @@ final class Inbox {
             if items.contains(where: { $0.fingerprint == verdict.fingerprint }) {
                 setVerdict(verdict, for: verdict.fingerprint, persisting: false)
                 touched.formUnion(items.filter { $0.fingerprint == verdict.fingerprint }.map(\.id))
+            } else if let index = items.firstIndex(where: { $0.verdict == nil && $0.id.hasPrefix("notification-")
+                                                       && Self.looselyMatches($0, app: verdict.app, title: verdict.title, body: verdict.body, at: verdict.triagedAt) }) {
+                // The Mac's copy takes the iPhone's fingerprint, so what's done to it
+                // here reaches the iPhone's record.
+                items[index].fingerprint = verdict.fingerprint
+                items[index].verdict = verdict
+                if items[index].readAt == nil { items[index].readAt = verdict.readAt }
+                if items[index].recipients == nil { items[index].recipients = verdict.recipients }
+                if items[index].senderName == nil { items[index].senderName = verdict.sender }
+                touched.insert(items[index].id)
+                SafeDiagnosticLog.shared.record("verdicts: matched one loosely, by sender and text")
             } else if verdict.title != nil || verdict.body != nil {
                 var item = Item(
                     id: verdict.fingerprint,

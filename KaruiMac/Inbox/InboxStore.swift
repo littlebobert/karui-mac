@@ -51,6 +51,7 @@ final class InboxEntry {
     }
 
     func update(from item: Inbox.Item) {
+        fingerprint = item.fingerprint
         recipients = item.recipients
         senderName = item.senderName
         linkURL = item.link?.url.absoluteString
