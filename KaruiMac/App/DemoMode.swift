@@ -96,6 +96,9 @@ enum DemoMode {
         switch view {
         case "compact":
             inbox.isCompact = true
+        case "selected":
+            inbox.isCompact = true
+            if let second = inbox.items.dropFirst().first { inbox.selection = [second.id] }
         case "threads":
             inbox.isCompact = true
             inbox.grouping = .threads

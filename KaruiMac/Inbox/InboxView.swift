@@ -633,14 +633,14 @@ private struct ItemsList: View {
                     // Movable like the others; its width stays fixed.
                     .customizationID("unread")
                     TableColumn(L10n.string("Category"), value: \.categoryRank) { item in
-                        VerdictBadge(verdict: item.verdict, chosen: item.chosenCategory, isWaiting: item.isWaitingForVerdict)
+                        VerdictBadge(verdict: item.verdict, chosen: item.chosenCategory, isWaiting: item.isWaitingForVerdict, font: .body)
                     }
-                    .width(min: 76, ideal: 96, max: 104)
+                    .width(min: 76, ideal: 96, max: 150)
                     .customizationID("category")
                     TableColumn(L10n.string("App"), value: \.app) { item in
                         AppNameLink(app: item.app)
                     }
-                    .width(min: 70, ideal: 96, max: 112)
+                    .width(min: 70, ideal: 96, max: 160)
                     .customizationID("app")
                     TableColumn(L10n.string("Sender"), value: \.sender) { item in
                         Text(item.sender).lineLimit(1).truncationMode(.tail)
@@ -799,6 +799,11 @@ private struct VerdictBadge: View {
     let verdict: VerdictRecord?
     let chosen: String?
     let isWaiting: Bool
+    /// The table's rows use the body size like their other cells; the expanded
+    /// rows' header line is caption-sized.
+    var font: Font = .caption
+    /// Increased on a selected table row, where the system paints text white.
+    @Environment(\.backgroundProminence) private var backgroundProminence
 
     var body: some View {
         let (label, color): (String, Color) = switch chosen ?? verdict?.category {
@@ -807,8 +812,10 @@ private struct VerdictBadge: View {
         case "silence": (L10n.string("Spam"), Color.secondary)
         default: (L10n.string(isWaiting ? "Sorting…" : "Not on the iPhone"), Color.secondary)
         }
-        Text(label)
-            .font(.caption.weight(.semibold))
-            .foregroundStyle(color)
+        if backgroundProminence == .increased {
+            Text(label).font(font.weight(.semibold)).foregroundStyle(.primary)
+        } else {
+            Text(label).font(font.weight(.semibold)).foregroundStyle(color)
+        }
     }
 }
