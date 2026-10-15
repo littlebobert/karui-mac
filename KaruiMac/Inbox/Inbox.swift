@@ -219,6 +219,10 @@ final class Inbox {
     var toast: Toast?
     /// What Sync Now is up to, for the status line; nil when nothing was asked.
     var syncNote: String?
+    /// Bumped by ⌘F; the search field focuses itself when it changes.
+    var searchFocusRequest = 0
+    /// Bumped by Escape in the search field; the list takes the keyboard back.
+    var listFocusRequest = 0
 
     init(defaults: UserDefaults = .standard, store: InboxStore? = nil) {
         self.defaults = defaults

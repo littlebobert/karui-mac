@@ -22,6 +22,10 @@ struct KaruiMacApp: App {
                 }
                 .disabled(!appDelegate.coordinator.autoUpdates.canCheckForUpdates)
             }
+            CommandGroup(after: .textEditing) {
+                Button(L10n.string("Find")) { appDelegate.coordinator.inbox.searchFocusRequest += 1 }
+                    .keyboardShortcut("f", modifiers: .command)
+            }
             CommandMenu(L10n.string("Notifications")) {
                 let coordinator = appDelegate.coordinator
                 let selection = coordinator.inbox.selection

@@ -102,6 +102,7 @@ struct InboxView: View {
 /// right-click offers the display modes a toolbar would.
 private struct ControlBar: View {
     let coordinator: AppCoordinator
+    @FocusState private var isSearchFocused: Bool
 
     var body: some View {
         @Bindable var inbox = coordinator.inbox
@@ -123,6 +124,12 @@ private struct ControlBar: View {
             TextField(L10n.string("Search"), text: $inbox.search)
                 .textFieldStyle(.roundedBorder)
                 .frame(maxWidth: 220)
+                .focused($isSearchFocused)
+                .onChange(of: inbox.searchFocusRequest) { _, _ in isSearchFocused = true }
+                .onExitCommand {
+                    isSearchFocused = false
+                    inbox.listFocusRequest += 1
+                }
             Spacer()
             BarMenuButton(mode: inbox.barDisplayMode, label: L10n.string("Filter"), symbol: isFiltering ? "line.3.horizontal.decrease.circle.fill" : "line.3.horizontal.decrease.circle") {
                 [
@@ -532,6 +539,7 @@ private struct GroupsList: View {
     let inbox: Inbox
     @Binding var openGroupID: String?
     @State private var selection: Set<String> = []
+    @FocusState private var isFocused: Bool
     @AppStorage(DemoMode.isActive ? "inbox.groupColumns.demo" : "inbox.groupColumns") private var columns: TableColumnCustomization<Inbox.Group>
 
     var body: some View {
@@ -581,6 +589,14 @@ private struct GroupsList: View {
             openGroupID = id
             return .handled
         }
+        .focused($isFocused)
+        .onChange(of: inbox.listFocusRequest) { _, _ in isFocused = true }
+        .onAppear {
+            Task { @MainActor in
+                try? await Task.sleep(for: .milliseconds(50))
+                isFocused = true
+            }
+        }
     }
 }
 
@@ -590,6 +606,7 @@ private struct GroupsList: View {
 private struct ItemsList: View {
     let coordinator: AppCoordinator
     let items: [Inbox.Item]
+    @FocusState private var isFocused: Bool
     /// The columns' widths and order, kept across launches.
     @AppStorage(DemoMode.isActive ? "inbox.columns.demo" : "inbox.columns") private var columns: TableColumnCustomization<Inbox.Item>
 
@@ -633,13 +650,26 @@ private struct ItemsList: View {
                     .width(min: 56, ideal: 76, max: 170)
                     .customizationID("time")
                 }
+                .focused($isFocused)
                 .modifier(ItemActions(coordinator: coordinator))
             } else {
                 List(sorted, selection: $inbox.selection) { item in
                     InboxRow(coordinator: coordinator, item: item)
                 }
+                .focused($isFocused)
                 .modifier(ItemActions(coordinator: coordinator))
             }
+        }
+        .onAppear { focusSoon() }
+        .onChange(of: inbox.listFocusRequest) { _, _ in isFocused = true }
+    }
+
+    /// After the view is in the window: coming back from a notification or a group,
+    /// the keyboard returns to the list.
+    private func focusSoon() {
+        Task { @MainActor in
+            try? await Task.sleep(for: .milliseconds(50))
+            isFocused = true
         }
     }
 }
