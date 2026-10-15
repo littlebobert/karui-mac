@@ -142,7 +142,7 @@ final class Inbox {
 
     nonisolated static let categories = ["notifyNow", "summary", "silence"]
 
-    private(set) var items: [Item] = []
+    private(set) var items: [Item] = [] { didSet { invalidateCaches() } }
     /// Well above a month of a busy iPhone; the month on disk is the real limit.
     private static let capacity = 20_000
     private let defaults: UserDefaults
@@ -151,12 +151,12 @@ final class Inbox {
     // The view's settings, kept across launches.
     var grouping: Grouping { didSet { defaults.set(grouping.rawValue, forKey: "inbox.grouping") } }
     var isCompact: Bool { didSet { defaults.set(isCompact, forKey: "inbox.isCompact") } }
-    var shownCategories: Set<String> { didSet { defaults.set(Array(shownCategories).sorted(), forKey: "inbox.shownCategories") } }
-    var shownReadStates: Set<ReadState> { didSet { defaults.set(shownReadStates.map(\.rawValue).sorted(), forKey: "inbox.shownReadStates") } }
+    var shownCategories: Set<String> { didSet { defaults.set(Array(shownCategories).sorted(), forKey: "inbox.shownCategories"); invalidateCaches() } }
+    var shownReadStates: Set<ReadState> { didSet { defaults.set(shownReadStates.map(\.rawValue).sorted(), forKey: "inbox.shownReadStates"); invalidateCaches() } }
     var barDisplayMode: BarDisplayMode { didSet { defaults.set(barDisplayMode.rawValue, forKey: "inbox.barDisplayMode") } }
     /// Only what this Mac can open in full: items with a link.
-    var showsOnlyOpenable: Bool { didSet { defaults.set(showsOnlyOpenable, forKey: "inbox.showsOnlyOpenable") } }
-    var search = ""
+    var showsOnlyOpenable: Bool { didSet { defaults.set(showsOnlyOpenable, forKey: "inbox.showsOnlyOpenable"); invalidateCaches() } }
+    var search = "" { didSet { invalidateCaches() } }
     var selection: Set<String> = []
     /// The columns' sort, newest first until a header is clicked. Kept across
     /// launches as the column's name and direction.
@@ -252,14 +252,41 @@ final class Inbox {
         return filtered
     }
 
+    // The filtered and sorted lists are kept until something they depend on
+    // changes: with thousands of items, recomputing them on every selection change
+    // made arrowing through the list lag. The caches are not observed, so reading
+    // them doesn't register a dependency; the inputs they're built from are.
+    @ObservationIgnored private var filteredCache: [Item]?
+    @ObservationIgnored private var sortedCache: (key: String, items: [Item])?
+    @ObservationIgnored private var cacheVersion = 0
+
+    private func invalidateCaches() {
+        filteredCache = nil
+        sortedCache = nil
+        cacheVersion &+= 1
+    }
+
     var filtered: [Item] {
+        if let filteredCache { return filteredCache }
         let search = search.trimmingCharacters(in: .whitespaces)
-        return items.filter { item in
+        let result = items.filter { item in
             if showsOnlyOpenable, item.link == nil { return false }
             if let category = item.category, !shownCategories.contains(category) { return false }
             if !shownReadStates.contains(item.isUnread ? .unread : .read) { return false }
             return search.isEmpty || item.matches(search)
         }
+        filteredCache = result
+        return result
+    }
+
+    /// The items the list shows, in the columns' order: the open group's, or the
+    /// filtered day. Sorted once per change of items, filters, group, or sort.
+    var sortedVisibleItems: [Item] {
+        let key = "\(cacheVersion)|\(openGroupID ?? "")|\(grouping.rawValue)|" + sortOrder.map { "\($0.keyPath)\($0.order)" }.joined()
+        if let sortedCache, sortedCache.key == key { return sortedCache.items }
+        let result = visibleItems.sorted(using: sortOrder)
+        sortedCache = (key, result)
+        return result
     }
 
     func group(id: String) -> Group? { groups.first { $0.id == id } }

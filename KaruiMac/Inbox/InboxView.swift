@@ -87,7 +87,7 @@ struct InboxView: View {
         if !inbox.selection.isEmpty {
             line = L10n.format("%d selected", inbox.selection.count)
         } else {
-            let shown = inbox.visibleItems
+            let shown = inbox.sortedVisibleItems
             let unread = shown.filter(\.isUnread).count
             let count = L10n.format("%d notifications", shown.count)
             line = unread == 0 ? count : count + " · " + L10n.format("%d unread", unread)
@@ -451,9 +451,9 @@ private struct InboxList: View {
             } else if inbox.filtered.isEmpty {
                 EmptyNote(text: L10n.string("Nothing matches."))
             } else if let openGroupID = inbox.openGroupID, let group = inbox.group(id: openGroupID) {
-                ItemsList(coordinator: coordinator, items: group.items)
+                ItemsList(coordinator: coordinator)
             } else if inbox.grouping == .none {
-                ItemsList(coordinator: coordinator, items: inbox.filtered)
+                ItemsList(coordinator: coordinator)
             } else {
                 GroupsList(inbox: inbox, openGroupID: $inbox.openGroupID)
             }
@@ -605,14 +605,13 @@ private struct GroupsList: View {
 /// order.
 private struct ItemsList: View {
     let coordinator: AppCoordinator
-    let items: [Inbox.Item]
     @FocusState private var isFocused: Bool
     /// The columns' widths and order, kept across launches.
     @AppStorage(DemoMode.isActive ? "inbox.columns.demo" : "inbox.columns") private var columns: TableColumnCustomization<Inbox.Item>
 
     var body: some View {
         @Bindable var inbox = coordinator.inbox
-        let sorted = items.sorted(using: inbox.sortOrder)
+        let sorted = inbox.sortedVisibleItems
         Group {
             if inbox.isCompact {
                 Table(sorted, selection: $inbox.selection, sortOrder: $inbox.sortOrder, columnCustomization: $columns) {
