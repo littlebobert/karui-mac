@@ -480,6 +480,11 @@ private struct ItemDetail: View {
             .onAppear { isFocused = true }
             .onExitCommand(perform: onBack)
             .onDeleteCommand(perform: onDelete)
+            .onKeyPress(.return) {
+                guard AppLauncher.canOpen(item.app) else { return .ignored }
+                AppLauncher.open(item.app)
+                return .handled
+            }
     }
 
     private var content: some View {
@@ -507,6 +512,10 @@ private struct ItemDetail: View {
                 }
                 if item.readAt != nil {
                     Text(L10n.string("Read here; cleared on the iPhone")).font(.caption).foregroundStyle(.secondary)
+                }
+                if AppLauncher.canOpen(item.app) {
+                    Button(L10n.format("Open %@", item.app)) { AppLauncher.open(item.app) }
+                        .padding(.top, 6)
                 }
             }
             .textSelection(.enabled)
@@ -629,7 +638,7 @@ private struct ItemsList: View {
                     .width(min: 76, ideal: 96, max: 104)
                     .customizationID("category")
                     TableColumn(L10n.string("App"), value: \.app) { item in
-                        Text(item.app).foregroundStyle(.secondary)
+                        AppNameLink(app: item.app)
                     }
                     .width(min: 70, ideal: 96, max: 112)
                     .customizationID("app")
@@ -733,7 +742,7 @@ private struct InboxRow: View {
                 .padding(.top, 6)
             VStack(alignment: .leading, spacing: 2) {
                 HStack(spacing: 6) {
-                    Text(item.app).font(.caption).foregroundStyle(.secondary)
+                    AppNameLink(app: item.app).font(.caption)
                     VerdictBadge(verdict: item.verdict, chosen: item.chosenCategory, isWaiting: item.isWaitingForVerdict)
                 }
                 if let title = item.title, !title.isEmpty {
@@ -765,6 +774,23 @@ private struct InboxRow: View {
         }
         .padding(.vertical, 3)
         .tag(item.id)
+    }
+}
+
+/// The app's name; a click opens the app, or its website when it isn't installed.
+private struct AppNameLink: View {
+    let app: String
+
+    var body: some View {
+        if AppLauncher.canOpen(app) {
+            // In the link color, with the hand cursor, so it reads as something to click.
+            Button(app) { AppLauncher.open(app) }
+                .buttonStyle(.link)
+                .onHover { inside in inside ? NSCursor.pointingHand.push() : NSCursor.pop() }
+                .help(L10n.format("Open %@", app))
+        } else {
+            Text(app).foregroundStyle(.secondary)
+        }
     }
 }
 

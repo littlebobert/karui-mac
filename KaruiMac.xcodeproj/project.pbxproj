@@ -12,6 +12,7 @@
 		0E8ACEBE68E76745938B38FE /* AppSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 53FC48A0DD6C2ECF2AF9D224 /* AppSettings.swift */; };
 		10CAE366D1D1CFAE81007222 /* CorrespondentSources.swift in Sources */ = {isa = PBXBuildFile; fileRef = A557411D5121D7AA92246BF3 /* CorrespondentSources.swift */; };
 		12AE2ADF169EEC27C715B492 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = AFB92E764E41E683274F5389 /* AppDelegate.swift */; };
+		133F9D8A73E4F90FCA00D6D1 /* AppLauncher.swift in Sources */ = {isa = PBXBuildFile; fileRef = 04C7D2944D42D6C87AC633F7 /* AppLauncher.swift */; };
 		23020A8966F305767CA6C564 /* DemoMode.swift in Sources */ = {isa = PBXBuildFile; fileRef = 23A1E5BDB996F7E881DA0021 /* DemoMode.swift */; };
 		256F450297662965424AE8A3 /* CompanionPresence.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7CDCA27785FCD626FF554343 /* CompanionPresence.swift */; };
 		26445B3E9165FAB91EBDFDBB /* KaruiLinkKit in Frameworks */ = {isa = PBXBuildFile; productRef = 1EEF910B98DBB071B7129E5A /* KaruiLinkKit */; };
@@ -69,6 +70,7 @@
 		01B64433CF565459941ABCA4 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 		02059342FADE2B98EE06A434 /* InboxStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InboxStore.swift; sourceTree = "<group>"; };
 		0368E20A347FBE53765A797B /* SlackHarvester.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SlackHarvester.swift; sourceTree = "<group>"; };
+		04C7D2944D42D6C87AC633F7 /* AppLauncher.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppLauncher.swift; sourceTree = "<group>"; };
 		1234CDFEE07EA21BAA319888 /* SparkLinkTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SparkLinkTests.swift; sourceTree = "<group>"; };
 		17304FF1E3D049F3C656DA86 /* CorrespondentTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CorrespondentTests.swift; sourceTree = "<group>"; };
 		18C03C189FC251D0F185F180 /* KaruiMac.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = KaruiMac.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -244,6 +246,7 @@
 				57C6E865203C37F84966819F /* AboutWindowController.swift */,
 				4B466F1F135069DD48A1473B /* AppCoordinator.swift */,
 				AFB92E764E41E683274F5389 /* AppDelegate.swift */,
+				04C7D2944D42D6C87AC633F7 /* AppLauncher.swift */,
 				53FC48A0DD6C2ECF2AF9D224 /* AppSettings.swift */,
 				9FBC7F39D73658B323FE3E33 /* AutoUpdateService.swift */,
 				23A1E5BDB996F7E881DA0021 /* DemoMode.swift */,
@@ -367,6 +370,7 @@
 				BB21062D85E162C062CA9759 /* AboutWindowController.swift in Sources */,
 				D1453266EDBE1F7502E7FA75 /* AppCoordinator.swift in Sources */,
 				12AE2ADF169EEC27C715B492 /* AppDelegate.swift in Sources */,
+				133F9D8A73E4F90FCA00D6D1 /* AppLauncher.swift in Sources */,
 				0E8ACEBE68E76745938B38FE /* AppSettings.swift in Sources */,
 				54758AD1ACDF40494DD0EB17 /* AutoUpdateService.swift in Sources */,
 				C347228A7259723AA47FB4B8 /* CloudKitEntitlement.swift in Sources */,
