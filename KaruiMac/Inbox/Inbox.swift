@@ -564,6 +564,22 @@ final class Inbox {
         if persisting { persist(touched) }
     }
 
+    /// Notifications this Mac got that the iPhone still hasn't sorted after the
+    /// wait for its verdict: the ones to ask it about (`SortRequests`). Not those the
+    /// person sorted here, those already asked about, or ones with no text.
+    func itemsToSortOnIPhone(now: Date = Date(), excluding requested: Set<String>) -> [Item] {
+        items.filter { item in
+            let age = now.timeIntervalSince(item.deliveredAt)
+            return item.id.hasPrefix("notification-")
+                && item.verdict == nil
+                && item.chosenCategory == nil
+                && !requested.contains(item.fingerprint)
+                && age >= Item.verdictWait
+                && age <= SortRequests.reach
+                && [item.title, item.subtitle, item.body].contains { !($0?.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ?? true) }
+        }
+    }
+
     /// The fingerprints still waiting for the iPhone's verdict, among the day's items.
     func fingerprintsAwaitingVerdict(now: Date = Date()) -> [String] {
         items.filter { $0.verdict == nil && now.timeIntervalSince($0.deliveredAt) <= VerdictRecord.lifetime }.map(\.fingerprint)

@@ -22,7 +22,10 @@ struct SettingsView: View {
             Section(L10n.string("iPhone")) {
                 Text(coordinator.syncStatus.description)
                     .foregroundStyle(.secondary)
-                Text(L10n.string("Each link goes to your iPhone through your iCloud account, with a fingerprint of the notification. The notification's text never leaves this Mac."))
+                Toggle(L10n.string("Have your iPhone sort notifications only this Mac got"), isOn: $settings.asksIPhoneToSort)
+                Text(settings.asksIPhoneToSort
+                    ? L10n.string("Each link goes to your iPhone through your iCloud account, with a fingerprint of the notification. When your iPhone hasn't sorted a notification after five minutes, its text goes too, end-to-end encrypted, so Karui on your iPhone can sort it and alert you if it's Important. This needs Show History on your Mac turned on in Karui on your iPhone.")
+                    : L10n.string("Each link goes to your iPhone through your iCloud account, with a fingerprint of the notification. The notification's text never leaves this Mac."))
                     .foregroundStyle(.secondary)
             }
             Section(L10n.string("Full Disk Access")) {

@@ -27,12 +27,19 @@ final class AppCoordinator {
         found: { [weak self] verdicts in
             Task { @MainActor in
                 self?.inbox.apply(verdicts)
-                self?.noteVerdictsArrived()
+                self?.noteVerdictsArrived(verdicts)
             }
         }
     )
     /// When Sync Now last asked the iPhone, so verdicts arriving soon after count as its answer.
     private var syncRequestedAt: Date?
+    private let sortRequests = SortRequests()
+    /// When the newest verdict from the iPhone was sorted. Recent ones show it sends
+    /// its History, which is how its answers to sort requests come back.
+    private var newestVerdictAt: Date?
+    private var sortRequestTask: Task<Void, Never>?
+    /// How often the inbox is checked for notifications to ask the iPhone about.
+    private static let sortRequestInterval: Duration = .seconds(60)
     private var watcher: NotificationDatabaseWatcher?
     private var watchTask: Task<Void, Never>?
     private var readPollTask: Task<Void, Never>?
@@ -165,10 +172,28 @@ final class AppCoordinator {
             }
             await sync.deleteExpired()
             await verdicts.fetch()
+            await self.askIPhoneToSort()
         }
     }
 
-    private func noteVerdictsArrived() {
+    // MARK: Sorting on the iPhone
+
+    /// Notifications only this Mac got go to the iPhone to sort, when the person has
+    /// turned that on and the iPhone is sending its History, the way the answers
+    /// come back. Without recent verdicts every notification here would look unsorted.
+    private func askIPhoneToSort() async {
+        guard settings.asksIPhoneToSort, syncStatus.status.isAvailable,
+              let newestVerdictAt, Date().timeIntervalSince(newestVerdictAt) <= VerdictRecord.lifetime else { return }
+        let requested = await sortRequests.requested()
+        let items = inbox.itemsToSortOnIPhone(excluding: requested)
+        guard !items.isEmpty else { return }
+        await sortRequests.send(items.prefix(SortRequests.batchLimit).map(SortRequests.Request.init))
+    }
+
+    private func noteVerdictsArrived(_ verdicts: [VerdictRecord]) {
+        if let newest = verdicts.map(\.triagedAt).max(), newest > newestVerdictAt ?? .distantPast {
+            newestVerdictAt = newest
+        }
         guard let syncRequestedAt, Date().timeIntervalSince(syncRequestedAt) < 10 * 60 else { return }
         self.syncRequestedAt = nil
         inbox.syncNote = L10n.format("Synced at %@", Self.timeFormatter.string(from: Date()))
@@ -324,6 +349,12 @@ final class AppCoordinator {
         let readWatcher = readWatcher
         let verdicts = verdicts
         Task { await verdicts.start() }
+        sortRequestTask = Task { [weak self] in
+            while !Task.isCancelled {
+                try? await Task.sleep(for: Self.sortRequestInterval)
+                await self?.askIPhoneToSort()
+            }
+        }
         watchTask = Task {
             for await event in watcher.events() {
                 switch event {

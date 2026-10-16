@@ -4,6 +4,10 @@ import Foundation
 /// fingerprint like the link: the Mac already has the notification's text from
 /// Notification Center and joins the two. Text fields are only for notifications
 /// from apps the Mac doesn't have, and only when the person asks for that.
+///
+/// The same record type carries the Mac's request to sort a notification the
+/// iPhone never got (`sortRequestedAt`); until the iPhone answers it has no
+/// category, so it isn't a verdict yet.
 public struct VerdictRecord: Codable, Equatable, Sendable {
     public static let lifetime: TimeInterval = 24 * 60 * 60
 
@@ -93,4 +97,12 @@ public enum VerdictRecordSchema {
     public static let deletedAt = "deletedAt"
     /// When the Mac last did any of the three; what the iPhone subscribes to.
     public static let actionAt = "actionAt"
+
+    /// Set by the Mac on a record it creates for a notification only it got, which
+    /// carries the text and no category: the iPhone sorts it and writes its verdict
+    /// onto the same record. What the iPhone's second subscription watches.
+    public static let sortRequestedAt = "sortRequestedAt"
+    /// When a notification the Mac asks about arrived there. The iPhone files it at
+    /// that time, so its verdict goes with the Mac's notification.
+    public static let deliveredAt = "deliveredAt"
 }
