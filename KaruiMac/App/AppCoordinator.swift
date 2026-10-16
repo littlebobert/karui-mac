@@ -34,6 +34,8 @@ final class AppCoordinator {
     /// When Sync Now last asked the iPhone, so verdicts arriving soon after count as its answer.
     private var syncRequestedAt: Date?
     private let sortRequests = SortRequests()
+    let sortingSettings = SortingSettingsStore()
+    private lazy var sorter = MacSorter(settings: sortingSettings)
     /// When the newest verdict from the iPhone was sorted. Recent ones show it sends
     /// its History, which is how its answers to sort requests come back.
     private var newestVerdictAt: Date?
@@ -97,6 +99,7 @@ final class AppCoordinator {
             syncStatus.status = await sync.refreshStatus()
             await sync.deleteExpired()
             if syncStatus.status.isAvailable {
+                await MainActor.run { self.sortingSettings.start() }
                 await presence.start()
                 // Needs Full Disk Access for Messages; Spark's part works without it.
                 await correspondents.start()
@@ -172,9 +175,20 @@ final class AppCoordinator {
             }
             await sync.deleteExpired()
             await verdicts.fetch()
+            await self.sortingSettings.refresh()
             await self.askIPhoneToSort()
         }
     }
+
+    // MARK: Sorting here
+
+    /// With the iPhone's settings, as the notification arrives.
+    private func sortHere(_ itemID: String) {
+        guard settings.sortsOnThisMac else { return }
+        sorter.sort(itemID: itemID, in: inbox, shortcutName: settings.secondOpinionShortcutName)
+    }
+
+    var canSortHere: Bool { sorter.canSort }
 
     // MARK: Sorting on the iPhone
 
@@ -364,7 +378,9 @@ final class AppCoordinator {
                     }
                     // Shown with or without a link; the verdict is the iPhone's to send.
                     if let app = KnownApp(macBundleIdentifier: record.bundleIdentifier) {
-                        inbox.add(record, as: app)
+                        let isNew = inbox.add(record, as: app)
+                        // New ones only: a launch's backfill would keep the model busy for minutes.
+                        if case .appeared = event, isNew { self.sortHere(Inbox.id(for: record)) }
                     }
                     // Kept from before a relaunch: the link is on iCloud already, so
                     // only the read-watch is picked up again, when it's still unread.

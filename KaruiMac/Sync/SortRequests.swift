@@ -24,6 +24,8 @@ actor SortRequests {
         let body: String?
         let deliveredAt: Date
         let readAt: Date?
+        /// Sorted here with the model, not by the rules standing in for it.
+        let macVerdict: MacVerdict?
 
         init(_ item: Inbox.Item) {
             fingerprint = item.fingerprint
@@ -33,6 +35,7 @@ actor SortRequests {
             body = item.body
             deliveredAt = item.deliveredAt
             readAt = item.readAt
+            macVerdict = item.macVerdict.flatMap { $0.isModelFallback ? nil : $0 }
         }
     }
 
@@ -71,6 +74,13 @@ actor SortRequests {
             // Read here already: the iPhone files it without alerting.
             record[VerdictRecordSchema.readAt] = request.readAt
             record[VerdictRecordSchema.sortRequestedAt] = now
+            if let verdict = request.macVerdict {
+                record[VerdictRecordSchema.macCategory] = verdict.category
+                record[VerdictRecordSchema.macEngine] = verdict.engine
+                record[VerdictRecordSchema.macConfidence] = verdict.confidence
+                record[VerdictRecordSchema.macInterest] = verdict.interest
+                record.encryptedValues[VerdictRecordSchema.macReason] = verdict.reason
+            }
             return record
         }
         var settled = Set<String>()

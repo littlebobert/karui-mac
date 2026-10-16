@@ -492,7 +492,7 @@ private struct ItemDetail: View {
             VStack(alignment: .leading, spacing: 10) {
                 HStack(spacing: 8) {
                     Text(item.app).foregroundStyle(.secondary)
-                    VerdictBadge(verdict: item.verdict, chosen: item.chosenCategory, isWaiting: item.isWaitingForVerdict)
+                    VerdictBadge(verdict: item.verdict, chosen: item.chosenCategory, mac: item.macVerdict, isWaiting: item.isWaitingForVerdict)
                     Spacer()
                     Text(item.deliveredAt, format: .dateTime.month(.abbreviated).day().hour().minute())
                         .foregroundStyle(.secondary)
@@ -506,7 +506,7 @@ private struct ItemDetail: View {
                 if let body = item.body, !body.isEmpty {
                     Text(body)
                 }
-                if let reason = item.verdict?.reason, !reason.isEmpty {
+                if let reason = item.verdict?.reason ?? item.macVerdict?.reason, !reason.isEmpty {
                     Divider()
                     Text(reason).foregroundStyle(.secondary)
                 }
@@ -633,7 +633,7 @@ private struct ItemsList: View {
                     // Movable like the others; its width stays fixed.
                     .customizationID("unread")
                     TableColumn(L10n.string("Category"), value: \.categoryRank) { item in
-                        VerdictBadge(verdict: item.verdict, chosen: item.chosenCategory, isWaiting: item.isWaitingForVerdict, font: .body)
+                        VerdictBadge(verdict: item.verdict, chosen: item.chosenCategory, mac: item.macVerdict, isWaiting: item.isWaitingForVerdict, font: .body)
                     }
                     .width(min: 76, ideal: 96, max: 150)
                     .customizationID("category")
@@ -743,7 +743,7 @@ private struct InboxRow: View {
             VStack(alignment: .leading, spacing: 2) {
                 HStack(spacing: 6) {
                     AppNameLink(app: item.app).font(.caption)
-                    VerdictBadge(verdict: item.verdict, chosen: item.chosenCategory, isWaiting: item.isWaitingForVerdict)
+                    VerdictBadge(verdict: item.verdict, chosen: item.chosenCategory, mac: item.macVerdict, isWaiting: item.isWaitingForVerdict)
                 }
                 if let title = item.title, !title.isEmpty {
                     Text(title).fontWeight(.semibold)
@@ -754,7 +754,7 @@ private struct InboxRow: View {
                 if let body = item.body, !body.isEmpty {
                     Text(body).foregroundStyle(.secondary).lineLimit(2)
                 }
-                if let reason = item.verdict?.reason, !reason.isEmpty {
+                if let reason = item.verdict?.reason ?? item.macVerdict?.reason, !reason.isEmpty {
                     Text(reason).font(.caption).foregroundStyle(.secondary).lineLimit(2)
                 }
                 if item.readAt != nil {
@@ -798,6 +798,8 @@ private struct AppNameLink: View {
 private struct VerdictBadge: View {
     let verdict: VerdictRecord?
     let chosen: String?
+    /// Sorted on this Mac; shown until the iPhone's verdict arrives.
+    var mac: MacVerdict?
     let isWaiting: Bool
     /// The table's rows use the body size like their other cells; the expanded
     /// rows' header line is caption-sized.
@@ -806,7 +808,7 @@ private struct VerdictBadge: View {
     @Environment(\.backgroundProminence) private var backgroundProminence
 
     var body: some View {
-        let (label, color): (String, Color) = switch chosen ?? verdict?.category {
+        let (label, color): (String, Color) = switch chosen ?? verdict?.category ?? mac?.category {
         case "notifyNow": (L10n.string("Important"), Color(red: 0.72, green: 0.32, blue: 0.22))
         case "summary": (L10n.string("Neutral"), Color(red: 0.22, green: 0.37, blue: 0.29))
         case "silence": (L10n.string("Spam"), Color.secondary)

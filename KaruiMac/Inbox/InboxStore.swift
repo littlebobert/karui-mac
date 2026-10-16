@@ -26,6 +26,8 @@ final class InboxEntry {
     var verdictIsUnread: Bool
     var verdictTitle: String?
     var verdictBody: String?
+    /// The Mac's own verdict (`MacVerdict`), as JSON.
+    var macVerdictData: Data?
 
     init(item: Inbox.Item) {
         id = item.id
@@ -48,6 +50,7 @@ final class InboxEntry {
         verdictIsUnread = item.verdict?.isUnread ?? true
         verdictTitle = item.verdict?.title
         verdictBody = item.verdict?.body
+        macVerdictData = item.macVerdict.flatMap { try? JSONEncoder().encode($0) }
     }
 
     func update(from item: Inbox.Item) {
@@ -65,6 +68,7 @@ final class InboxEntry {
         verdictIsUnread = item.verdict?.isUnread ?? true
         verdictTitle = item.verdict?.title
         verdictBody = item.verdict?.body
+        macVerdictData = item.macVerdict.flatMap { try? JSONEncoder().encode($0) }
     }
 
     var item: Inbox.Item {
@@ -82,6 +86,7 @@ final class InboxEntry {
         item.senderName = senderName
         item.readAt = readAt
         item.chosenCategory = chosenCategory
+        item.macVerdict = macVerdictData.flatMap { try? JSONDecoder().decode(MacVerdict.self, from: $0) }
         if let verdictCategory, let verdictTriagedAt {
             item.verdict = VerdictRecord(
                 fingerprint: fingerprint, app: app, category: verdictCategory, interest: verdictInterest,

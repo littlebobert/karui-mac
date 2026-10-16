@@ -35,7 +35,6 @@ actor CorrespondentSync {
     }
 
     func send() async {
-        guard let database else { return }
         var hashes = Set<String>()
         for source in sources {
             do {
@@ -46,6 +45,9 @@ actor CorrespondentSync {
                 SafeDiagnosticLog.shared.record("correspondents: \(type(of: source)) failed: \(error)")
             }
         }
+        // Sorting on this Mac uses them as the iPhone does.
+        KnownCorrespondentHashes.shared.replace(with: hashes)
+        guard let database else { return }
         // Sorted so the record only changes when the people do.
         let list = Array(hashes).sorted().prefix(CorrespondentRecordSchema.maximumHashes)
         let record = CKRecord(

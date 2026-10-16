@@ -9,6 +9,8 @@ final class AppSettings {
         static let showsDockIcon = "showsDockIcon"
         static let showsUnreadBadge = "showsUnreadBadge"
         static let asksIPhoneToSort = "asksIPhoneToSort"
+        static let sortsOnThisMac = "sortsOnThisMac"
+        static let secondOpinionShortcutName = "secondOpinionShortcutName"
     }
 
     private let defaults: UserDefaults
@@ -40,11 +42,25 @@ final class AppSettings {
         didSet { defaults.set(asksIPhoneToSort, forKey: Key.asksIPhoneToSort) }
     }
 
+    /// Sorts each notification here as it arrives, with the iPhone's settings. Nothing
+    /// leaves the Mac for it, so on unless turned off.
+    var sortsOnThisMac: Bool {
+        didSet { defaults.set(sortsOnThisMac, forKey: Key.sortsOnThisMac) }
+    }
+
+    /// The Shortcut that asks Private Cloud Compute, when the iPhone's Second Opinion
+    /// setting calls for it.
+    var secondOpinionShortcutName: String {
+        didSet { defaults.set(secondOpinionShortcutName, forKey: Key.secondOpinionShortcutName) }
+    }
+
     init(defaults: UserDefaults = .standard) {
         self.defaults = defaults
         showsMenuBarItem = defaults.bool(forKey: Key.showsMenuBarItem)
         showsDockIcon = defaults.object(forKey: Key.showsDockIcon) as? Bool ?? true
         showsUnreadBadge = defaults.object(forKey: Key.showsUnreadBadge) as? Bool ?? true
         asksIPhoneToSort = defaults.bool(forKey: Key.asksIPhoneToSort)
+        sortsOnThisMac = defaults.object(forKey: Key.sortsOnThisMac) as? Bool ?? true
+        secondOpinionShortcutName = defaults.string(forKey: Key.secondOpinionShortcutName) ?? MacSecondOpinion.defaultShortcutName
     }
 }

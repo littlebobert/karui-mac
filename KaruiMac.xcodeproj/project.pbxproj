@@ -26,13 +26,16 @@
 		54758AD1ACDF40494DD0EB17 /* AutoUpdateService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9FBC7F39D73658B323FE3E33 /* AutoUpdateService.swift */; };
 		58B843671087828476A17A1A /* AppIconSource.png in Resources */ = {isa = PBXBuildFile; fileRef = 6CA9E859EEC0683C3C84FEEB /* AppIconSource.png */; };
 		5916F4769E5F40D48B463BFF /* Sparkle in Frameworks */ = {isa = PBXBuildFile; productRef = 782A9236982375E69B998D37 /* Sparkle */; };
+		59B02B06504F73D2E33FBDDB /* MacSorter.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF88AF701CB740F31C522CBC /* MacSorter.swift */; };
 		611EDB47A4CA5D72542A9168 /* Acknowledgements.txt in Resources */ = {isa = PBXBuildFile; fileRef = CDA83893DD1898A941803C76 /* Acknowledgements.txt */; };
 		6F1F477087C760E2E8B83643 /* SlackHarvester.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0368E20A347FBE53765A797B /* SlackHarvester.swift */; };
 		71995B62B28464F1978F0F94 /* VerdictStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = B925C34CA7033ED768164254 /* VerdictStore.swift */; };
 		71FCA40B8355B8319BD331C2 /* MessagesLinkTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5986291BE197CA76F4D6CA8E /* MessagesLinkTests.swift */; };
 		81CB8D99097C43010B9E2FC2 /* CorrespondentTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17304FF1E3D049F3C656DA86 /* CorrespondentTests.swift */; };
 		820F35FC5B53F16C8C79C1D5 /* NotificationDatabase.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2EF2A3CF2E9957E0C0B42B3 /* NotificationDatabase.swift */; };
+		8D32B45A548B847970B9406E /* MacSortingEnvironment.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84FE6D61A57CB963CB4C5CCC /* MacSortingEnvironment.swift */; };
 		8DEB9C643FA7D9081602AD21 /* CorrespondentSync.swift in Sources */ = {isa = PBXBuildFile; fileRef = DF4BF525FF076257FB084C2A /* CorrespondentSync.swift */; };
+		9938A77BD4938C9D62BB75C0 /* KaruiSorting in Frameworks */ = {isa = PBXBuildFile; productRef = 5E676695F40FF501D04224D5 /* KaruiSorting */; };
 		993CD23DDD32E5C0C303FEBC /* SparkLinkTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1234CDFEE07EA21BAA319888 /* SparkLinkTests.swift */; };
 		A665DA8B77CE7BEE0C570BE2 /* SQLiteDatabase.swift in Sources */ = {isa = PBXBuildFile; fileRef = 256E396E924DE9AB3935ABB5 /* SQLiteDatabase.swift */; };
 		AD28793611CC3ED7547620EB /* ReadWatcher.swift in Sources */ = {isa = PBXBuildFile; fileRef = B7677F16AEA0B585F6963745 /* ReadWatcher.swift */; };
@@ -53,6 +56,8 @@
 		D66550355B02294EBB91F582 /* NotificationPayloadTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57E3E9CF0788DE8E74AA72D0 /* NotificationPayloadTests.swift */; };
 		E00EE92CA4A237CC5AE01FB8 /* NotificationDatabaseWatcher.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B9727746C8262B05FCF0C07 /* NotificationDatabaseWatcher.swift */; };
 		E620E1F707D6E244E25C8E3E /* SafeDiagnosticLog.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01510FEECF5D3DCE0DED30E6 /* SafeDiagnosticLog.swift */; };
+		E938124FFE8ECE7B8C2CD054 /* MacSecondOpinion.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75ACA25EA222D40857A4FB20 /* MacSecondOpinion.swift */; };
+		F0994B4D99C5602707DEC703 /* SortingSettingsStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 462569B5AE26FA4CCA644A6A /* SortingSettingsStore.swift */; };
 		F0AB815F18DBD4B665CAFB12 /* SortRequests.swift in Sources */ = {isa = PBXBuildFile; fileRef = EB6F536E917DE437D0754E1E /* SortRequests.swift */; };
 /* End PBXBuildFile section */
 
@@ -80,6 +85,7 @@
 		256E396E924DE9AB3935ABB5 /* SQLiteDatabase.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SQLiteDatabase.swift; sourceTree = "<group>"; };
 		29A29143D3E9AA889152D714 /* Localization.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Localization.swift; sourceTree = "<group>"; };
 		2CD87E065773D23C77EB5CCD /* InfoPlist.strings */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = InfoPlist.strings; path = ja.lproj/InfoPlist.strings; sourceTree = "<group>"; };
+		462569B5AE26FA4CCA644A6A /* SortingSettingsStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SortingSettingsStore.swift; sourceTree = "<group>"; };
 		4B466F1F135069DD48A1473B /* AppCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppCoordinator.swift; sourceTree = "<group>"; };
 		4B9727746C8262B05FCF0C07 /* NotificationDatabaseWatcher.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationDatabaseWatcher.swift; sourceTree = "<group>"; };
 		4C44EC3DE17DE1FCA7463F4E /* SlackLinkTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SlackLinkTests.swift; sourceTree = "<group>"; };
@@ -94,8 +100,10 @@
 		640B79B0B8031650B8824CEB /* Inbox.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Inbox.swift; sourceTree = "<group>"; };
 		6CA9E859EEC0683C3C84FEEB /* AppIconSource.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = AppIconSource.png; sourceTree = "<group>"; };
 		6E0F2603A038F4EABE382CD4 /* CloudKitEntitlement.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CloudKitEntitlement.swift; sourceTree = "<group>"; };
+		75ACA25EA222D40857A4FB20 /* MacSecondOpinion.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MacSecondOpinion.swift; sourceTree = "<group>"; };
 		7C291DB86FBAE44252DBF29D /* karui-mac */ = {isa = PBXFileReference; lastKnownFileType = folder; name = "karui-mac"; path = .; sourceTree = SOURCE_ROOT; };
 		7CDCA27785FCD626FF554343 /* CompanionPresence.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CompanionPresence.swift; sourceTree = "<group>"; };
+		84FE6D61A57CB963CB4C5CCC /* MacSortingEnvironment.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MacSortingEnvironment.swift; sourceTree = "<group>"; };
 		8971A5A194FC9644337F7A93 /* KaruiMacTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = KaruiMacTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		9789D39272AA5E1B1CC4C22B /* MessagesHarvester.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MessagesHarvester.swift; sourceTree = "<group>"; };
 		9FBC7F39D73658B323FE3E33 /* AutoUpdateService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AutoUpdateService.swift; sourceTree = "<group>"; };
@@ -107,6 +115,7 @@
 		B8640EA18112E9AC366300AA /* Harvester.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Harvester.swift; sourceTree = "<group>"; };
 		B925C34CA7033ED768164254 /* VerdictStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VerdictStore.swift; sourceTree = "<group>"; };
 		BAA22D646B0B0086568E6C34 /* FullDiskAccess.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FullDiskAccess.swift; sourceTree = "<group>"; };
+		BF88AF701CB740F31C522CBC /* MacSorter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MacSorter.swift; sourceTree = "<group>"; };
 		C424AFD49EBE5C89997B8D7C /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		CDA83893DD1898A941803C76 /* Acknowledgements.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = Acknowledgements.txt; sourceTree = "<group>"; };
 		DD78E6FA806C0CC6D07E2BEF /* SyncStatus.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SyncStatus.swift; sourceTree = "<group>"; };
@@ -124,6 +133,7 @@
 			files = (
 				5916F4769E5F40D48B463BFF /* Sparkle in Frameworks */,
 				26445B3E9165FAB91EBDFDBB /* KaruiLinkKit in Frameworks */,
+				9938A77BD4938C9D62BB75C0 /* KaruiSorting in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -171,6 +181,17 @@
 			path = Resources;
 			sourceTree = "<group>";
 		};
+		78B776C6E403EA0088925B33 /* Sorting */ = {
+			isa = PBXGroup;
+			children = (
+				75ACA25EA222D40857A4FB20 /* MacSecondOpinion.swift */,
+				BF88AF701CB740F31C522CBC /* MacSorter.swift */,
+				84FE6D61A57CB963CB4C5CCC /* MacSortingEnvironment.swift */,
+				462569B5AE26FA4CCA644A6A /* SortingSettingsStore.swift */,
+			);
+			path = Sorting;
+			sourceTree = "<group>";
+		};
 		816B0FF06B203EE1220A5BE1 /* Harvesting */ = {
 			isa = PBXGroup;
 			children = (
@@ -195,6 +216,7 @@
 				816B0FF06B203EE1220A5BE1 /* Harvesting */,
 				8A7DF89B2D17028784BFF4AC /* Inbox */,
 				69F5FD8E5F62FE9E958DDD80 /* Resources */,
+				78B776C6E403EA0088925B33 /* Sorting */,
 				CE95B3523B7979876B61ACBF /* Sync */,
 			);
 			path = KaruiMac;
@@ -283,6 +305,7 @@
 			packageProductDependencies = (
 				782A9236982375E69B998D37 /* Sparkle */,
 				1EEF910B98DBB071B7129E5A /* KaruiLinkKit */,
+				5E676695F40FF501D04224D5 /* KaruiSorting */,
 			);
 			productName = KaruiMac;
 			productReference = 18C03C189FC251D0F185F180 /* KaruiMac.app */;
@@ -391,6 +414,9 @@
 				351CCFEAAFC9F7E04A808ADE /* KaruiMacApp.swift in Sources */,
 				D5D5164D472F70C79643EE6A /* Localization.swift in Sources */,
 				CE9B510965CA78D9CD0F8D89 /* LoginItem.swift in Sources */,
+				E938124FFE8ECE7B8C2CD054 /* MacSecondOpinion.swift in Sources */,
+				59B02B06504F73D2E33FBDDB /* MacSorter.swift in Sources */,
+				8D32B45A548B847970B9406E /* MacSortingEnvironment.swift in Sources */,
 				B683E35184D1A6B6FAD22A3C /* MenuBarMenu.swift in Sources */,
 				ADBF1CC1490BB3D97A63E3C6 /* MessagesConversationFinder.swift in Sources */,
 				B36C02CF03B1CE1739258C8D /* MessagesHarvester.swift in Sources */,
@@ -402,6 +428,7 @@
 				BDE1F47D809D94B97D3ADDFC /* SettingsView.swift in Sources */,
 				6F1F477087C760E2E8B83643 /* SlackHarvester.swift in Sources */,
 				F0AB815F18DBD4B665CAFB12 /* SortRequests.swift in Sources */,
+				F0994B4D99C5602707DEC703 /* SortingSettingsStore.swift in Sources */,
 				506A24EE70DB7B87395F9679 /* SparkHarvester.swift in Sources */,
 				C2E50012B0D354A658E91189 /* SyncStatus.swift in Sources */,
 				71995B62B28464F1978F0F94 /* VerdictStore.swift in Sources */,
@@ -701,6 +728,10 @@
 		1EEF910B98DBB071B7129E5A /* KaruiLinkKit */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = KaruiLinkKit;
+		};
+		5E676695F40FF501D04224D5 /* KaruiSorting */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = KaruiSorting;
 		};
 		782A9236982375E69B998D37 /* Sparkle */ = {
 			isa = XCSwiftPackageProductDependency;

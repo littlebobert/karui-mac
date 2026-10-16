@@ -63,6 +63,8 @@ targets:
       - package: Sparkle
         product: Sparkle
       - package: KaruiLinkKit
+      - package: KaruiLinkKit
+        product: KaruiSorting
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.justin.henry.karui.mac

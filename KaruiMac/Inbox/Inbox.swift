@@ -29,6 +29,9 @@ final class Inbox {
         var verdict: VerdictRecord?
         /// A category chosen here, shown until the iPhone's verdict catches up.
         var chosenCategory: String?
+        /// Sorted on this Mac as it arrived (`MacSorter`), shown until the iPhone's
+        /// verdict arrives.
+        var macVerdict: MacVerdict?
 
         init(id: String, app: String, fingerprint: String, title: String?, subtitle: String?, body: String?, deliveredAt: Date) {
             self.id = id
@@ -40,7 +43,7 @@ final class Inbox {
             self.deliveredAt = deliveredAt
         }
 
-        var category: String? { chosenCategory ?? verdict?.category }
+        var category: String? { chosenCategory ?? verdict?.category ?? macVerdict?.category }
         /// The category as a column sorts it: Important, Neutral, Spam, then none.
         var categoryRank: Int { Inbox.categories.firstIndex(of: category ?? "") ?? Inbox.categories.count }
         /// The subtitle and body on one line, for a compact row; the sender has its own column.
@@ -52,10 +55,11 @@ final class Inbox {
         }
         var isUnread: Bool { readAt == nil && verdict?.isUnread ?? true }
 
-        /// A verdict arrives within a minute or two when the iPhone got the
+        /// A verdict usually arrives within a minute when the iPhone got the
         /// notification; after this long, it didn't (the app held the push back
-        /// while the person was at the Mac, or the phone was off).
-        static let verdictWait: TimeInterval = 5 * 60
+        /// while the person was at the Mac, or the phone was off), and the Mac asks
+        /// the iPhone to sort it. The iPhone's log says how long each request took.
+        static let verdictWait: TimeInterval = 2 * 60
         var isWaitingForVerdict: Bool {
             verdict == nil && Date().timeIntervalSince(deliveredAt) < Self.verdictWait
         }
@@ -549,6 +553,12 @@ final class Inbox {
     func restore(_ removed: [Item]) {
         for item in removed { insert(item) }
         store?.save(removed)
+    }
+
+    func setMacVerdict(_ verdict: MacVerdict, id: String) {
+        guard let index = items.firstIndex(where: { $0.id == id }) else { return }
+        items[index].macVerdict = verdict
+        persist([id])
     }
 
     func setVerdict(_ verdict: VerdictRecord, for fingerprint: String, persisting: Bool = true) {
