@@ -266,7 +266,20 @@ final class Inbox {
         cacheVersion &+= 1
     }
 
+    /// Reads every input the caches are built from, so a view that gets a cached
+    /// list still depends on them. Otherwise only the first view to read after a
+    /// change registers the inputs, and the next keystroke in Search updates the
+    /// count in the status line but not the table.
+    private func noteCacheInputs() {
+        _ = items.count
+        _ = search
+        _ = showsOnlyOpenable
+        _ = shownCategories
+        _ = shownReadStates
+    }
+
     var filtered: [Item] {
+        noteCacheInputs()
         if let filteredCache { return filteredCache }
         let search = search.trimmingCharacters(in: .whitespaces)
         let result = items.filter { item in
@@ -282,6 +295,7 @@ final class Inbox {
     /// The items the list shows, in the columns' order: the open group's, or the
     /// filtered day. Sorted once per change of items, filters, group, or sort.
     var sortedVisibleItems: [Item] {
+        noteCacheInputs()
         let key = "\(cacheVersion)|\(openGroupID ?? "")|\(grouping.rawValue)|" + sortOrder.map { "\($0.keyPath)\($0.order)" }.joined()
         if let sortedCache, sortedCache.key == key { return sortedCache.items }
         let result = visibleItems.sorted(using: sortOrder)
