@@ -399,7 +399,7 @@ final class Inbox {
         record.deepLink(as: app, url: URL(string: "about:blank")!, opensExactContent: false).fingerprint
     }
 
-    /// A notification this Mac got, from Notification Center. Returns whether it was new.
+    /// A notification this Mac received, from Notification Center. Returns whether it was new.
     ///
     /// Notification Center reuses a cleared notification's record ID for the next
     /// one, so an item with this ID may be an older notification; it is kept under
@@ -574,7 +574,7 @@ final class Inbox {
         if persisting { persist(touched) }
     }
 
-    /// Notifications this Mac got that the iPhone still hasn't sorted after the
+    /// Notifications this Mac received that the iPhone still hasn't sorted after the
     /// wait for its verdict: the ones to ask it about (`SortRequests`). Not those the
     /// person sorted here, those already asked about, or ones with no text.
     func itemsToSortOnIPhone(now: Date = Date(), excluding requested: Set<String>) -> [Item] {

@@ -15,7 +15,7 @@ final class SetupNudge {
         case iPhoneSettings
         /// Second Opinion is on in Karui on the iPhone, and the Shortcut is missing here.
         case secondOpinionShortcut
-        /// Sorting works; notifications only this Mac got could reach the iPhone too.
+        /// Sorting works; notifications only this Mac received could reach the iPhone too.
         case sendToIPhone
     }
 
@@ -115,7 +115,7 @@ struct SetupNudgeCard: View {
         switch step {
         case .iPhoneSettings: L10n.string("Sort notifications the moment they arrive")
         case .secondOpinionShortcut: L10n.string("Add the Second Opinion Shortcut")
-        case .sendToIPhone: L10n.string("Get notifications only this Mac got on your iPhone")
+        case .sendToIPhone: L10n.string("Get notifications only this Mac received on your iPhone")
         }
     }
 

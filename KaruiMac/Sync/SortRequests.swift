@@ -2,7 +2,7 @@ import CloudKit
 import Foundation
 import KaruiLinkKit
 
-/// Notifications only this Mac got, sent to the iPhone to sort: an app can hold a
+/// Notifications only this Mac received, sent to the iPhone to sort: an app can hold a
 /// push back from the phone while the person is at the Mac, or the phone can be
 /// off. Each goes as a `Verdict` record named by its fingerprint, with the text
 /// (end-to-end encrypted), when it arrived, and no category; the iPhone sorts it,

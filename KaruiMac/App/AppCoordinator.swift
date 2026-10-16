@@ -208,7 +208,7 @@ final class AppCoordinator {
 
     // MARK: Sorting on the iPhone
 
-    /// Notifications only this Mac got go to the iPhone to sort, when the person has
+    /// Notifications only this Mac received go to the iPhone to sort, when the person has
     /// turned that on and the iPhone is sending its History, the way the answers
     /// come back. Without recent verdicts every notification here would look unsorted.
     private func askIPhoneToSort() async {

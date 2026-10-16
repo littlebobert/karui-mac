@@ -26,7 +26,7 @@ struct MacVerdict: Codable, Equatable, Sendable {
 
 /// Sorts each notification as it arrives, with the iPhone's settings and Apple's
 /// on-device model on this Mac, so the inbox has a category at once and the iPhone
-/// needn't sort what only the Mac got. Then, when the iPhone's Second Opinion
+/// needn't sort what only the Mac received. Then, when the iPhone's Second Opinion
 /// setting calls for it, asks Private Cloud Compute through the person's Shortcut.
 /// One at a time: the model answers one request at a time anyway.
 @MainActor

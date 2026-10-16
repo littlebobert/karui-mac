@@ -27,7 +27,7 @@
 "Sign in to iCloud on this Mac to send links to your iPhone" = "iPhoneにリンクを送るには、このMacでiCloudにサインインしてください";
 "iCloud is restricted on this Mac" = "このMacではiCloudが制限されています";
 "Each link goes to your iPhone through your iCloud account, with a fingerprint of the notification. The notification's text never leaves this Mac." = "各リンクは通知のフィンガープリントとともに、あなたのiCloudアカウントを通じてiPhoneに送られます。通知の本文がこのMacから出ることはありません。";
-"Send notifications only this Mac got to your iPhone" = "このMacだけに届いた通知をiPhoneに送る";
+"Send notifications only this Mac received to your iPhone" = "このMacだけに届いた通知をiPhoneに送る";
 "Each link goes to your iPhone through your iCloud account, with a fingerprint of the notification. When your iPhone hasn't sorted a notification after two minutes, its text goes too, end-to-end encrypted, so Karui on your iPhone can sort it and alert you if it's Important. This needs Show History on your Mac turned on in Karui on your iPhone." = "各リンクは通知のフィンガープリントとともに、あなたのiCloudアカウントを通じてiPhoneに送られます。2分たってもiPhoneが仕分けていない通知は、その本文もエンドツーエンドで暗号化して送られ、iPhoneのKaruiが仕分けて、重要なら通知します。iPhoneのKaruiで「Macに履歴を表示」をオンにしておく必要があります。";
 "Copy Diagnostics" = "診断情報をコピー";
 "Read here; cleared on the iPhone" = "ここで既読。iPhoneの通知を消去";
@@ -141,7 +141,7 @@
 "Sorting" = "仕分け";
 "Sort notifications the moment they arrive" = "届いた瞬間に通知を仕分ける";
 "Add the Second Opinion Shortcut" = "セカンドオピニオンのショートカットを追加";
-"Get notifications only this Mac got on your iPhone" = "このMacだけに届いた通知をiPhoneでも受け取る";
+"Get notifications only this Mac received on your iPhone" = "このMacだけに届いた通知をiPhoneでも受け取る";
 "This Mac can sort each notification with your iPhone’s settings as soon as it arrives. In Karui on your iPhone, open Settings → Karui for Mac and turn on Show History on your Mac." = "このMacは、届いた通知をすぐにiPhoneの設定で仕分けられます。iPhoneのKaruiで「設定」→「Mac版Karui」を開き、「Macに履歴を表示」をオンにしてください。";
 "Second Opinion is on in Karui on your iPhone. This Mac asks Apple’s Private Cloud Compute through a Shortcut of your own, with the same prompt your iPhone sends." = "iPhoneのKaruiでセカンドオピニオンがオンになっています。このMacは、あなた自身のショートカットを通じて、iPhoneと同じ内容でAppleのPrivate Cloud Computeに問い合わせます。";
 "When your iPhone never got a notification, this Mac can send it there, already sorted and end-to-end encrypted, so it shows in History and alerts you if it’s Important." = "iPhoneに届かなかった通知を、このMacが仕分け済みの状態でエンドツーエンド暗号化して送れます。iPhoneの履歴に表示され、重要なら通知されます。";

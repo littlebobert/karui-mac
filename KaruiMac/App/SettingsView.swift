@@ -97,7 +97,7 @@ struct SettingsView: View {
                 }
             }
             Section {
-                Toggle(L10n.string("Send notifications only this Mac got to your iPhone"), isOn: $settings.asksIPhoneToSort)
+                Toggle(L10n.string("Send notifications only this Mac received to your iPhone"), isOn: $settings.asksIPhoneToSort)
                 Text(iPhoneDescription(sendsNotifications: settings.asksIPhoneToSort, sortsHere: settings.sortsOnThisMac && coordinator.canSortHere))
                     .foregroundStyle(.secondary)
             }
