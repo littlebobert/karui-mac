@@ -7,11 +7,10 @@ import SwiftUI
 struct IPhoneSortingSettingsSection: View {
     let policy: TriagePolicy
     let updatedAt: Date?
-    @State private var isExpanded = false
 
     var body: some View {
         Section {
-            DisclosureGroup(L10n.string("Your iPhone’s sorting settings"), isExpanded: $isExpanded) {
+            Group {
                 row("VIPs", list(policy.vipIdentities.map(\.displayName)))
                 row("Your names", terms(policy.userNames))
                 row("Important apps", list(policy.importantApps.filter { app in !policy.workApps.contains(app) }))
@@ -32,6 +31,8 @@ struct IPhoneSortingSettingsSection: View {
                 row("Learned", L10n.format("%lld fixes", Int64(learnedCount)))
                 row("Second Opinion", secondOpinion)
             }
+        } header: {
+            Text(L10n.string("Your iPhone’s sorting settings"))
         } footer: {
             Text(updatedAt.map {
                 L10n.format("Change these in Karui on your iPhone. These are from %@.", $0.formatted(date: .abbreviated, time: .shortened))

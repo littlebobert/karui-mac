@@ -36,9 +36,26 @@ struct SettingsView: View {
     }
 
     var body: some View {
-        @Bindable var settings = coordinator.settings
+        TabView {
+            generalTab
+                .tabItem { Label(L10n.string("General"), systemImage: "gearshape") }
+            iPhoneTab
+                .tabItem { Label(L10n.string("iPhone"), systemImage: "iphone") }
+            sortingTab
+                .tabItem { Label(L10n.string("Sorting"), systemImage: "line.3.horizontal.decrease.circle") }
+            fullDiskAccessTab
+                .tabItem { Label(L10n.string("Full Disk Access"), systemImage: "lock.shield") }
+        }
+        .onAppear {
+            coordinator.loginItem.refresh()
+            coordinator.fullDiskAccess.refresh()
+            coordinator.refreshSyncStatus()
+        }
+    }
 
-        Form {
+    private var generalTab: some View {
+        @Bindable var settings = coordinator.settings
+        return Form {
             Section {
                 Toggle(L10n.string("Show in menu bar"), isOn: $settings.showsMenuBarItem)
                 Toggle(L10n.string("Show in Dock"), isOn: $settings.showsDockIcon)
@@ -51,17 +68,39 @@ struct SettingsView: View {
                     )
                 )
             }
-            Section(L10n.string("iPhone")) {
+        }
+        .formStyle(.grouped)
+        .frame(width: Self.width)
+        .fixedSize(horizontal: false, vertical: true)
+    }
+
+    private var iPhoneTab: some View {
+        @Bindable var settings = coordinator.settings
+        return Form {
+            Section {
                 Text(coordinator.syncStatus.description)
                     .foregroundStyle(.secondary)
+            }
+            Section {
                 Toggle(L10n.string("Send notifications only this Mac got to your iPhone"), isOn: $settings.asksIPhoneToSort)
                 Text(iPhoneDescription(sendsNotifications: settings.asksIPhoneToSort, sortsHere: settings.sortsOnThisMac && coordinator.canSortHere))
                     .foregroundStyle(.secondary)
             }
-            Section(L10n.string("Sorting on this Mac")) {
+        }
+        .formStyle(.grouped)
+        .frame(width: Self.width)
+        .fixedSize(horizontal: false, vertical: true)
+    }
+
+    private var sortingTab: some View {
+        @Bindable var settings = coordinator.settings
+        return Form {
+            Section {
                 Toggle(L10n.string("Sort notifications on this Mac"), isOn: $settings.sortsOnThisMac)
                 Text(sortingStatus)
                     .foregroundStyle(.secondary)
+            }
+            Section(L10n.string("Second Opinion")) {
                 TextField(L10n.string("Second Opinion Shortcut"), text: $settings.secondOpinionShortcutName)
                 LabeledContent(L10n.string("Shortcut")) {
                     switch isShortcutInstalled {
@@ -79,7 +118,21 @@ struct SettingsView: View {
             if let policy = coordinator.sortingSettings.policy {
                 IPhoneSortingSettingsSection(policy: policy, updatedAt: coordinator.sortingSettings.updatedAt)
             }
-            Section(L10n.string("Full Disk Access")) {
+        }
+        .formStyle(.grouped)
+        // The iPhone's settings can run long; the tab scrolls past this.
+        .frame(width: Self.width, height: 560)
+        .task { await coordinator.sortingSettings.refresh() }
+        // Again on each change of name, and when the person comes back from Shortcuts.
+        .task(id: settings.secondOpinionShortcutName) { await checkShortcut() }
+        .onReceive(NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)) { _ in
+            Task { await checkShortcut() }
+        }
+    }
+
+    private var fullDiskAccessTab: some View {
+        Form {
+            Section {
                 LabeledContent(
                     L10n.string("Status"),
                     value: coordinator.fullDiskAccess.isGranted ? L10n.string("On") : L10n.string("Off")
@@ -92,17 +145,9 @@ struct SettingsView: View {
             }
         }
         .formStyle(.grouped)
-        .task { await coordinator.sortingSettings.refresh() }
-        // Again on each change of name, and when the person comes back from Shortcuts.
-        .task(id: settings.secondOpinionShortcutName) { await checkShortcut() }
-        .onReceive(NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)) { _ in
-            Task { await checkShortcut() }
-        }
-        .frame(width: 460)
-        .onAppear {
-            coordinator.loginItem.refresh()
-            coordinator.fullDiskAccess.refresh()
-            coordinator.refreshSyncStatus()
-        }
+        .frame(width: Self.width)
+        .fixedSize(horizontal: false, vertical: true)
     }
+
+    private static let width: CGFloat = 480
 }
