@@ -6,7 +6,7 @@ Its window is the day's notifications from those apps, as Notification Center ha
 
 ## Download
 
-[Download Karui for Mac 0.5.4 for Apple Silicon](https://github.com/littlebobert/karui-mac/releases/download/0.5.4/Karui-0.5.4-mac.zip)
+[Download Karui for Mac 0.5.5 for Apple Silicon](https://github.com/littlebobert/karui-mac/releases/download/0.5.5/Karui-0.5.5-mac.zip)
 
 ## Build and run
 
