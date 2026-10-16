@@ -8,6 +8,9 @@ import KaruiSorting
 /// the rest of its settings.
 enum MacSecondOpinion {
     static let defaultShortcutName = "Karui Second Opinion"
+    /// The standard Shortcut: receive text, Use Model set to Private Cloud Compute,
+    /// output the response.
+    static let shortcutURL = URL(string: "https://www.icloud.com/shortcuts/5e5dadea36134e56ab3d7f372eedd747")!
     static let deadline: Duration = .seconds(30)
 
     /// As the iPhone decides: never what the rules decided outright; with Before

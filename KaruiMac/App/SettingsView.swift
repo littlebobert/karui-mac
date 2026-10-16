@@ -2,6 +2,8 @@ import SwiftUI
 
 struct SettingsView: View {
     let coordinator: AppCoordinator
+    /// Nil while checking.
+    @State private var isShortcutInstalled: Bool?
 
     private var sortingStatus: String {
         guard #available(macOS 26.0, *) else {
@@ -17,6 +19,20 @@ struct SettingsView: View {
             "Sorts each notification as it arrives, with your iPhone’s settings from %@. Nothing leaves this Mac for it.",
             updatedAt.formatted(date: .abbreviated, time: .shortened)
         )
+    }
+
+    private func iPhoneDescription(sendsNotifications: Bool, sortsHere: Bool) -> String {
+        guard sendsNotifications else {
+            return L10n.string("Each link goes to your iPhone through your iCloud account, with a fingerprint of the notification. The notification's text never leaves this Mac.")
+        }
+        return sortsHere
+            ? L10n.string("Each link goes to your iPhone through your iCloud account, with a fingerprint of the notification. When your iPhone hasn't sorted a notification after two minutes, this Mac sends it with its own verdict, end-to-end encrypted, so it shows in your iPhone's History and alerts you if it's Important. This needs Show History on your Mac turned on in Karui on your iPhone.")
+            : L10n.string("Each link goes to your iPhone through your iCloud account, with a fingerprint of the notification. When your iPhone hasn't sorted a notification after two minutes, its text goes too, end-to-end encrypted, so Karui on your iPhone can sort it and alert you if it's Important. This needs Show History on your Mac turned on in Karui on your iPhone.")
+    }
+
+    private func checkShortcut() async {
+        let name = coordinator.settings.secondOpinionShortcutName.trimmingCharacters(in: .whitespacesAndNewlines)
+        isShortcutInstalled = name.isEmpty ? false : await MacSecondOpinion.isInstalled(name: name)
     }
 
     var body: some View {
@@ -38,10 +54,8 @@ struct SettingsView: View {
             Section(L10n.string("iPhone")) {
                 Text(coordinator.syncStatus.description)
                     .foregroundStyle(.secondary)
-                Toggle(L10n.string("Have your iPhone sort notifications only this Mac got"), isOn: $settings.asksIPhoneToSort)
-                Text(settings.asksIPhoneToSort
-                    ? L10n.string("Each link goes to your iPhone through your iCloud account, with a fingerprint of the notification. When your iPhone hasn't sorted a notification after two minutes, its text goes too, end-to-end encrypted, so Karui on your iPhone can sort it and alert you if it's Important. This needs Show History on your Mac turned on in Karui on your iPhone.")
-                    : L10n.string("Each link goes to your iPhone through your iCloud account, with a fingerprint of the notification. The notification's text never leaves this Mac."))
+                Toggle(L10n.string("Send notifications only this Mac got to your iPhone"), isOn: $settings.asksIPhoneToSort)
+                Text(iPhoneDescription(sendsNotifications: settings.asksIPhoneToSort, sortsHere: settings.sortsOnThisMac && coordinator.canSortHere))
                     .foregroundStyle(.secondary)
             }
             Section(L10n.string("Sorting on this Mac")) {
@@ -49,6 +63,16 @@ struct SettingsView: View {
                 Text(sortingStatus)
                     .foregroundStyle(.secondary)
                 TextField(L10n.string("Second Opinion Shortcut"), text: $settings.secondOpinionShortcutName)
+                LabeledContent(L10n.string("Shortcut")) {
+                    switch isShortcutInstalled {
+                    case true?: Text(L10n.string("Installed"))
+                    case false?:
+                        Button(L10n.string("Get the Shortcut")) {
+                            NSWorkspace.shared.open(MacSecondOpinion.shortcutURL)
+                        }
+                    case nil: ProgressView().controlSize(.small)
+                    }
+                }
                 Text(L10n.string("When Second Opinion is on in Karui on your iPhone, this Mac asks Apple’s Private Cloud Compute through this Shortcut, with the same prompt your iPhone sends. The Shortcut takes text and returns what Use Model, set to Private Cloud Compute, answers."))
                     .foregroundStyle(.secondary)
             }
@@ -66,6 +90,11 @@ struct SettingsView: View {
         }
         .formStyle(.grouped)
         .task { await coordinator.sortingSettings.refresh() }
+        // Again on each change of name, and when the person comes back from Shortcuts.
+        .task(id: settings.secondOpinionShortcutName) { await checkShortcut() }
+        .onReceive(NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)) { _ in
+            Task { await checkShortcut() }
+        }
         .frame(width: 460)
         .onAppear {
             coordinator.loginItem.refresh()

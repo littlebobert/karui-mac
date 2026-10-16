@@ -35,7 +35,8 @@ final class AppSettings {
         didSet { defaults.set(showsUnreadBadge, forKey: Key.showsUnreadBadge) }
     }
 
-    /// Notifications only this Mac got go to the iPhone to sort, text and all; off
+    /// Notifications only this Mac got go to the iPhone, text and all, to sort or,
+    /// when this Mac sorted them already, to file with its verdict; off
     /// until the person turns it on, since it's the one thing that sends text
     /// from this Mac.
     var asksIPhoneToSort: Bool {
