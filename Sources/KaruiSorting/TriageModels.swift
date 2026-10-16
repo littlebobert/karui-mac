@@ -1260,3 +1260,19 @@ public struct TriagePolicy: Codable, Equatable, Sendable {
         try container.encode(searchByMeaning, forKey: .searchByMeaning)
     }
 }
+
+public extension NotificationInput {
+    /// A notification as Karui for Mac has it from Notification Center, shaped as the
+    /// iPhone's Shortcut would hand it over. In Messages, Slack, and Spark the title
+    /// names the sender.
+    static func fromMac(app: String, title: String?, subtitle: String?, body: String?, receivedAt: Date) -> NotificationInput {
+        NotificationInput(
+            source: app,
+            title: title ?? "",
+            body: [subtitle, body].compactMap { $0 }.joined(separator: "\n"),
+            sender: title,
+            subtitle: subtitle,
+            receivedAt: receivedAt
+        )
+    }
+}

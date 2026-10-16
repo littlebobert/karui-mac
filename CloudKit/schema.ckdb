@@ -34,6 +34,11 @@ DEFINE SCHEMA
         deliveredAt       TIMESTAMP,
         interest          INT64,
         isUnread          INT64,
+        macCategory       STRING,
+        macConfidence     DOUBLE,
+        macEngine         STRING,
+        macInterest       INT64,
+        macReason         ENCRYPTED STRING,
         readAt            TIMESTAMP,
         reason            ENCRYPTED STRING,
         recipients        ENCRYPTED STRING,
@@ -75,6 +80,23 @@ DEFINE SCHEMA
         lastSeenAt        TIMESTAMP,
         name              STRING,
         syncRequestedAt   TIMESTAMP QUERYABLE,
+        GRANT WRITE TO "_creator",
+        GRANT CREATE TO "_icloud",
+        GRANT READ TO "_icloud"
+    );
+
+    RECORD TYPE SortingSettings (
+        "___createTime"     TIMESTAMP,
+        "___createdBy"      REFERENCE,
+        "___etag"           STRING,
+        "___modTime"        TIMESTAMP,
+        "___modifiedBy"     REFERENCE,
+        "___recordID"       REFERENCE QUERYABLE,
+        appVersion          STRING,
+        correctionThreshold DOUBLE,
+        corrections         ENCRYPTED STRING,
+        policy              ENCRYPTED STRING,
+        updatedAt           TIMESTAMP,
         GRANT WRITE TO "_creator",
         GRANT CREATE TO "_icloud",
         GRANT READ TO "_icloud"

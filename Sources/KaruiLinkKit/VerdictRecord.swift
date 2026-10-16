@@ -105,4 +105,13 @@ public enum VerdictRecordSchema {
     /// When a notification the Mac asks about arrived there. The iPhone files it at
     /// that time, so its verdict goes with the Mac's notification.
     public static let deliveredAt = "deliveredAt"
+    /// The Mac's own verdict on a notification it asks about, sorted there with the
+    /// iPhone's settings (`SortingSettingsRecordSchema`): the iPhone files it as is,
+    /// rather than sort again in the background. Category, engine, and confidence as
+    /// `TriageResult` has them; the reason is encrypted.
+    public static let macCategory = "macCategory"
+    public static let macEngine = "macEngine"
+    public static let macConfidence = "macConfidence"
+    public static let macInterest = "macInterest"
+    public static let macReason = "macReason"
 }
