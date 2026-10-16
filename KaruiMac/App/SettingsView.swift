@@ -78,8 +78,23 @@ struct SettingsView: View {
         @Bindable var settings = coordinator.settings
         return Form {
             Section {
-                Text(coordinator.syncStatus.description)
-                    .foregroundStyle(.secondary)
+                // A status row, so it doesn't read as a heading.
+                LabeledContent(L10n.string("Status")) {
+                    switch coordinator.syncStatus.status {
+                    case .unknown:
+                        HStack(spacing: 6) {
+                            ProgressView().controlSize(.small)
+                            Text(coordinator.syncStatus.description)
+                        }
+                    case .available:
+                        Label(coordinator.syncStatus.description, systemImage: "checkmark.circle.fill")
+                            .foregroundStyle(.green)
+                    default:
+                        Label(coordinator.syncStatus.description, systemImage: "exclamationmark.triangle.fill")
+                            .foregroundStyle(.orange)
+                            .multilineTextAlignment(.trailing)
+                    }
+                }
             }
             Section {
                 Toggle(L10n.string("Send notifications only this Mac got to your iPhone"), isOn: $settings.asksIPhoneToSort)
