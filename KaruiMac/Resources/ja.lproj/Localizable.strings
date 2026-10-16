@@ -139,3 +139,11 @@
 "Change these in Karui on your iPhone." = "変更はiPhoneのKaruiで行ってください。";
 "General" = "一般";
 "Sorting" = "仕分け";
+"Sort notifications the moment they arrive" = "届いた瞬間に通知を仕分ける";
+"Add the Second Opinion Shortcut" = "セカンドオピニオンのショートカットを追加";
+"Get notifications only this Mac got on your iPhone" = "このMacだけに届いた通知をiPhoneでも受け取る";
+"This Mac can sort each notification with your iPhone’s settings as soon as it arrives. In Karui on your iPhone, open Settings → Karui for Mac and turn on Show History on your Mac." = "このMacは、届いた通知をすぐにiPhoneの設定で仕分けられます。iPhoneのKaruiで「設定」→「Mac版Karui」を開き、「Macに履歴を表示」をオンにしてください。";
+"Second Opinion is on in Karui on your iPhone. This Mac asks Apple’s Private Cloud Compute through a Shortcut of your own, with the same prompt your iPhone sends." = "iPhoneのKaruiでセカンドオピニオンがオンになっています。このMacは、あなた自身のショートカットを通じて、iPhoneと同じ内容でAppleのPrivate Cloud Computeに問い合わせます。";
+"When your iPhone never got a notification, this Mac can send it there, already sorted and end-to-end encrypted, so it shows in History and alerts you if it’s Important." = "iPhoneに届かなかった通知を、このMacが仕分け済みの状態でエンドツーエンド暗号化して送れます。iPhoneの履歴に表示され、重要なら通知されます。";
+"Turn On" = "オンにする";
+"Not Now" = "今はしない";

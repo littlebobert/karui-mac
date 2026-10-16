@@ -59,6 +59,19 @@ struct KaruiMacApp: App {
             CommandGroup(replacing: .help) {
                 Link(L10n.string("Karui for Mac Help"), destination: URL(string: "https://karui.jp/mac")!)
                 Button(L10n.string("Report a Bug…")) { _ = BugReport.compose() }
+                #if DEBUG
+                Divider()
+                // Developer builds: the inbox's setup steps, whatever the state.
+                Menu("Show Setup Banner") {
+                    let nudge = appDelegate.coordinator.setupNudge
+                    ForEach(SetupNudge.Step.allCases, id: \.self) { step in
+                        Button(step.rawValue) { nudge.forcedStep = step }
+                    }
+                    Divider()
+                    Button("Hide Forced Banner") { nudge.forcedStep = nil }
+                    Button("Reset Dismissed Banners") { nudge.resetDismissed() }
+                }
+                #endif
             }
         }
 

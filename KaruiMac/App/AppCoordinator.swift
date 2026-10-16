@@ -35,6 +35,7 @@ final class AppCoordinator {
     private var syncRequestedAt: Date?
     private let sortRequests = SortRequests()
     let sortingSettings = SortingSettingsStore()
+    let setupNudge = SetupNudge()
     private lazy var sorter = MacSorter(settings: sortingSettings)
     /// When the newest verdict from the iPhone was sorted. Recent ones show it sends
     /// its History, which is how its answers to sort requests come back.
@@ -87,6 +88,7 @@ final class AppCoordinator {
             return
         }
         SafeDiagnosticLog.shared.record("app: start")
+        refreshSetupNudge()
         fullDiskAccess.refresh()
         startWatchingIfPossible()
         autoUpdates.start()
@@ -118,6 +120,7 @@ final class AppCoordinator {
     /// the person comes back to the app.
     func applicationDidBecomeActive() {
         guard !DemoMode.isActive else { return }
+        refreshSetupNudge()
         fullDiskAccess.refresh()
         startWatchingIfPossible()
     }
@@ -181,6 +184,19 @@ final class AppCoordinator {
     }
 
     // MARK: Sorting here
+
+    /// Whether the Second Opinion Shortcut is here, for the inbox's setup step; on
+    /// launch and each time the person comes back, as from the Shortcuts app.
+    func refreshSetupNudge() {
+        let nudge = setupNudge
+        let name = settings.secondOpinionShortcutName
+        Task { await nudge.refreshShortcut(name: name) }
+    }
+
+    var setupStep: SetupNudge.Step? {
+        guard !DemoMode.isActive else { return nil }
+        return setupNudge.step(settings: settings, sorting: sortingSettings, canSort: canSortHere)
+    }
 
     /// With the iPhone's settings, as the notification arrives.
     private func sortHere(_ itemID: String) {

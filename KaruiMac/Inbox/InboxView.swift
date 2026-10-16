@@ -15,6 +15,18 @@ struct InboxView: View {
                         .padding([.horizontal, .top], 16)
                 }
             }
+            // After Full Disk Access, which comes first, the next step toward sorting here.
+            if coordinator.fullDiskAccess.isGranted || DemoMode.isActive, let step = coordinator.setupStep {
+                SetupNudgeCard(
+                    step: step,
+                    onTurnOnSending: {
+                        coordinator.settings.asksIPhoneToSort = true
+                        coordinator.setupNudge.forcedStep = nil
+                    },
+                    onDismiss: { coordinator.setupNudge.dismiss(step) }
+                )
+                .padding([.horizontal, .top], 16)
+            }
             if let openItemID = coordinator.inbox.openItemID, let item = coordinator.inbox.item(id: openItemID) {
                 // One notification in full: its own bar, with nothing that belongs to a list.
                 DetailBar(coordinator: coordinator, item: item)

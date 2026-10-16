@@ -16,6 +16,8 @@ final class SortingSettingsStore {
     private(set) var policy: TriagePolicy?
     /// When the iPhone last changed them.
     private(set) var updatedAt: Date?
+    /// iCloud has answered at least once, so a missing policy means the iPhone sent none.
+    private(set) var hasChecked = false
     @ObservationIgnored private let database: CKDatabase?
     @ObservationIgnored private var task: Task<Void, Never>?
 
@@ -44,10 +46,12 @@ final class SortingSettingsStore {
         do {
             let record = try await database.record(for: CKRecord.ID(recordName: SortingSettingsRecordSchema.recordName))
             apply(record)
+            hasChecked = true
         } catch let error as CKError where error.code == .unknownItem {
             // Never sent, or Show History on your Mac was turned off on the iPhone.
             if policy != nil { SafeDiagnosticLog.shared.record("sorting settings: gone from iCloud, cleared") }
             clear()
+            hasChecked = true
         } catch {
             SafeDiagnosticLog.shared.record("sorting settings: fetch failed: \(error.localizedDescription)")
         }
