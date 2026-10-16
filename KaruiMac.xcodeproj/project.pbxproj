@@ -57,6 +57,7 @@
 		E00EE92CA4A237CC5AE01FB8 /* NotificationDatabaseWatcher.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B9727746C8262B05FCF0C07 /* NotificationDatabaseWatcher.swift */; };
 		E620E1F707D6E244E25C8E3E /* SafeDiagnosticLog.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01510FEECF5D3DCE0DED30E6 /* SafeDiagnosticLog.swift */; };
 		E938124FFE8ECE7B8C2CD054 /* MacSecondOpinion.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75ACA25EA222D40857A4FB20 /* MacSecondOpinion.swift */; };
+		EC296C35DFB671461EE63283 /* IPhoneSortingSettingsSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA731233B4D5A5ECA4611FD6 /* IPhoneSortingSettingsSection.swift */; };
 		F0994B4D99C5602707DEC703 /* SortingSettingsStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 462569B5AE26FA4CCA644A6A /* SortingSettingsStore.swift */; };
 		F0AB815F18DBD4B665CAFB12 /* SortRequests.swift in Sources */ = {isa = PBXBuildFile; fileRef = EB6F536E917DE437D0754E1E /* SortRequests.swift */; };
 /* End PBXBuildFile section */
@@ -118,6 +119,7 @@
 		BF88AF701CB740F31C522CBC /* MacSorter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MacSorter.swift; sourceTree = "<group>"; };
 		C424AFD49EBE5C89997B8D7C /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		CDA83893DD1898A941803C76 /* Acknowledgements.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = Acknowledgements.txt; sourceTree = "<group>"; };
+		DA731233B4D5A5ECA4611FD6 /* IPhoneSortingSettingsSection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IPhoneSortingSettingsSection.swift; sourceTree = "<group>"; };
 		DD78E6FA806C0CC6D07E2BEF /* SyncStatus.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SyncStatus.swift; sourceTree = "<group>"; };
 		DF4BF525FF076257FB084C2A /* CorrespondentSync.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CorrespondentSync.swift; sourceTree = "<group>"; };
 		EB6F536E917DE437D0754E1E /* SortRequests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SortRequests.swift; sourceTree = "<group>"; };
@@ -276,6 +278,7 @@
 				9FBC7F39D73658B323FE3E33 /* AutoUpdateService.swift */,
 				23A1E5BDB996F7E881DA0021 /* DemoMode.swift */,
 				BAA22D646B0B0086568E6C34 /* FullDiskAccess.swift */,
+				DA731233B4D5A5ECA4611FD6 /* IPhoneSortingSettingsSection.swift */,
 				61B11DFC924A31F1D18275E7 /* KaruiMacApp.swift */,
 				29A29143D3E9AA889152D714 /* Localization.swift */,
 				5223EA087C8D20E54B0D5DDF /* LoginItem.swift */,
@@ -407,6 +410,7 @@
 				23020A8966F305767CA6C564 /* DemoMode.swift in Sources */,
 				450373E70A90D9E47C01B39A /* FullDiskAccess.swift in Sources */,
 				03A9D4824CFC0492AF517084 /* Harvester.swift in Sources */,
+				EC296C35DFB671461EE63283 /* IPhoneSortingSettingsSection.swift in Sources */,
 				04B9EDA56D644A72178963F7 /* Inbox.swift in Sources */,
 				D1283CD1A534EAB5246E66A9 /* InboxStore.swift in Sources */,
 				48BC8B8FE8B3454F291F732C /* InboxView.swift in Sources */,

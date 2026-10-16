@@ -76,6 +76,9 @@ struct SettingsView: View {
                 Text(L10n.string("When Second Opinion is on in Karui on your iPhone, this Mac asks Apple’s Private Cloud Compute through this Shortcut, with the same prompt your iPhone sends. The Shortcut takes text and returns what Use Model, set to Private Cloud Compute, answers."))
                     .foregroundStyle(.secondary)
             }
+            if let policy = coordinator.sortingSettings.policy {
+                IPhoneSortingSettingsSection(policy: policy, updatedAt: coordinator.sortingSettings.updatedAt)
+            }
             Section(L10n.string("Full Disk Access")) {
                 LabeledContent(
                     L10n.string("Status"),
