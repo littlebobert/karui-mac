@@ -354,6 +354,19 @@ final class Inbox {
     /// notification.
     static let looseMatchWindow: TimeInterval = 15 * 60
 
+    /// A verdict goes with an item of its fingerprint delivered this close to when
+    /// the iPhone sorted it. The fingerprint is the app, sender, and text, so "Hi"
+    /// from the same person on two days is one fingerprint; the verdict sorted today
+    /// belongs to today's notification, not the one from three days ago.
+    static let verdictMatchWindow: TimeInterval = 60 * 60
+
+    private func indices(matching verdict: VerdictRecord) -> [Int] {
+        items.indices.filter {
+            items[$0].fingerprint == verdict.fingerprint
+                && abs(items[$0].deliveredAt.timeIntervalSince(verdict.triagedAt)) <= Self.verdictMatchWindow
+        }
+    }
+
     static func looselyMatches(_ item: Item, app: String, title: String?, body: String?, at date: Date) -> Bool {
         guard item.app == appName(app), abs(item.deliveredAt.timeIntervalSince(date)) <= looseMatchWindow else { return false }
         let mine = NotificationFingerprint.normalize(item.title), theirs = NotificationFingerprint.normalize(title)
@@ -425,14 +438,21 @@ final class Inbox {
         var touched = Set<String>()
         for verdict in verdicts {
             if verdict.deletedAt != nil {
-                let gone = items.filter { $0.fingerprint == verdict.fingerprint }.map(\.id)
-                items.removeAll { $0.fingerprint == verdict.fingerprint }
-                store?.delete(ids: Set(gone))
+                let gone = Set(indices(matching: verdict).map { items[$0].id })
+                items.removeAll { gone.contains($0.id) }
+                store?.delete(ids: gone)
                 continue
             }
-            if items.contains(where: { $0.fingerprint == verdict.fingerprint }) {
-                setVerdict(verdict, for: verdict.fingerprint, persisting: false)
-                touched.formUnion(items.filter { $0.fingerprint == verdict.fingerprint }.map(\.id))
+            let matching = indices(matching: verdict)
+            if !matching.isEmpty {
+                for index in matching {
+                    items[index].verdict = verdict
+                    if items[index].recipients == nil { items[index].recipients = verdict.recipients }
+                    if items[index].senderName == nil { items[index].senderName = verdict.sender }
+                    if items[index].chosenCategory == verdict.category { items[index].chosenCategory = nil }
+                    if let readAt = verdict.readAt, items[index].readAt == nil { items[index].readAt = readAt }
+                    touched.insert(items[index].id)
+                }
             } else if let index = items.firstIndex(where: { $0.verdict == nil && $0.id.hasPrefix("notification-")
                                                        && Self.looselyMatches($0, app: verdict.app, title: verdict.title, body: verdict.body, at: verdict.triagedAt) }) {
                 // The Mac's copy takes the iPhone's fingerprint, so what's done to it
@@ -445,8 +465,11 @@ final class Inbox {
                 touched.insert(items[index].id)
                 SafeDiagnosticLog.shared.record("verdicts: matched one loosely, by sender and text")
             } else if verdict.title != nil || verdict.body != nil {
+                // An earlier notification with the same text keeps its own row; this
+                // one's ID carries the time, so the two stay apart.
+                let isRepeat = items.contains { $0.fingerprint == verdict.fingerprint }
                 var item = Item(
-                    id: verdict.fingerprint,
+                    id: isRepeat ? "\(verdict.fingerprint)@\(Int(verdict.triagedAt.timeIntervalSince1970))" : verdict.fingerprint,
                     app: Self.appName(verdict.app),
                     fingerprint: verdict.fingerprint,
                     title: verdict.title,
