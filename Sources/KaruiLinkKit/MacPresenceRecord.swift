@@ -1,7 +1,8 @@
 import Foundation
 
-/// Whether the person is using a Mac right now: one record per Mac, named like its
-/// `Companion` record, updated every half minute while they are and at once when the
+/// Whether the person is using a Mac right now: one record per Mac, named
+/// "presence-" and its `Companion` record's name (record names are unique in a zone
+/// whatever the type), updated every half minute while they are and at once when the
 /// screen locks or the Mac sleeps. Karui on the iPhone reads it just before an alert,
 /// and while they're at a Mac, alerts quietly: the Mac has the notification in front
 /// of them. A record of its own, since the iPhone subscribes to `Companion` changes

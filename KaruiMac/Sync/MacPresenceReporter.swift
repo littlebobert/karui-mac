@@ -35,7 +35,9 @@ final class MacPresenceReporter {
     init(
         container: CKContainer? = CloudKitEntitlement.hasKaruiContainer
             ? CKContainer(identifier: DeepLinkSync.containerIdentifier) : nil,
-        recordName: String = CompanionPresence.identifier()
+        // Its own name: record names are unique in a zone whatever the type, and
+        // the Companion record already has this Mac's identifier.
+        recordName: String = "presence-" + CompanionPresence.identifier()
     ) {
         database = container?.privateCloudDatabase
         self.recordName = recordName
