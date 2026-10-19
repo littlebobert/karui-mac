@@ -21,7 +21,7 @@ final class MacBanners: NSObject, UNUserNotificationCenterDelegate {
     }
 
     func requestPermission() {
-        center.requestAuthorization(options: [.alert, .sound]) { granted, error in
+        center.requestAuthorization(options: [.alert, .sound, .badge]) { granted, error in
             if let error {
                 SafeDiagnosticLog.shared.record("banners: permission failed: \(error.localizedDescription)")
             } else if !granted {
@@ -42,6 +42,13 @@ final class MacBanners: NSObject, UNUserNotificationCenterDelegate {
             if let error { SafeDiagnosticLog.shared.record("banners: post failed: \(error.localizedDescription)") }
         }
         SafeDiagnosticLog.shared.record("banners: posted one from \(item.app)")
+    }
+
+    /// Notifications were allowed or refused, and the Dock badge with them was turned
+    /// off: macOS then hides the badge, so Settings says where to turn it on.
+    func badgesAreBlocked() async -> Bool {
+        let settings = await center.notificationSettings()
+        return settings.authorizationStatus != .notDetermined && settings.badgeSetting != .enabled
     }
 
     /// Read here or elsewhere: its banner goes from Notification Center too.

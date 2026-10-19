@@ -57,7 +57,6 @@
 "Mark as Read" = "既読にする";
 "Delete" = "削除";
 "Nothing matches." = "一致する項目はありません。";
-"%d unread" = "未読 %d件";
 "Back" = "戻る";
 "%d selected" = "%d件を選択中";
 "About Karui" = "Karuiについて";
@@ -90,7 +89,6 @@
 "Asked the iPhone at %@" = "%@にiPhoneへ依頼";
 "Synced at %@" = "%@に同期";
 "Could not reach iCloud" = "iCloudに接続できません";
-"Badge with unread count" = "未読数をバッジで表示";
 "Sender" = "送信者";
 "Name" = "名前";
 "Count" = "件数";
@@ -203,3 +201,7 @@
 "Show Preview" = "プレビューを表示";
 "Hide Preview" = "プレビューを非表示";
 "No Notification Selected" = "通知が選択されていません";
+"Badge with unread Important count" = "未読の重要な通知の数をバッジで表示";
+"%d unread Important" = "未読の重要 %d件";
+"Badges are off for Karui in System Settings." = "システム設定でKaruiのバッジがオフになっています。";
+"Open Notification Settings" = "通知設定を開く";

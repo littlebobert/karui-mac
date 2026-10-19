@@ -54,6 +54,9 @@ final class Inbox {
                 .joined(separator: " · ")
         }
         var isUnread: Bool { readAt == nil && verdict?.isUnread ?? true }
+        /// Unread and Important: what gets the dot, the counts, and the Dock badge.
+        /// Neutral and Spam are read or not, but never wait for the person.
+        var needsAttention: Bool { isUnread && category == "notifyNow" }
 
         /// A verdict usually arrives within a minute when the iPhone got the
         /// notification; after this long, it didn't (the app held the push back
@@ -137,7 +140,8 @@ final class Inbox {
         let items: [Item]
 
         var count: Int { items.count }
-        var unreadCount: Int { items.filter(\.isUnread).count }
+        /// Unread Important ones, as everywhere a count is shown.
+        var unreadCount: Int { items.filter(\.needsAttention).count }
         var newestAt: Date { items.map(\.deliveredAt).max() ?? .distantPast }
 
         static func == (lhs: Group, rhs: Group) -> Bool { lhs.id == rhs.id }
@@ -359,8 +363,8 @@ final class Inbox {
 
     func item(id: String) -> Item? { items.first { $0.id == id } }
 
-    /// Unread across everything held, whatever the filters show.
-    var unreadCount: Int { items.filter(\.isUnread).count }
+    /// Unread Important across everything held, whatever the filters show.
+    var unreadCount: Int { items.filter(\.needsAttention).count }
 
     /// Everything at once, for the demo; nothing is written to disk.
     func replaceItems(_ newItems: [Item]) {

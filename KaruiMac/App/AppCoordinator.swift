@@ -119,7 +119,8 @@ final class AppCoordinator {
                     let settings = self.settings
                     self.presenceReporter.isEnabled = { settings.reportsUse }
                     self.presenceReporter.start()
-                    if settings.reportsUse { self.banners.requestPermission() }
+                    // Banners need it, and once asked, the Dock badge needs it too.
+                    if settings.reportsUse || settings.showsUnreadBadge { self.banners.requestPermission() }
                 }
                 await self.subscriptions.ensure()
                 await presence.start()
@@ -219,6 +220,10 @@ final class AppCoordinator {
     }
 
     // MARK: Banners
+
+    func badgesAreBlocked() async -> Bool {
+        await banners.badgesAreBlocked()
+    }
 
     /// The person turned on quieting the iPhone: this Mac will show banners instead.
     func reportsUseChanged() {

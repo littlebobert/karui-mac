@@ -109,9 +109,9 @@ struct InboxView: View {
             line = L10n.format("%d selected", inbox.selection.count)
         } else {
             let shown = inbox.sortedVisibleItems
-            let unread = shown.filter(\.isUnread).count
+            let unread = shown.filter(\.needsAttention).count
             let count = L10n.format("%d notifications", shown.count)
-            line = unread == 0 ? count : count + " · " + L10n.format("%d unread", unread)
+            line = unread == 0 ? count : count + " · " + L10n.format("%d unread Important", unread)
         }
         return inbox.syncNote.map { line + " · " + $0 } ?? line
     }
@@ -683,7 +683,7 @@ private struct ItemsList: View {
                 Table(sorted, selection: $inbox.selection, sortOrder: $inbox.sortOrder, columnCustomization: $columns) {
                     TableColumn("") { item in
                         Circle()
-                            .fill(item.isUnread ? Color.accentColor : Color.clear)
+                            .fill(item.needsAttention ? Color.accentColor : Color.clear)
                             .frame(width: 8, height: 8)
                     }
                     .width(12)
@@ -794,7 +794,7 @@ private struct InboxRow: View {
     var body: some View {
         HStack(alignment: .top, spacing: 10) {
             Circle()
-                .fill(item.isUnread ? Color.accentColor : Color.clear)
+                .fill(item.needsAttention ? Color.accentColor : Color.clear)
                 .frame(width: 8, height: 8)
                 .padding(.top, 6)
             VStack(alignment: .leading, spacing: 2) {

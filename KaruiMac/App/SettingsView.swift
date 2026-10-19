@@ -4,6 +4,7 @@ struct SettingsView: View {
     let coordinator: AppCoordinator
     /// Nil while checking.
     @State private var isShortcutInstalled: Bool?
+    @State private var badgesAreBlocked = false
 
     private var sortingStatus: String {
         guard #available(macOS 26.0, *) else {
@@ -59,7 +60,17 @@ struct SettingsView: View {
             Section {
                 Toggle(L10n.string("Show in menu bar"), isOn: $settings.showsMenuBarItem)
                 Toggle(L10n.string("Show in Dock"), isOn: $settings.showsDockIcon)
-                Toggle(L10n.string("Badge with unread count"), isOn: $settings.showsUnreadBadge)
+                Toggle(L10n.string("Badge with unread Important count"), isOn: $settings.showsUnreadBadge)
+                if settings.showsUnreadBadge, badgesAreBlocked {
+                    HStack {
+                        Text(L10n.string("Badges are off for Karui in System Settings."))
+                            .foregroundStyle(.secondary)
+                        Spacer()
+                        Button(L10n.string("Open Notification Settings")) {
+                            NSWorkspace.shared.open(URL(string: "x-apple.systempreferences:com.apple.Notifications-Settings.extension?id=\(Bundle.main.bundleIdentifier ?? "")")!)
+                        }
+                    }
+                }
                 Toggle(
                     L10n.string("Start at login"),
                     isOn: Binding(
@@ -72,6 +83,10 @@ struct SettingsView: View {
         .formStyle(.grouped)
         .frame(width: Self.width)
         .fixedSize(horizontal: false, vertical: true)
+        .task(id: settings.showsUnreadBadge) { badgesAreBlocked = await coordinator.badgesAreBlocked() }
+        .onReceive(NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)) { _ in
+            Task { badgesAreBlocked = await coordinator.badgesAreBlocked() }
+        }
     }
 
     private var iPhoneTab: some View {
