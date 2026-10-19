@@ -6,13 +6,18 @@ import KaruiLinkKit
 
 /// Tells the iPhone whether the person is using this Mac (`MacPresenceRecordSchema`),
 /// so Karui there alerts quietly while the Mac has the notification in front of
-/// them. In use means a key or the pointer moved within the last minute, with the
-/// screen unlocked and awake. Written every half minute while in use, and at once
-/// when that ends; a Mac that stops writing goes stale on the iPhone by itself.
+/// them. In use means a key or the pointer moved within the last few minutes, with
+/// the screen unlocked and awake. Written every half minute while in use, and at
+/// once when that ends; a Mac that stops writing goes stale on the iPhone by itself.
+///
+/// The writes keep App Nap off while the screen is unlocked and awake: napping, the
+/// app's timers slip by minutes once its window is covered, the record goes stale,
+/// and the iPhone alerts though the person is right here.
 @MainActor
 final class MacPresenceReporter {
-    /// No input for this long counts as away.
-    static let idleThreshold: TimeInterval = 60
+    /// No input for this long counts as away. Long enough to read a message without
+    /// touching anything; walking away usually locks the screen or puts it to sleep.
+    static let idleThreshold: TimeInterval = 3 * 60
     private let database: CKDatabase?
     private let recordName: String
     private var timer: Timer?
@@ -20,6 +25,8 @@ final class MacPresenceReporter {
     private var isAsleep = false
     /// What was last written, so an unchanged "away" isn't written again.
     private var lastWritten: Bool?
+    private var lastTick: Date?
+    private var activity: NSObjectProtocol?
     private var observers: [NSObjectProtocol] = []
     var isEnabled: () -> Bool = { true }
 
@@ -53,26 +60,68 @@ final class MacPresenceReporter {
             })
         }
         timer = Timer.scheduledTimer(withTimeInterval: MacPresenceRecordSchema.interval, repeats: true) { [weak self] _ in
-            MainActor.assumeIsolated { self?.report() }
+            MainActor.assumeIsolated { self?.tick() }
         }
         report()
+    }
+
+    /// The setting changed.
+    func refresh() {
+        report()
+    }
+
+    private var secondsSinceInput: TimeInterval {
+        CGEventSource.secondsSinceLastEventType(.combinedSessionState, eventType: CGEventType(rawValue: ~0)!)
     }
 
     /// Whether the person is using the Mac now.
     var isInUse: Bool {
         guard isEnabled(), !isLocked, !isAsleep else { return false }
-        let anyInput = CGEventType(rawValue: ~0)!
-        return CGEventSource.secondsSinceLastEventType(.combinedSessionState, eventType: anyInput) < Self.idleThreshold
+        return secondsSinceInput < Self.idleThreshold
     }
 
-    /// In use: written each time, so the iPhone sees a fresh time. Away: written once.
+    /// A late timer means the app was napping after all; the log says by how much.
+    private func tick() {
+        let now = Date()
+        if let lastTick, !isLocked, !isAsleep, isEnabled() {
+            let gap = now.timeIntervalSince(lastTick)
+            if gap > MacPresenceRecordSchema.interval * 2 {
+                SafeDiagnosticLog.shared.record("presence: check ran \(Int(gap)) s after the last")
+            }
+        }
+        lastTick = now
+        report()
+    }
+
+    /// App Nap stays off while there is someone to report on.
+    private func updateActivity() {
+        let wanted = isEnabled() && !isLocked && !isAsleep
+        if wanted, activity == nil {
+            activity = ProcessInfo.processInfo.beginActivity(
+                options: .userInitiatedAllowingIdleSystemSleep,
+                reason: "Telling the iPhone whether you're using this Mac"
+            )
+        } else if !wanted, let activity {
+            ProcessInfo.processInfo.endActivity(activity)
+            self.activity = nil
+        }
+    }
+
+    /// In use: written each time, so the iPhone sees a fresh time. Away: written once,
+    /// with when input last came, so the iPhone's log can say how long ago.
     private func report() {
+        updateActivity()
+        let idle = secondsSinceInput
         let inUse = isInUse
         guard inUse || lastWritten != false, let database else { return }
+        if inUse != lastWritten {
+            SafeDiagnosticLog.shared.record("presence: \(inUse ? "in use" : "away (\(awayReason(idle: idle)))")")
+        }
         lastWritten = inUse
+        let now = Date()
         let record = CKRecord(recordType: MacPresenceRecordSchema.recordType, recordID: CKRecord.ID(recordName: recordName))
         record[MacPresenceRecordSchema.isAtMac] = inUse ? 1 : 0
-        record[MacPresenceRecordSchema.lastActiveAt] = inUse ? Date() : nil
+        record[MacPresenceRecordSchema.lastActiveAt] = inUse ? now : now.addingTimeInterval(-idle)
         record[MacPresenceRecordSchema.name] = Host.current().localizedName ?? "Mac"
         Task {
             do {
@@ -82,5 +131,12 @@ final class MacPresenceReporter {
                 await MainActor.run { self.lastWritten = nil }
             }
         }
+    }
+
+    private func awayReason(idle: TimeInterval) -> String {
+        if !isEnabled() { return "turned off" }
+        if isLocked { return "locked" }
+        if isAsleep { return "asleep" }
+        return "no input for \(Int(idle)) s"
     }
 }

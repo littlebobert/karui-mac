@@ -223,6 +223,7 @@ final class AppCoordinator {
     /// The person turned on quieting the iPhone: this Mac will show banners instead.
     func reportsUseChanged() {
         if settings.reportsUse { banners.requestPermission() }
+        presenceReporter.refresh()
     }
 
     /// While the person is using this Mac the iPhone alerts quietly, so Important
