@@ -10,6 +10,7 @@ final class AppSettings {
         static let showsUnreadBadge = "showsUnreadBadge"
         static let asksIPhoneToSort = "asksIPhoneToSort"
         static let sortsOnThisMac = "sortsOnThisMac"
+        static let reportsUse = "reportsUse"
         static let secondOpinionShortcutName = "secondOpinionShortcutName"
     }
 
@@ -49,6 +50,12 @@ final class AppSettings {
         didSet { defaults.set(sortsOnThisMac, forKey: Key.sortsOnThisMac) }
     }
 
+    /// Tells the iPhone when the person is using this Mac, so Karui there alerts
+    /// quietly meanwhile. Only whether, and when last; on unless turned off.
+    var reportsUse: Bool {
+        didSet { defaults.set(reportsUse, forKey: Key.reportsUse) }
+    }
+
     /// The Shortcut that asks Private Cloud Compute, when the iPhone's Second Opinion
     /// setting calls for it.
     var secondOpinionShortcutName: String {
@@ -62,6 +69,7 @@ final class AppSettings {
         showsUnreadBadge = defaults.object(forKey: Key.showsUnreadBadge) as? Bool ?? true
         asksIPhoneToSort = defaults.bool(forKey: Key.asksIPhoneToSort)
         sortsOnThisMac = defaults.object(forKey: Key.sortsOnThisMac) as? Bool ?? true
+        reportsUse = defaults.object(forKey: Key.reportsUse) as? Bool ?? true
         secondOpinionShortcutName = defaults.string(forKey: Key.secondOpinionShortcutName) ?? MacSecondOpinion.defaultShortcutName
     }
 }

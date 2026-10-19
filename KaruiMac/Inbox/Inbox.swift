@@ -451,9 +451,12 @@ final class Inbox {
 
     /// The day's verdicts from the iPhone: each goes with its notification here, or,
     /// when it carries the text, stands for a notification only the iPhone got. One
-    /// the iPhone has deleted goes.
-    func apply(_ verdicts: [VerdictRecord]) {
+    /// the iPhone has deleted goes. Returns the IDs of notifications only the iPhone
+    /// got that are new here.
+    @discardableResult
+    func apply(_ verdicts: [VerdictRecord]) -> [String] {
         var touched = Set<String>()
+        var added: [String] = []
         for verdict in verdicts {
             if verdict.deletedAt != nil {
                 let gone = Set(indices(matching: verdict).map { items[$0].id })
@@ -501,9 +504,11 @@ final class Inbox {
                 item.readAt = verdict.readAt
                 insert(item)
                 touched.insert(item.id)
+                added.append(item.id)
             }
         }
         persist(touched)
+        return added
     }
 
     /// The link goes with the notification it was harvested from, matched by

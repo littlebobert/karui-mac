@@ -198,3 +198,5 @@
 "If it’s urgent, call me." = "急ぎの場合は電話してください。";
 "If it’s urgent, call me twice." = "急ぎの場合は2回電話してください。";
 "(Auto-reply)" = "（自動返信）";
+"Quiet your iPhone while you use this Mac" = "このMacを使っている間はiPhoneを静かにする";
+"While you're using this Mac, Karui on your iPhone sends its alerts without sound, and they wait in Notification Center. This Mac shows the Important ones it didn't receive itself. Only whether you're using the Mac goes to your iPhone, through your iCloud account. Wake Me and one-time codes still alert." = "このMacを使っている間、iPhoneのKaruiは通知を音なしで送り、通知センターに残します。このMacが受け取っていない重要な通知は、このMacに表示します。iPhoneに送られるのは、Macを使っているかどうかだけで、あなたのiCloudアカウントを通ります。緊急アラームとワンタイムコードはこれまでどおり通知します。";

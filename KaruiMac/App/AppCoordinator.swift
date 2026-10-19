@@ -26,8 +26,11 @@ final class AppCoordinator {
         awaiting: { [weak self] in await MainActor.run { self?.inbox.fingerprintsAwaitingVerdict() ?? [] } },
         found: { [weak self] verdicts in
             Task { @MainActor in
-                self?.inbox.apply(verdicts)
-                self?.noteVerdictsArrived(verdicts)
+                guard let self else { return }
+                let added = self.inbox.apply(verdicts)
+                self.noteVerdictsArrived(verdicts)
+                self.bannerIfAtMac(added)
+                self.banners.remove(ids: self.inbox.items.filter { !$0.isUnread }.map(\.id))
             }
         }
     )
@@ -35,6 +38,9 @@ final class AppCoordinator {
     private var syncRequestedAt: Date?
     private let sortRequests = SortRequests()
     let sortingSettings = SortingSettingsStore()
+    private let subscriptions = MacSubscriptions()
+    private let presenceReporter = MacPresenceReporter()
+    private let banners = MacBanners()
     let setupNudge = SetupNudge()
     private lazy var sorter = MacSorter(settings: sortingSettings)
     /// When the newest verdict from the iPhone was sorted. Recent ones show it sends
@@ -88,6 +94,12 @@ final class AppCoordinator {
             return
         }
         SafeDiagnosticLog.shared.record("app: start")
+        banners.open = { [weak self] id in
+            guard let self else { return }
+            showInbox()
+            if let item = inbox.item(id: id) { open(item) }
+        }
+        banners.start()
         refreshSetupNudge()
         fullDiskAccess.refresh()
         startWatchingIfPossible()
@@ -101,7 +113,15 @@ final class AppCoordinator {
             syncStatus.status = await sync.refreshStatus()
             await sync.deleteExpired()
             if syncStatus.status.isAvailable {
-                await MainActor.run { self.sortingSettings.start() }
+                await MainActor.run {
+                    self.sortingSettings.start()
+                    NSApp.registerForRemoteNotifications()
+                    let settings = self.settings
+                    self.presenceReporter.isEnabled = { settings.reportsUse }
+                    self.presenceReporter.start()
+                    if settings.reportsUse { self.banners.requestPermission() }
+                }
+                await self.subscriptions.ensure()
                 await presence.start()
                 // Needs Full Disk Access for Messages; Spark's part works without it.
                 await correspondents.start()
@@ -180,6 +200,49 @@ final class AppCoordinator {
             await verdicts.fetch()
             await self.sortingSettings.refresh()
             await self.askIPhoneToSort()
+        }
+    }
+
+    // MARK: Pushes
+
+    /// A change on the iPhone, pushed by CloudKit: fetched now, not on the next poll.
+    func handleRemoteNotification(_ userInfo: [String: Any]) {
+        guard let change = MacSubscriptions.change(in: userInfo) else { return }
+        let verdicts = verdicts
+        let sortingSettings = sortingSettings
+        Task {
+            switch change {
+            case .verdict(let recordID): await verdicts.fetch(recordID: recordID)
+            case .settings: await sortingSettings.refresh()
+            }
+        }
+    }
+
+    // MARK: Banners
+
+    /// The person turned on quieting the iPhone: this Mac will show banners instead.
+    func reportsUseChanged() {
+        if settings.reportsUse { banners.requestPermission() }
+    }
+
+    /// While the person is using this Mac the iPhone alerts quietly, so Important
+    /// notifications only the iPhone received get a banner here. After a moment, in
+    /// case this Mac's own copy arrives and takes the stand-in's place.
+    private func bannerIfAtMac(_ ids: [String]) {
+        guard settings.reportsUse, presenceReporter.isInUse else { return }
+        let fresh = ids.filter { id in
+            guard let item = inbox.item(id: id), let verdict = item.verdict else { return false }
+            return verdict.category == "notifyNow" && item.isUnread
+                && Date().timeIntervalSince(verdict.triagedAt) < MacBanners.freshness
+        }
+        guard !fresh.isEmpty else { return }
+        Task { [weak self] in
+            try? await Task.sleep(for: MacBanners.settleDelay)
+            guard let self else { return }
+            for id in fresh {
+                guard let item = inbox.item(id: id), item.isUnread, item.category == "notifyNow" else { continue }
+                banners.post(item)
+            }
         }
     }
 
@@ -283,6 +346,7 @@ final class AppCoordinator {
         let items = inbox.items.filter { ids.contains($0.id) && $0.isUnread }
         guard !items.isEmpty else { return }
         inbox.markRead(ids: ids)
+        banners.remove(ids: items.map(\.id))
         let sync = sync
         let verdicts = verdicts
         Task {

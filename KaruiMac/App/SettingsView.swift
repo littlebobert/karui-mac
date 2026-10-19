@@ -101,6 +101,12 @@ struct SettingsView: View {
                 Text(iPhoneDescription(sendsNotifications: settings.asksIPhoneToSort, sortsHere: settings.sortsOnThisMac && coordinator.canSortHere))
                     .foregroundStyle(.secondary)
             }
+            Section {
+                Toggle(L10n.string("Quiet your iPhone while you use this Mac"), isOn: $settings.reportsUse)
+                    .onChange(of: settings.reportsUse) { coordinator.reportsUseChanged() }
+                Text(L10n.string("While you're using this Mac, Karui on your iPhone sends its alerts without sound, and they wait in Notification Center. This Mac shows the Important ones it didn't receive itself. Only whether you're using the Mac goes to your iPhone, through your iCloud account. Wake Me and one-time codes still alert."))
+                    .foregroundStyle(.secondary)
+            }
         }
         .formStyle(.grouped)
         .frame(width: Self.width)
