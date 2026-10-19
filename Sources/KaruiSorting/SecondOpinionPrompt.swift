@@ -138,6 +138,8 @@ public enum SecondOpinionPrompt {
     /// Reads the cloud model's answer, forgiving of extra words, missing lines, or the
     /// category written in Japanese or Korean. Nil when no category can be found.
     public static func parse(answer: String) -> Answer? {
+        // Sometimes the model answers in JSON instead of the lines asked for.
+        if let answer = parseJSON(answer: answer) { return answer }
         let lines = answer
             .split(whereSeparator: \.isNewline)
             .map { $0.trimmingCharacters(in: .whitespaces) }
@@ -167,8 +169,10 @@ public enum SecondOpinionPrompt {
         // No labeled category line: the first category word anywhere decides.
         let resolvedCategory = category ?? Self.category(in: answer)
         guard let resolvedCategory else { return nil }
+        // A line with words: never a lone brace or code fence from a stray JSON answer.
         let fallbackReason = lines.first {
-            Self.category(in: $0) == nil && Self.number(in: $0) == nil
+            $0.contains(where: \.isLetter)
+                && Self.category(in: $0) == nil && Self.number(in: $0) == nil
                 && labeledValue(in: $0, labels: ["task", "タスク", "할 일"]) == nil
                 && labeledValue(in: $0, labels: ["tags", "tag", "タグ", "태그"]) == nil
         } ?? ""
@@ -180,6 +184,43 @@ public enum SecondOpinionPrompt {
             task: task,
             dueDate: dueDate,
             tags: tags
+        )
+    }
+
+    /// A JSON object anywhere in the answer, in or out of a code fence, with the same
+    /// fields as the lines. Nil when there's no object or it names no category.
+    private static func parseJSON(answer: String) -> Answer? {
+        guard let start = answer.firstIndex(of: "{"), let end = answer.lastIndex(of: "}"), start < end,
+              let data = String(answer[start...end]).data(using: .utf8),
+              let object = (try? JSONSerialization.jsonObject(with: data)) as? [String: Any] else {
+            return nil
+        }
+        var fields: [String: Any] = [:]
+        for (key, value) in object {
+            fields[key.lowercased().filter(\.isLetter)] = value
+        }
+        func text(_ keys: String...) -> String? {
+            for key in keys {
+                if let value = fields[key] as? String, !value.trimmingCharacters(in: .whitespaces).isEmpty {
+                    return value.trimmingCharacters(in: .whitespacesAndNewlines)
+                }
+            }
+            return nil
+        }
+        guard let category = text("category", "カテゴリ", "分類", "카테고리", "분류").flatMap(Self.category(in:)) else {
+            return nil
+        }
+        let confidence = (fields["confidence"] as? NSNumber)?.doubleValue
+            ?? text("confidence").flatMap(Self.number(in:))
+        let tagValues: [String]? = (fields["tags"] as? [Any])?.compactMap { $0 as? String }
+            ?? text("tags").map { $0.split(whereSeparator: { [",", "、", "，", ";", "/"].contains($0) }).map(String.init) }
+        return Answer(
+            category: category,
+            confidence: min(max(confidence.map { $0 > 1 ? $0 / 100 : $0 } ?? 0.7, 0), 1),
+            reason: String((text("reason", "理由", "이유") ?? "").prefix(200)),
+            task: text("task", "タスク"),
+            dueDate: text("due", "duedate"),
+            tags: tagValues.flatMap { SearchTags.cleaned($0) }
         )
     }
 

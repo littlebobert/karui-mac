@@ -20,6 +20,7 @@ let package = Package(
     targets: [
         .target(name: "KaruiLinkKit"),
         .target(name: "KaruiSorting", dependencies: ["KaruiLinkKit"]),
-        .testTarget(name: "KaruiLinkKitTests", dependencies: ["KaruiLinkKit"])
+        .testTarget(name: "KaruiLinkKitTests", dependencies: ["KaruiLinkKit"]),
+        .testTarget(name: "KaruiSortingTests", dependencies: ["KaruiSorting"])
     ]
 )
