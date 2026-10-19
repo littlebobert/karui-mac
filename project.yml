@@ -59,6 +59,8 @@ targets:
         com.apple.developer.icloud-services: [CloudKit]
         com.apple.developer.icloud-container-identifiers: [iCloud.com.justin.henry.karui]
         com.apple.developer.icloud-container-environment: Production
+        # CloudKit's silent pushes, so the Mac hears the iPhone's changes at once.
+        com.apple.developer.aps-environment: production
     dependencies:
       - package: Sparkle
         product: Sparkle

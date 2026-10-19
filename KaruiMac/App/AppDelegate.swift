@@ -39,6 +39,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             .first { $0.processIdentifier != current && !$0.isTerminated }
     }
 
+    func application(_ application: NSApplication, didReceiveRemoteNotification userInfo: [String: Any]) {
+        coordinator.handleRemoteNotification(userInfo)
+    }
+
+    func application(_ application: NSApplication, didFailToRegisterForRemoteNotificationsWithError error: any Error) {
+        SafeDiagnosticLog.shared.record("pushes: registration failed: \(error.localizedDescription)")
+    }
+
     /// Closing the window leaves the app harvesting; it keeps going until Quit.
     func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool {
         false

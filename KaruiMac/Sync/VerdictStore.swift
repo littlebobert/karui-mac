@@ -7,7 +7,8 @@ import KaruiLinkKit
 /// notification; those carrying text are notifications only the iPhone got, which
 /// the inbox shows on their own.
 actor VerdictStore {
-    static let pollInterval: Duration = .seconds(20)
+    /// A fallback now that pushes bring each change (`MacSubscriptions`).
+    static let pollInterval: Duration = .seconds(60)
     /// The full day is re-read this often, for categories and read marks that changed.
     static let fullPassInterval: Duration = .seconds(5 * 60)
     static let window: TimeInterval = VerdictRecord.lifetime
@@ -96,6 +97,19 @@ actor VerdictStore {
             SafeDiagnosticLog.shared.record(summary)
         }
         found(verdicts)
+    }
+
+    /// One verdict, named by a push.
+    func fetch(recordID: CKRecord.ID) async {
+        guard let database else { return }
+        do {
+            let record = try await database.record(for: recordID)
+            if let verdict = Self.verdict(from: record) { found([verdict]) }
+        } catch let error as CKError where error.code == .unknownItem {
+            // Deleted on the iPhone: the next full pass drops it.
+        } catch {
+            SafeDiagnosticLog.shared.record("verdicts: fetch by push failed: \(error.localizedDescription)")
+        }
     }
 
     /// What the person did here, onto the verdict record, for the iPhone to apply.
