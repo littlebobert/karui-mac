@@ -26,6 +26,8 @@ final class MacPresenceReporter {
     /// What was last written, so an unchanged "away" isn't written again.
     private var lastWritten: Bool?
     private var lastTick: Date?
+    /// Logged once a launch, so the log shows the record reaches iCloud at all.
+    private var hasSaved = false
     private var activity: NSObjectProtocol?
     private var observers: [NSObjectProtocol] = []
     var isEnabled: () -> Bool = { true }
@@ -125,10 +127,17 @@ final class MacPresenceReporter {
         record[MacPresenceRecordSchema.name] = Host.current().localizedName ?? "Mac"
         Task {
             do {
-                _ = try await database.modifyRecords(saving: [record], deleting: [], savePolicy: .allKeys)
+                // A record CloudKit refuses, as when its type isn't in the Production
+                // schema, comes back in the results rather than as a thrown error.
+                let (saved, _) = try await database.modifyRecords(saving: [record], deleting: [], savePolicy: .allKeys)
+                if case .failure(let error)? = saved[record.recordID] { throw error }
+                if !hasSaved {
+                    hasSaved = true
+                    SafeDiagnosticLog.shared.record("presence: saved to iCloud")
+                }
             } catch {
                 SafeDiagnosticLog.shared.record("presence: status failed: \(error.localizedDescription)")
-                await MainActor.run { self.lastWritten = nil }
+                lastWritten = nil
             }
         }
     }
