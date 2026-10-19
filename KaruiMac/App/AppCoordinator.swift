@@ -320,14 +320,15 @@ final class AppCoordinator {
 
     /// Opens the item where it has somewhere to open, or shows it in full. A
     /// Messages notification without a link still tries its conversation, by the
-    /// sender, the way the iPhone does.
+    /// sender, the way the iPhone does. With the preview pane showing it already,
+    /// one with nowhere more exact opens its app instead.
     func open(_ item: Inbox.Item) {
         if let link = item.link {
             NSWorkspace.shared.open(link.url)
             return
         }
         guard item.app == KnownApp.messages.rawValue, !DemoMode.isActive else {
-            inbox.openItemID = item.id
+            openWithoutLink(item)
             return
         }
         Task { @MainActor in
@@ -335,8 +336,16 @@ final class AppCoordinator {
                 SafeDiagnosticLog.shared.record("messages: conversation found by the sender")
                 NSWorkspace.shared.open(url)
             } else {
-                inbox.openItemID = item.id
+                openWithoutLink(item)
             }
+        }
+    }
+
+    private func openWithoutLink(_ item: Inbox.Item) {
+        if inbox.showsPreview, AppLauncher.canOpen(item.app) {
+            AppLauncher.open(item.app)
+        } else {
+            inbox.openItemID = item.id
         }
     }
 

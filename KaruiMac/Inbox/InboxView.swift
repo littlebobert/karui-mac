@@ -42,7 +42,16 @@ struct InboxView: View {
                     .padding(.horizontal, 12)
                     .padding(.vertical, 4)
                 Divider()
-                InboxList(coordinator: coordinator)
+                if coordinator.inbox.showsPreview {
+                    VSplitView {
+                        InboxList(coordinator: coordinator)
+                            .frame(minHeight: 120)
+                        PreviewPane(inbox: coordinator.inbox)
+                            .frame(minHeight: 100, idealHeight: coordinator.inbox.previewHeight)
+                    }
+                } else {
+                    InboxList(coordinator: coordinator)
+                }
             }
         }
         .onChange(of: windowTitle, initial: true) { _, title in
@@ -132,6 +141,9 @@ private struct ControlBar: View {
             }
             BarButton(mode: inbox.barDisplayMode, label: L10n.string(inbox.isCompact ? "Expanded" : "Compact"), symbol: inbox.isCompact ? "rectangle.expand.vertical" : "rectangle.compress.vertical") {
                 inbox.isCompact.toggle()
+            }
+            BarButton(mode: inbox.barDisplayMode, label: L10n.string(inbox.showsPreview ? "Hide Preview" : "Show Preview"), symbol: inbox.showsPreview ? "rectangle.bottomhalf.inset.filled" : "rectangle") {
+                inbox.showsPreview.toggle()
             }
             TextField(L10n.string("Search"), text: $inbox.search)
                 .textFieldStyle(.roundedBorder)
@@ -500,6 +512,16 @@ private struct ItemDetail: View {
     }
 
     private var content: some View {
+        NotificationContent(item: item)
+    }
+}
+
+/// What a notification says, with Karui's verdict and reason: the full view's and
+/// the preview pane's.
+private struct NotificationContent: View {
+    let item: Inbox.Item
+
+    var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 10) {
                 HStack(spacing: 8) {
@@ -533,6 +555,29 @@ private struct ItemDetail: View {
             .textSelection(.enabled)
             .frame(maxWidth: .infinity, alignment: .leading)
             .padding(16)
+        }
+    }
+}
+
+/// Under the list when the person asks for it: the selected notification, so it
+/// can be read without opening it. Selecting one already marks it read, as in Mail.
+/// Its height is kept.
+private struct PreviewPane: View {
+    let inbox: Inbox
+
+    var body: some View {
+        Group {
+            if inbox.selection.count == 1, let id = inbox.selection.first, let item = inbox.item(id: id) {
+                NotificationContent(item: item)
+            } else {
+                Text(inbox.selection.count > 1 ? L10n.format("%d selected", inbox.selection.count) : L10n.string("No Notification Selected"))
+                    .foregroundStyle(.secondary)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+            }
+        }
+        .background(.background)
+        .onGeometryChange(for: Double.self) { $0.size.height } action: { height in
+            if height >= 100 { inbox.previewHeight = height }
         }
     }
 }

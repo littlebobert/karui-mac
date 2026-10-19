@@ -93,10 +93,14 @@ enum DemoMode {
         inbox.showsOnlyOpenable = false
         inbox.barDisplayMode = .iconAndText
         inbox.sortOrder = [KeyPathComparator(\.deliveredAt, order: .reverse)]
+        inbox.showsPreview = view == "preview"
         switch view {
         case "compact":
             inbox.isCompact = true
         case "selected":
+            inbox.isCompact = true
+            if let second = inbox.items.dropFirst().first { inbox.selection = [second.id] }
+        case "preview":
             inbox.isCompact = true
             if let second = inbox.items.dropFirst().first { inbox.selection = [second.id] }
         case "threads":

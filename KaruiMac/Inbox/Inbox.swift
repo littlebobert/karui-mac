@@ -155,6 +155,9 @@ final class Inbox {
     // The view's settings, kept across launches.
     var grouping: Grouping { didSet { defaults.set(grouping.rawValue, forKey: "inbox.grouping") } }
     var isCompact: Bool { didSet { defaults.set(isCompact, forKey: "inbox.isCompact") } }
+    /// The selected notification under the list, as in Mail; off unless turned on.
+    var showsPreview: Bool { didSet { defaults.set(showsPreview, forKey: "inbox.showsPreview") } }
+    var previewHeight: Double { didSet { defaults.set(previewHeight, forKey: "inbox.previewHeight") } }
     var shownCategories: Set<String> { didSet { defaults.set(Array(shownCategories).sorted(), forKey: "inbox.shownCategories"); invalidateCaches() } }
     var shownReadStates: Set<ReadState> { didSet { defaults.set(shownReadStates.map(\.rawValue).sorted(), forKey: "inbox.shownReadStates"); invalidateCaches() } }
     var barDisplayMode: BarDisplayMode { didSet { defaults.set(barDisplayMode.rawValue, forKey: "inbox.barDisplayMode") } }
@@ -242,6 +245,8 @@ final class Inbox {
         }
         grouping = defaults.string(forKey: "inbox.grouping").flatMap(Grouping.init(rawValue:)) ?? .none
         isCompact = defaults.bool(forKey: "inbox.isCompact")
+        showsPreview = defaults.bool(forKey: "inbox.showsPreview")
+        previewHeight = defaults.object(forKey: "inbox.previewHeight") as? Double ?? 220
         shownCategories = defaults.stringArray(forKey: "inbox.shownCategories").map(Set.init) ?? Set(Inbox.categories)
         shownReadStates = defaults.stringArray(forKey: "inbox.shownReadStates").map { Set($0.compactMap(ReadState.init(rawValue:))) } ?? Set(ReadState.allCases)
         barDisplayMode = defaults.string(forKey: "inbox.barDisplayMode").flatMap(BarDisplayMode.init(rawValue:)) ?? .iconAndText

@@ -26,6 +26,12 @@ struct KaruiMacApp: App {
                 Button(L10n.string("Find")) { appDelegate.coordinator.inbox.searchFocusRequest += 1 }
                     .keyboardShortcut("f", modifiers: .command)
             }
+            CommandGroup(before: .toolbar) {
+                let inbox = appDelegate.coordinator.inbox
+                Button(L10n.string(inbox.showsPreview ? "Hide Preview" : "Show Preview")) { inbox.showsPreview.toggle() }
+                    .keyboardShortcut("p", modifiers: [.command, .option])
+                Divider()
+            }
             CommandMenu(L10n.string("Notifications")) {
                 let coordinator = appDelegate.coordinator
                 let selection = coordinator.inbox.selection
