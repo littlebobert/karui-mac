@@ -43,11 +43,10 @@ struct InboxView: View {
                     .padding(.vertical, 4)
                 Divider()
                 if coordinator.inbox.showsPreview {
-                    VSplitView {
+                    // Not a VSplitView: it sizes the halves from their content, so the
+                    // divider moved whenever a filter changed what the list held.
+                    PreviewSplit(inbox: coordinator.inbox) {
                         InboxList(coordinator: coordinator)
-                            .frame(minHeight: 120)
-                        PreviewPane(inbox: coordinator.inbox)
-                            .frame(minHeight: 100, idealHeight: coordinator.inbox.previewHeight)
                     }
                 } else {
                     InboxList(coordinator: coordinator)
@@ -577,9 +576,52 @@ private struct PreviewPane: View {
             }
         }
         .background(.background)
-        .onGeometryChange(for: Double.self) { $0.size.height } action: { height in
-            if height >= 100 { inbox.previewHeight = height }
+    }
+}
+
+/// The list over the preview pane, which keeps the height the person drags it to
+/// whatever the list holds. The list keeps at least `minimumList`.
+private struct PreviewSplit<List: View>: View {
+    let inbox: Inbox
+    @ViewBuilder let list: List
+    @State private var dragStartHeight: Double?
+    private static var minimumPane: Double { 100 }
+    private static var minimumList: Double { 120 }
+
+    var body: some View {
+        GeometryReader { geometry in
+            let height = clamped(inbox.previewHeight, total: geometry.size.height)
+            VStack(spacing: 0) {
+                list
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                Divider()
+                    .overlay {
+                        // A taller target than the line, with the resize cursor.
+                        Color.clear
+                            .frame(height: 9)
+                            .contentShape(Rectangle())
+                            .onHover { inside in
+                                if inside { NSCursor.resizeUpDown.push() } else { NSCursor.pop() }
+                            }
+                            .gesture(
+                                DragGesture(minimumDistance: 1, coordinateSpace: .global)
+                                    .onChanged { drag in
+                                        let start = dragStartHeight ?? height
+                                        dragStartHeight = start
+                                        inbox.previewHeight = clamped(start - drag.translation.height, total: geometry.size.height)
+                                    }
+                                    .onEnded { _ in dragStartHeight = nil }
+                            )
+                    }
+                PreviewPane(inbox: inbox)
+                    .frame(height: height)
+            }
         }
+    }
+
+    private func clamped(_ height: Double, total: Double) -> Double {
+        let upper = max(Self.minimumPane, total - Self.minimumList)
+        return min(max(height, Self.minimumPane), upper)
     }
 }
 
