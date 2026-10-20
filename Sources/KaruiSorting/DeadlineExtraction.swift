@@ -24,13 +24,20 @@ public enum DeadlineExtraction {
     /// A deadline further out than this is more likely a misread year than a task.
     public static let maximumDaysAhead = 366
 
+    /// A Slack message mentioning the user, "イベントで使いたく、アダプターを借ります
+    /// 明日返します", made a reminder for the user to return what the sender borrowed:
+    /// Japanese often leaves out who acts, and the mention reads like a request.
+    static let senderPromises = """
+        Neither does a promise the sender makes about their own action, such as "I'll return it tomorrow" or "I'll send the slides Friday": that is the sender's task, even when the message mentions the user. Japanese often leaves out who acts; a sentence like "明日返します" or "金曜に送ります" from the sender is the sender's own promise.
+        """
+
     /// Added to the model's instructions only while deadline reminders are on, so
     /// everyone else's notifications are sorted exactly as before.
     public static let instructions = """
         Also look for a deadline: something the notification asks the user to do by a certain day.
         task: what the user must do, at most 8 words, such as "Pay invoice #2041". Leave it empty when nothing is asked of the user by a certain day.
         dueDate: that day as YYYY-MM-DD, taken from the Dates line, only when the notification itself names the day: a date, a weekday, "tomorrow", "end of the month". Leave it empty when there is no task or no day is named. Never guess a day from words like "soon", "later", or "before I leave".
-        Only a request made to the user counts. A sale, offer, or promotion that ends on a day is not a task, and neither is an event the user merely attends. Someone describing their own plans or what they are waiting for asks nothing of the user. Leave both empty for all of these.
+        Only a request made to the user counts. A sale, offer, or promotion that ends on a day is not a task, and neither is an event the user merely attends. Someone describing their own plans or what they are waiting for asks nothing of the user. \(senderPromises) Leave both empty for all of these.
         Write the task in the same language as the reason.
         """
 
@@ -41,7 +48,7 @@ public enum DeadlineExtraction {
     public static func deadlineOnlyInstructions(taskLanguage: String) -> String {
         """
         Look for a deadline in one notification: something it asks the user to do by a certain day.
-        Reason: first, in at most 20 words, what the notification asks the user to do, if anything, and the day it names, if any. The notification was sent to the user; someone describing their own plans or what they are waiting for asks nothing of the user.
+        Reason: first, in at most 20 words, what the notification asks the user to do, if anything, and the day it names, if any. The notification was sent to the user; someone describing their own plans or what they are waiting for asks nothing of the user. \(senderPromises)
         Task: what the user must do, at most 8 words, such as "Pay invoice #2041". None when nothing is asked of the user by a certain day.
         Due: that day as YYYY-MM-DD, taken from the Dates line, only when the notification itself names the day: a date, a weekday, "tomorrow", "end of the month". None when there is no task or no day is named. Never guess a day from words like "soon", "later", or "before I leave".
         Only a request made to the user counts. A sale, offer, or promotion that ends on a day is not a task, and neither is an event the user merely attends. Answer None for both when in doubt: a missed reminder costs less than a wrong one.
