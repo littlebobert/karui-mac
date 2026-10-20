@@ -92,7 +92,7 @@ DEFINE SCHEMA
         "___modTime"      TIMESTAMP,
         "___modifiedBy"   REFERENCE,
         "___recordID"     REFERENCE QUERYABLE,
-        isAtMac           INT64,
+        isAtMac           INT64 QUERYABLE,
         lastActiveAt      TIMESTAMP QUERYABLE,
         name              STRING,
         GRANT WRITE TO "_creator",
