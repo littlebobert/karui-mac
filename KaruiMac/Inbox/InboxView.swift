@@ -60,6 +60,7 @@ struct InboxView: View {
         // Selecting one notification reads it, as in Mail. A multiple selection
         // doesn't, so Select All stays a way to act on many without reading them.
         .onChange(of: coordinator.inbox.selection) { _, selection in
+            coordinator.inbox.keepVisible(selection)
             if selection.count == 1, let id = selection.first {
                 coordinator.markRead([id])
             }

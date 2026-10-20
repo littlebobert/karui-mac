@@ -20,4 +20,21 @@ final class InboxVerdictTests: XCTestCase {
         XCTAssertEqual(inbox.apply([verdict("a"), verdict("b", title: nil, body: nil)]), ["a"])
         XCTAssertEqual(inbox.apply([verdict("a")]), [])
     }
+
+    /// With only unread ones shown, one read by selecting it stays until the
+    /// selection moves on, as in Mail.
+    func testAReadSelectionStaysUnderTheUnreadFilterUntilItMoves() {
+        let suite = "InboxVerdictTests.\(UUID().uuidString)"
+        let inbox = Inbox(defaults: UserDefaults(suiteName: suite)!, store: nil)
+        defer { UserDefaults().removePersistentDomain(forName: suite) }
+        inbox.apply([verdict("a"), verdict("b")])
+        inbox.shownReadStates = [.unread]
+        inbox.selection = ["a"]
+        inbox.keepVisible(inbox.selection)
+        inbox.markRead(ids: ["a"])
+        XCTAssertEqual(Set(inbox.filtered.map(\.id)), ["a", "b"])
+        inbox.selection = ["b"]
+        inbox.keepVisible(inbox.selection)
+        XCTAssertEqual(inbox.filtered.map(\.id), ["b"])
+    }
 }

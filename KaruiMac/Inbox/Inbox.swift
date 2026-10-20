@@ -163,12 +163,22 @@ final class Inbox {
     var showsPreview: Bool { didSet { defaults.set(showsPreview, forKey: "inbox.showsPreview") } }
     var previewHeight: Double { didSet { defaults.set(previewHeight, forKey: "inbox.previewHeight") } }
     var shownCategories: Set<String> { didSet { defaults.set(Array(shownCategories).sorted(), forKey: "inbox.shownCategories"); invalidateCaches() } }
-    var shownReadStates: Set<ReadState> { didSet { defaults.set(shownReadStates.map(\.rawValue).sorted(), forKey: "inbox.shownReadStates"); invalidateCaches() } }
+    var shownReadStates: Set<ReadState> { didSet { defaults.set(shownReadStates.map(\.rawValue).sorted(), forKey: "inbox.shownReadStates"); invalidateCaches(); keepVisible(selection) } }
     var barDisplayMode: BarDisplayMode { didSet { defaults.set(barDisplayMode.rawValue, forKey: "inbox.barDisplayMode") } }
     /// Only what this Mac can open in full: items with a link.
     var showsOnlyOpenable: Bool { didSet { defaults.set(showsOnlyOpenable, forKey: "inbox.showsOnlyOpenable"); invalidateCaches() } }
     var search = "" { didSet { invalidateCaches() } }
     var selection: Set<String> = []
+    /// Selected while only unread ones are shown: reading them doesn't drop them from
+    /// the list until the selection moves on, as in Mail.
+    private(set) var keptVisibleIDs: Set<String> = [] { didSet { invalidateCaches() } }
+
+    /// Called as the selection changes. Only while read items are hidden, so the
+    /// caches survive arrowing through the list otherwise.
+    func keepVisible(_ ids: Set<String>) {
+        let kept = shownReadStates.contains(.read) ? [] : ids
+        if kept != keptVisibleIDs { keptVisibleIDs = kept }
+    }
     /// The columns' sort, newest first until a header is clicked. Kept across
     /// launches as the column's name and direction.
     var sortOrder: [KeyPathComparator<Item>] {
@@ -289,6 +299,7 @@ final class Inbox {
         _ = showsOnlyOpenable
         _ = shownCategories
         _ = shownReadStates
+        _ = keptVisibleIDs
     }
 
     var filtered: [Item] {
@@ -298,7 +309,7 @@ final class Inbox {
         let result = items.filter { item in
             if showsOnlyOpenable, item.link == nil { return false }
             if let category = item.category, !shownCategories.contains(category) { return false }
-            if !shownReadStates.contains(item.isUnread ? .unread : .read) { return false }
+            if !shownReadStates.contains(item.isUnread ? .unread : .read), !keptVisibleIDs.contains(item.id) { return false }
             return search.isEmpty || item.matches(search)
         }
         filteredCache = result
