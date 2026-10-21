@@ -47,4 +47,21 @@ final class InboxVerdictTests: XCTestCase {
         inbox.keepVisible(inbox.selection)
         XCTAssertEqual(inbox.filtered.map(\.id), ["b"])
     }
+
+    /// Turning on the Unread filter hides a selection already read, and adding to
+    /// that selection afterwards doesn't bring it back.
+    func testTheUnreadFilterHidesASelectionAlreadyRead() {
+        let suite = "InboxVerdictTests.\(UUID().uuidString)"
+        let inbox = Inbox(defaults: UserDefaults(suiteName: suite)!, store: nil)
+        defer { UserDefaults().removePersistentDomain(forName: suite) }
+        inbox.apply([verdict("a"), verdict("b"), verdict("c")])
+        inbox.selection = ["a"]
+        inbox.keepVisible(inbox.selection)
+        inbox.markRead(ids: ["a"])
+        inbox.shownReadStates = [.unread]
+        XCTAssertEqual(Set(inbox.filtered.map(\.id)), ["b", "c"])
+        inbox.selection = ["a", "b"]
+        inbox.keepVisible(inbox.selection)
+        XCTAssertEqual(Set(inbox.filtered.map(\.id)), ["b", "c"])
+    }
 }

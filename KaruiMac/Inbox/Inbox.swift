@@ -163,7 +163,9 @@ final class Inbox {
     var showsPreview: Bool { didSet { defaults.set(showsPreview, forKey: "inbox.showsPreview") } }
     var previewHeight: Double { didSet { defaults.set(previewHeight, forKey: "inbox.previewHeight") } }
     var shownCategories: Set<String> { didSet { defaults.set(Array(shownCategories).sorted(), forKey: "inbox.shownCategories"); invalidateCaches() } }
-    var shownReadStates: Set<ReadState> { didSet { defaults.set(shownReadStates.map(\.rawValue).sorted(), forKey: "inbox.shownReadStates"); invalidateCaches(); keepVisible(selection) } }
+    /// Changing it lets go of what was kept visible: a selection already read when
+    /// the Unread filter goes on is hidden with the rest.
+    var shownReadStates: Set<ReadState> { didSet { defaults.set(shownReadStates.map(\.rawValue).sorted(), forKey: "inbox.shownReadStates"); invalidateCaches(); if !keptVisibleIDs.isEmpty { keptVisibleIDs = [] } } }
     var barDisplayMode: BarDisplayMode { didSet { defaults.set(barDisplayMode.rawValue, forKey: "inbox.barDisplayMode") } }
     /// Only what this Mac can open in full: items with a link.
     var showsOnlyOpenable: Bool { didSet { defaults.set(showsOnlyOpenable, forKey: "inbox.showsOnlyOpenable"); invalidateCaches() } }
@@ -173,10 +175,14 @@ final class Inbox {
     /// the list until the selection moves on, as in Mail.
     private(set) var keptVisibleIDs: Set<String> = [] { didSet { invalidateCaches() } }
 
-    /// Called as the selection changes. Only while read items are hidden, so the
-    /// caches survive arrowing through the list otherwise.
+    /// Called as the selection changes, before selecting reads it. Only while read
+    /// items are hidden, so the caches survive arrowing through the list otherwise.
+    /// What's kept is what's unread as it's selected, and what was kept already; a
+    /// read item the filter hid stays hidden though still in the selection.
     func keepVisible(_ ids: Set<String>) {
-        let kept = shownReadStates.contains(.read) ? [] : ids
+        let kept: Set<String> = shownReadStates.contains(.read) ? [] : ids.filter { id in
+            keptVisibleIDs.contains(id) || item(id: id)?.isUnread == true
+        }
         if kept != keptVisibleIDs { keptVisibleIDs = kept }
     }
     /// The columns' sort, newest first until a header is clicked. Kept across
