@@ -108,8 +108,11 @@ struct SetupNudgeCard: View {
                         case .sendToIPhone:
                             Button(L10n.string("Turn On"), action: onTurnOnSending)
                         case .focusAllowsKarui:
+                            // Nothing here can tell when it's done, so going to do it
+                            // counts as done.
                             Button(L10n.string("Open Focus Settings")) {
                                 NSWorkspace.shared.open(SetupNudge.focusSettingsURL)
+                                onDismiss()
                             }
                         }
                         Button(L10n.string("Not Now"), action: onDismiss)

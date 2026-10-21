@@ -110,7 +110,7 @@ Until it's working, a card at the top of the inbox offers the next missing step,
 1. turning on *Show History on your Mac* on the iPhone,
 2. getting the Second Opinion Shortcut when Second Opinion is on there,
 3. sending notifications only this Mac received to the iPhone,
-4. while Karui on the iPhone filters, adding Karui to the allowed apps of the Focus it uses there, which follows the person to this Mac and otherwise keeps Karui's banners in Notification Center. This one can't be checked (Notification Center records a held-back banner as it does a shown one), so it shows until dismissed.
+4. while Karui on the iPhone filters, adding Karui to the allowed apps of the Focus it uses there, which follows the person to this Mac and otherwise keeps Karui's banners in Notification Center. This one can't be checked (Notification Center records a held-back banner as it does a shown one), so it shows until dismissed or its button is pressed.
 
 Each goes once done or dismissed, and a dismissed one doesn't hold back the next. In debug builds, Help → Show Setup Banner shows any of them.
 
