@@ -1,0 +1,16 @@
+# Without the interest scale: the instructions ask for an interest rating from 1 to
+# 5, but the answer has no line for it and nothing reads one.
+#- Also rate interest from 1 through 5
+#- 5: a real person wrote to the user
+#- 4: specific news about the user's own
+#- 3: a group conversation, community event
+#- 2: routine automated status
+#- 1: marketing, promotions, and generic broadcasts
+
+{{instructions}}
+
+{{policy}}
+
+{{notification}}
+
+{{answer}}

@@ -1,0 +1,17 @@
+# The answer asks for the reason before the category, as the instructions already
+# say to work: "First write the reason, then choose the category the reason
+# supports." Shipping asks for the category first, so the reason comes after the choice.
+
+{{instructions}}
+
+{{policy}}
+
+{{notification}}
+
+Answer with exactly {{answer.count}} lines and nothing else:
+{{answer.Reason}}
+{{answer.Category}}
+{{answer.Confidence}}
+{{answer.Tags}}
+{{answer.Task}}
+{{answer.Due}}

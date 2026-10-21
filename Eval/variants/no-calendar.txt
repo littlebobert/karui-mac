@@ -1,0 +1,15 @@
+# Without the calendar rule and examples: the Second Opinion prompt never includes
+# the user's calendar ("The user's calendar is not provided"), yet the shared
+# instructions explain how to connect a notification to calendar events and give
+# two examples that rely on them.
+#- Only connect a notification to one of the user's calendar events
+#- - The user has "Team all-hands 19:00" today
+#- - The user has "Book club 19:00" today
+
+{{instructions}}
+
+{{policy}}
+
+{{notification}}
+
+{{answer}}
