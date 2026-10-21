@@ -114,17 +114,18 @@ public enum ReportWriter {
         public var itemCount: Int
         public var unclearCount: Int
         public var runs: Int
-        public var shortcut: String
+        /// `Backend.name`.
+        public var backend: String
         public var progress: Runner.Progress
         public var stoppedEarly: Bool
         public var date: Date
 
-        public init(goldenFile: String, itemCount: Int, unclearCount: Int, runs: Int, shortcut: String, progress: Runner.Progress, stoppedEarly: Bool, date: Date = .now) {
+        public init(goldenFile: String, itemCount: Int, unclearCount: Int, runs: Int, backend: String, progress: Runner.Progress, stoppedEarly: Bool, date: Date = .now) {
             self.goldenFile = goldenFile
             self.itemCount = itemCount
             self.unclearCount = unclearCount
             self.runs = runs
-            self.shortcut = shortcut
+            self.backend = backend
             self.progress = progress
             self.stoppedEarly = stoppedEarly
             self.date = date
@@ -136,12 +137,12 @@ public enum ReportWriter {
         var lines = [
             "# karui-eval, \(context.date.formatted(date: .abbreviated, time: .shortened))",
             "",
-            "Golden set: \(context.goldenFile), \(context.itemCount) items (\(context.unclearCount) graded Unclear left out) · \(context.runs) run\(context.runs == 1 ? "" : "s") each · Shortcut “\(context.shortcut)”",
+            "Golden set: \(context.goldenFile), \(context.itemCount) items (\(context.unclearCount) graded Unclear left out) · \(context.runs) run\(context.runs == 1 ? "" : "s") each · \(context.backend)",
             "Answers: \(context.progress.cached) cached, \(context.progress.asked) asked now, \(context.progress.failed) failed",
         ]
         if context.stoppedEarly {
             lines.append("")
-            lines.append("**Stopped early:** the Shortcut failed \(context.progress.failed) times, most likely Apple’s limit. Everything answered is cached; run again later to fill in the rest.")
+            lines.append("**Stopped early:** \(context.progress.failed) requests failed, for Private Cloud Compute most likely Apple’s limit. Everything answered is cached; run again later to fill in the rest.")
         }
         let names = metrics.map(\.name)
         func row(_ title: String, _ value: (VariantMetrics) -> String) -> String {

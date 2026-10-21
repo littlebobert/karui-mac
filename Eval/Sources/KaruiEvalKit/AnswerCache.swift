@@ -1,11 +1,12 @@
 import CryptoKit
 import Foundation
 
-/// Every answer Private Cloud Compute gave, by the exact prompt and which run it
-/// was, so a rerun asks only about prompts that changed and a run cut short by a
-/// rate limit picks up where it stopped. An answer that couldn't be read is kept
-/// too: it's what that prompt got. A Shortcut that failed or timed out isn't, so
-/// it's asked again next time. One JSON line per answer, appended as it comes.
+/// Every answer a backend gave, by the exact prompt, which run it was, and which
+/// backend (`Backend.cacheNamespace`), so a rerun asks only about prompts that
+/// changed and a run cut short by a rate limit picks up where it stopped. An answer
+/// that couldn't be read is kept too: it's what that prompt got. A request that
+/// failed or timed out isn't, so it's asked again next time. One JSON line per
+/// answer, appended as it comes.
 public final class AnswerCache {
     public struct Entry: Codable, Equatable, Sendable {
         public let key: String
@@ -30,17 +31,19 @@ public final class AnswerCache {
 
     public var count: Int { entries.count }
 
-    public static func key(prompt: String, run: Int) -> String {
-        SHA256.hash(data: Data(prompt.utf8)).map { String(format: "%02x", $0) }.joined() + "#\(run)"
+    /// Private Cloud Compute's keys have no namespace, as they did before there were others.
+    public static func key(prompt: String, run: Int, namespace: String? = nil) -> String {
+        let text = namespace.map { $0 + "\u{1F}" + prompt } ?? prompt
+        return SHA256.hash(data: Data(text.utf8)).map { String(format: "%02x", $0) }.joined() + "#\(run)"
     }
 
-    public func entry(prompt: String, run: Int) -> Entry? {
-        entries[Self.key(prompt: prompt, run: run)]
+    public func entry(prompt: String, run: Int, namespace: String? = nil) -> Entry? {
+        entries[Self.key(prompt: prompt, run: run, namespace: namespace)]
     }
 
     @discardableResult
-    public func store(prompt: String, run: Int, answer: String, seconds: Double, askedAt: Date = .now) throws -> Entry {
-        let entry = Entry(key: Self.key(prompt: prompt, run: run), answer: answer, seconds: seconds, askedAt: askedAt)
+    public func store(prompt: String, run: Int, namespace: String? = nil, answer: String, seconds: Double, askedAt: Date = .now) throws -> Entry {
+        let entry = Entry(key: Self.key(prompt: prompt, run: run, namespace: namespace), answer: answer, seconds: seconds, askedAt: askedAt)
         entries[entry.key] = entry
         let encoder = JSONEncoder()
         encoder.dateEncodingStrategy = .iso8601

@@ -187,7 +187,7 @@ final class ReportTests: XCTestCase {
             result("notifyNow", [.notifyNow]), result("summary", [.silence]), result("silence", [.notifyNow]), result("summary", [.summary]),
         ])
         XCTAssertEqual(ChangedItem.between(shipping: shipping, variant: variant).map(\.kind), [.fixed, .broke, .stillWrong])
-        let markdown = ReportWriter.markdown([shipping, variant], context: .init(goldenFile: "golden.jsonl", itemCount: 4, unclearCount: 0, runs: 1, shortcut: "Karui Second Opinion", progress: .init(), stoppedEarly: false))
+        let markdown = ReportWriter.markdown([shipping, variant], context: .init(goldenFile: "golden.jsonl", itemCount: 4, unclearCount: 0, runs: 1, backend: "Private Cloud Compute", progress: .init(), stoppedEarly: false))
         XCTAssertTrue(markdown.contains("**Fixed: 1**"))
         XCTAssertTrue(markdown.contains("| Accuracy | 50% (2/4) | 50% (2/4) |"))
     }
@@ -227,5 +227,53 @@ final class VariantFileTests: XCTestCase {
         let sections = try PromptSections(item: item, policy: .standard, locale: Locale(identifier: "en_US"))
         let template = PromptTemplate(name: "stale", text: PromptTemplate.shippingText, description: "", removals: ["A rule that was rewritten"])
         XCTAssertThrowsError(try template.render(sections))
+    }
+}
+
+final class AgreementTests: XCTestCase {
+    private func result(_ label: String, _ answers: [TriageCategory?], title: String = "") -> ItemResult {
+        var result = ItemResult(
+            item: GoldenItem(triagedAt: Date(timeIntervalSince1970: 0), source: "Mail", title: title, body: "", category: "summary", label: label),
+            index: 0, prompt: ""
+        )
+        result.outcomes = answers.map { Outcome(category: $0, answer: "", seconds: 1, wasCached: true) }
+        return result
+    }
+
+    /// A stand-in's answers are kept apart from Private Cloud Compute's, whose keys
+    /// stay as they were before there were other backends.
+    func testTheCacheKeepsBackendsApart() throws {
+        let url = FileManager.default.temporaryDirectory.appending(path: "karui-eval-agree-\(UUID().uuidString).jsonl")
+        defer { try? FileManager.default.removeItem(at: url) }
+        let cache = try AnswerCache(url: url)
+        try cache.store(prompt: "p", run: 0, answer: "Category: Important", seconds: 1)
+        try cache.store(prompt: "p", run: 0, namespace: "ollama:gemma", answer: "Category: Spam", seconds: 1)
+        let reopened = try AnswerCache(url: url)
+        XCTAssertEqual(reopened.entry(prompt: "p", run: 0)?.answer, "Category: Important")
+        XCTAssertEqual(reopened.entry(prompt: "p", run: 0, namespace: "ollama:gemma")?.answer, "Category: Spam")
+        XCTAssertNil(reopened.entry(prompt: "p", run: 0, namespace: "on-device:27"))
+        XCTAssertEqual(AnswerCache.key(prompt: "p", run: 0), AnswerCache.key(prompt: "p", run: 0, namespace: nil))
+    }
+
+    /// Agreement is by majority answer on items both answered, and a variant's move
+    /// under Private Cloud Compute is checked against the stand-in's.
+    func testAgreementAndShifts() {
+        let variant = PromptTemplate(name: "v", text: "", description: "")
+        let pcc = [
+            VariantResult(template: .shipping, items: [result("notifyNow", [.notifyNow], title: "a"), result("summary", [.notifyNow], title: "b"), result("silence", [.silence], title: "c")]),
+            VariantResult(template: variant, items: [result("notifyNow", [.notifyNow], title: "a"), result("summary", [.summary], title: "b"), result("silence", [], title: "c")]),
+        ]
+        let standIn = [
+            VariantResult(template: .shipping, items: [result("notifyNow", [.notifyNow], title: "a"), result("summary", [.notifyNow], title: "b"), result("silence", [.summary], title: "c")]),
+            VariantResult(template: variant, items: [result("notifyNow", [.summary], title: "a"), result("summary", [.summary], title: "b"), result("silence", [.summary], title: "c")]),
+        ]
+        let agreement = Agreement(pcc: pcc, standIn: standIn)
+        XCTAssertEqual(agreement.variants.map(\.compared), [3, 2])
+        XCTAssertEqual(agreement.variants.map(\.agreed), [2, 1])
+        XCTAssertEqual(agreement.variants[0].standInAccuracy, .init(part: 1, whole: 3))
+        XCTAssertEqual(agreement.shifts.count, 1)
+        XCTAssertEqual(agreement.shifts.first?.item.title, "b")
+        XCTAssertEqual(agreement.shifts.first?.standInFollowed, true)
+        XCTAssertTrue(agreement.markdown(standIn: "gemma", goldenFile: "g.jsonl").contains("**Same answer as Private Cloud Compute: 60% (3/5)**"))
     }
 }

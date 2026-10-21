@@ -25,6 +25,25 @@ Every graded item goes through the shipping prompt and each variant in `variants
 
 Apple limits how often Private Cloud Compute answers. Every answer is cached in `~/Library/Application Support/Karui/Grading/eval-cache.jsonl`, keyed by the exact prompt and run. Running again asks only about prompts that changed, and a run stopped by the limit picks up where it left off. A run goes one round at a time across every prompt, so if it stops partway, every prompt still has the same rounds to compare.
 
+## Stand-ins for Private Cloud Compute
+
+Apple's limit makes a full run slow, so a model on this Mac can stand in while you sort through ideas, but only once you know it answers as Private Cloud Compute does:
+
+- `--backend ollama --model gemma4:e2b-mlx`: a model Ollama runs (start it with `ollama serve`).
+- `--backend on-device`: Apple's on-device model, given the same prompt as one message. That's not how Karui uses it: Karui's own on-device sort gives it the instructions as the session's, with structured output.
+
+- `--backend claude`: Claude through the Messages API, `claude-opus-5-5` unless `--model` says otherwise, at `--effort medium` unless you choose `low` through `max`. It needs your own key: `export ANTHROPIC_API_KEY=…` in the terminal that runs it, or an OAuth token in `ANTHROPIC_AUTH_TOKEN`. Every call is billed to that key. At Opus 5.5's $4 per million input tokens and $20 per million output, 80 prompts of about 2,300 tokens each cost roughly $1–2, thinking included. A refusal is retried on the fallback model the API picks, and the run says so when that happens.
+
+The first three don't send your notifications anywhere, and none of them has Apple's limit. Claude does send them, to Anthropic. Their answers are cached apart from Private Cloud Compute's. The on-device model's are kept by macOS version, since it comes with the OS.
+
+To see how far a stand-in can be trusted:
+
+```bash
+swift run karui-eval agree --backend ollama --model gemma4:e2b-mlx --golden golden.jsonl --limit 20
+```
+
+This asks the stand-in every prompt Private Cloud Compute has already answered, taking those from the cache and never asking it again. It reports how often the two give the same answer, overall and for each prompt. It also lists each item a variant moved under Private Cloud Compute, and whether the stand-in moved the same way. That's what matters for choosing variants. If a stand-in agrees well, try ideas with `run --backend …` and confirm the finalists with Private Cloud Compute. If it doesn't, it can't tell you which variant is better.
+
 ## The report
 
 For each prompt, by each item's majority answer across runs:

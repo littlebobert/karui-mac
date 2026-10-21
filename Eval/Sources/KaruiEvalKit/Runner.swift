@@ -59,6 +59,8 @@ public final class Runner {
     let locale: Locale
     let runs: Int
     let cache: AnswerCache
+    /// Which backend's answers, in the cache (`Backend.cacheNamespace`).
+    let namespace: String?
     let ask: (String) -> (answer: String, seconds: Double)?
     let delay: TimeInterval
     let maxFailuresInARow: Int
@@ -70,6 +72,7 @@ public final class Runner {
         locale: Locale,
         runs: Int,
         cache: AnswerCache,
+        namespace: String? = nil,
         delay: TimeInterval = 1,
         maxFailuresInARow: Int = 5,
         ask: @escaping (String) -> (answer: String, seconds: Double)?,
@@ -80,6 +83,7 @@ public final class Runner {
         self.locale = locale
         self.runs = runs
         self.cache = cache
+        self.namespace = namespace
         self.delay = delay
         self.maxFailuresInARow = maxFailuresInARow
         self.ask = ask
@@ -102,7 +106,7 @@ public final class Runner {
     public func uncached(_ results: [VariantResult]) -> Int {
         results.reduce(0) { total, variant in
             total + variant.items.reduce(0) { sum, item in
-                sum + (0..<runs).filter { cache.entry(prompt: item.prompt, run: $0) == nil }.count
+                sum + (0..<runs).filter { cache.entry(prompt: item.prompt, run: $0, namespace: namespace) == nil }.count
             }
         }
     }
@@ -119,7 +123,7 @@ public final class Runner {
                 for variantIndex in results.indices {
                     let prompt = results[variantIndex].items[itemIndex].prompt
                     let outcome: Outcome
-                    if let entry = cache.entry(prompt: prompt, run: run) {
+                    if let entry = cache.entry(prompt: prompt, run: run, namespace: namespace) {
                         outcome = Self.outcome(answer: entry.answer, seconds: entry.seconds, wasCached: true)
                         progress.cached += 1
                     } else {
@@ -132,7 +136,7 @@ public final class Runner {
                             continue
                         }
                         failuresInARow = 0
-                        _ = try? cache.store(prompt: prompt, run: run, answer: answer.answer, seconds: answer.seconds)
+                        _ = try? cache.store(prompt: prompt, run: run, namespace: namespace, answer: answer.answer, seconds: answer.seconds)
                         outcome = Self.outcome(answer: answer.answer, seconds: answer.seconds, wasCached: false)
                         progress.asked += 1
                     }
@@ -142,6 +146,21 @@ public final class Runner {
             }
         }
         return (progress, false)
+    }
+
+    /// The answers already cached, asking nothing: to compare with a backend that
+    /// isn't being asked now.
+    public func fillFromCache(_ results: inout [VariantResult]) {
+        for variantIndex in results.indices {
+            for itemIndex in results[variantIndex].items.indices {
+                let prompt = results[variantIndex].items[itemIndex].prompt
+                results[variantIndex].items[itemIndex].outcomes = (0..<runs).compactMap { run in
+                    cache.entry(prompt: prompt, run: run, namespace: namespace).map {
+                        Self.outcome(answer: $0.answer, seconds: $0.seconds, wasCached: true)
+                    }
+                }
+            }
+        }
     }
 
     static func outcome(answer: String, seconds: Double, wasCached: Bool) -> Outcome {
