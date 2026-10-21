@@ -93,6 +93,11 @@ public enum NotificationPromptFormatter {
             lines.append("The app marked this notification time sensitive.")
         }
         lines.append("Title: \(notification.title)")
+        // Stated as a fact, as the @Bob case: the model didn't reliably tell a direct
+        // message from a channel by the title alone. Only said when it's one.
+        if notification.isDirectMessage ?? ConversationCooldown.looksLikeDirectMessage(notification) {
+            lines.append("Direct message: written to the user alone, not in a channel or group.")
+        }
         // The subtitle is often a group chat's or thread's name; merged into the body,
         // the model can't tell it's a group conversation.
         var body = notification.body
@@ -161,6 +166,7 @@ public enum TriageInstructions {
         - Something arriving now or waiting for the user, such as a ride pulling up, food at the door, or a courier outside.
         - The app marked the notification time sensitive, unless it is marketing, a sale, or a promotion.
         - Anything matching the user's urgent terms.
+        - A direct message to the user from a person in an important app, unless it is only a reaction or it is automated.
         - When the source is an important app and you are unsure between Important and Neutral, choose Important.
 
         Neutral:

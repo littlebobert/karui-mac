@@ -61,6 +61,15 @@ public enum ConversationCooldown {
         return sender.isEmpty ? [] : ["\(app)|sender|\(sender)"]
     }
 
+    /// A message to the user alone in a workplace app, as its notification shows one:
+    /// the title is the sender's own name, where a channel or a thread reply names the
+    /// channel. Only meaningful where the sender is given apart from the title.
+    public static func looksLikeDirectMessage(_ notification: NotificationInput) -> Bool {
+        guard kind(of: ImportantAppMatcher.canonicalKey(notification.source)) == .workplace else { return false }
+        let sender = normalized(notification.sender ?? "")
+        return !sender.isEmpty && normalized(notification.title) == sender
+    }
+
     /// A conversation with more in it than one person writing to you, as far as the
     /// notification shows: a group with two or more recipients or a name in the
     /// subtitle, an email thread with a subject, or a workplace channel, whose title

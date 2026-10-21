@@ -290,6 +290,11 @@ public struct NotificationInput: Sendable, Equatable {
     /// The other people in the conversation, as the Shortcut gave them: a group
     /// chat's members besides the sender.
     public var recipients: String?
+    /// Whether it was written to the user alone rather than in a channel or group.
+    /// Nil: taken from the notification's shape (`ConversationCooldown.looksLikeDirectMessage`),
+    /// which needs the sender apart from the title, as the iPhone's Shortcut gives them.
+    /// False where it can't be told, as on the Mac, whose sender is the title.
+    public var isDirectMessage: Bool?
 
     public init(
         source: String,
@@ -300,7 +305,8 @@ public struct NotificationInput: Sendable, Equatable {
         translation: NotificationTranslation? = nil,
         subtitle: String? = nil,
         receivedAt: Date? = nil,
-        recipients: String? = nil
+        recipients: String? = nil,
+        isDirectMessage: Bool? = nil
     ) {
         self.source = source
         self.title = title
@@ -311,6 +317,7 @@ public struct NotificationInput: Sendable, Equatable {
         self.subtitle = subtitle
         self.receivedAt = receivedAt
         self.recipients = recipients
+        self.isDirectMessage = isDirectMessage
     }
 
     public var translatedText: String? {
@@ -1272,7 +1279,9 @@ public extension NotificationInput {
             body: [subtitle, body].compactMap { $0 }.joined(separator: "\n"),
             sender: title,
             subtitle: subtitle,
-            receivedAt: receivedAt
+            receivedAt: receivedAt,
+            // The sender is the title here, so every notification would look direct.
+            isDirectMessage: false
         )
     }
 }
