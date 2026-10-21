@@ -65,6 +65,50 @@ enum SlackLink {
         URL(string: "slack://channel?team=\(teamID)&id=\(channelID)")
     }
 
+    /// What the Mac opens for a link. Slack for Mac claims only `slack://` links, so
+    /// the permalink, which opens Slack on the iPhone, went through the browser first
+    /// here. It becomes Slack's own link to the same message, with the team found by
+    /// the workspace's address; anything else, or a workspace not on this Mac, opens
+    /// as it is.
+    static func macURL(
+        for url: URL,
+        supportDirectory: URL = SlackHarvester().supportDirectory
+    ) -> URL {
+        guard let rootState = try? Data(contentsOf: supportDirectory.appending(path: "storage/root-state.json")) else {
+            return url
+        }
+        return appURL(forPermalink: url, rootState: rootState) ?? url
+    }
+
+    /// `https://<workspace>/archives/<channel>/p<ts without the dot>` as
+    /// `slack://channel?team=<team>&id=<channel>&message=<ts>`.
+    static func appURL(forPermalink url: URL, rootState: Data) -> URL? {
+        let parts = url.pathComponents
+        guard url.scheme == "https", let host = url.host(), parts.count == 4, parts[1] == "archives",
+              parts[3].hasPrefix("p") else { return nil }
+        let digits = parts[3].dropFirst()
+        guard digits.count > 6, digits.allSatisfy(\.isNumber),
+              let teamID = teamID(forHost: host, rootState: rootState) else { return nil }
+        var components = URLComponents()
+        components.scheme = "slack"
+        components.host = "channel"
+        components.queryItems = [
+            URLQueryItem(name: "team", value: teamID),
+            URLQueryItem(name: "id", value: parts[2]),
+            URLQueryItem(name: "message", value: "\(digits.dropLast(6)).\(digits.suffix(6))"),
+        ]
+        return components.url
+    }
+
+    /// The team whose saved address has this host, from `storage/root-state.json`.
+    static func teamID(forHost host: String, rootState: Data) -> String? {
+        guard let state = try? JSONSerialization.jsonObject(with: rootState) as? [String: Any],
+              let workspaces = state["workspaces"] as? [String: Any] else { return nil }
+        return workspaces.first { _, value in
+            ((value as? [String: Any])?["url"] as? String).flatMap(URL.init(string:))?.host()?.lowercased() == host.lowercased()
+        }?.key
+    }
+
     /// `workspaces.<team ID>.url` in Slack's `storage/root-state.json`. The `url` is
     /// used rather than the `domain`, for workspaces with addresses of their own.
     static func workspaceURL(teamID: String, rootState: Data) -> URL? {

@@ -26,6 +26,21 @@ final class SlackLinkTests: XCTestCase {
         )
     }
 
+    /// Slack for Mac opens only its own links, so the permalink is opened as one.
+    func testPermalinkOpensAsSlacksOwnLinkOnTheMac() {
+        let state = Data(#"""
+        {"workspaces":{"T0123ABCDEF":{"domain":"example","id":"T0123ABCDEF","name":"Example","url":"https://example.slack.com/"}}}
+        """#.utf8)
+        XCTAssertEqual(
+            SlackLink.appURL(forPermalink: URL(string: "https://example.slack.com/archives/C0ABCDEFGHI/p1791879249798639")!, rootState: state)?.absoluteString,
+            "slack://channel?team=T0123ABCDEF&id=C0ABCDEFGHI&message=1791879249.798639"
+        )
+        // A workspace not signed in on this Mac, or not a permalink, opens as it is.
+        XCTAssertNil(SlackLink.appURL(forPermalink: URL(string: "https://other.slack.com/archives/C0ABCDEFGHI/p1791879249798639")!, rootState: state))
+        XCTAssertNil(SlackLink.appURL(forPermalink: URL(string: "slack://channel?team=T0123ABCDEF&id=C0ABCDEFGHI")!, rootState: state))
+        XCTAssertNil(SlackLink.appURL(forPermalink: URL(string: "https://example.slack.com/archives/C0ABCDEFGHI")!, rootState: state))
+    }
+
     func testWorkspaceURLComesFromRootState() {
         let state = Data(#"""
         {"workspaces":{"T0123ABCDEF":{"domain":"example","id":"T0123ABCDEF","name":"Example","url":"https://example.slack.com/"}}}

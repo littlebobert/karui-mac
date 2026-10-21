@@ -330,7 +330,7 @@ final class AppCoordinator {
     /// one with nowhere more exact opens its app instead.
     func open(_ item: Inbox.Item) {
         if let link = item.link {
-            NSWorkspace.shared.open(link.url)
+            NSWorkspace.shared.open(item.app == KnownApp.slack.rawValue ? SlackLink.macURL(for: link.url) : link.url)
             return
         }
         guard item.app == KnownApp.messages.rawValue, !DemoMode.isActive else {
