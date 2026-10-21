@@ -507,6 +507,17 @@ final class Inbox {
         return true
     }
 
+    /// A verdict that says unread, over one that said read, stays read. An iPhone and
+    /// an iPad write the same record, the last one wins, and a device that was off
+    /// while the person read things sends them unread when it comes back. Marking one
+    /// unread again on the iPhone doesn't reach the Mac, which is the smaller loss.
+    static func keepingRead(_ verdict: VerdictRecord, over previous: VerdictRecord?) -> VerdictRecord {
+        guard verdict.isUnread, previous?.isUnread == false else { return verdict }
+        var kept = verdict
+        kept.isUnread = false
+        return kept
+    }
+
     /// The day's verdicts from the iPhone: each goes with its notification here, or,
     /// when it carries the text, stands for a notification only the iPhone got. One
     /// the iPhone has deleted goes. Returns the IDs of notifications only the iPhone
@@ -525,7 +536,7 @@ final class Inbox {
             let matching = indices(matching: verdict)
             if !matching.isEmpty {
                 for index in matching {
-                    items[index].verdict = verdict
+                    items[index].verdict = Self.keepingRead(verdict, over: items[index].verdict)
                     if items[index].recipients == nil { items[index].recipients = verdict.recipients }
                     if items[index].senderName == nil { items[index].senderName = verdict.sender }
                     if items[index].chosenCategory == verdict.category { items[index].chosenCategory = nil }

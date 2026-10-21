@@ -48,6 +48,25 @@ final class InboxVerdictTests: XCTestCase {
         XCTAssertEqual(inbox.filtered.map(\.id), ["b"])
     }
 
+    /// A device that comes back online with an older History can't make what was read
+    /// on another unread again.
+    func testAReadVerdictStaysReadWhenAnotherDeviceSaysUnread() {
+        let suite = "InboxVerdictTests.\(UUID().uuidString)"
+        let inbox = Inbox(defaults: UserDefaults(suiteName: suite)!, store: nil)
+        defer { UserDefaults().removePersistentDomain(forName: suite) }
+        inbox.apply([verdict("a")])
+        var read = verdict("a")
+        read.isUnread = false
+        inbox.apply([read])
+        XCTAssertEqual(inbox.item(id: "a")?.isUnread, false)
+
+        var iPadsOlder = verdict("a")
+        iPadsOlder.reason = "From the iPad"
+        inbox.apply([iPadsOlder])
+        XCTAssertEqual(inbox.item(id: "a")?.isUnread, false)
+        XCTAssertEqual(inbox.item(id: "a")?.verdict?.reason, "From the iPad", "the rest of the verdict still comes through")
+    }
+
     /// Turning on the Unread filter hides a selection already read and drops it from
     /// the selection, so the preview clears; what's left selected isn't read by it.
     func testTheUnreadFilterHidesASelectionAlreadyRead() {
