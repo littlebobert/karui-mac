@@ -77,6 +77,8 @@ struct KaruiMacApp: App {
                     Button("Hide Forced Banner") { nudge.forcedStep = nil }
                     Button("Reset Dismissed Banners") { nudge.resetDismissed() }
                 }
+                // Grading History by hand, this Mac's copy and the iPhone's exports, for a golden set.
+                Button("Grade History…") { GradingWindowController.shared.show(inbox: appDelegate.coordinator.inbox) }
                 #endif
             }
         }

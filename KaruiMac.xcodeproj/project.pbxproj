@@ -14,6 +14,7 @@
 		12AE2ADF169EEC27C715B492 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = AFB92E764E41E683274F5389 /* AppDelegate.swift */; };
 		133F9D8A73E4F90FCA00D6D1 /* AppLauncher.swift in Sources */ = {isa = PBXBuildFile; fileRef = 04C7D2944D42D6C87AC633F7 /* AppLauncher.swift */; };
 		23020A8966F305767CA6C564 /* DemoMode.swift in Sources */ = {isa = PBXBuildFile; fileRef = 23A1E5BDB996F7E881DA0021 /* DemoMode.swift */; };
+		23AECE4A05A3D44584BEE2D3 /* GradingSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9EB31EDB83CEFAEFEA31A984 /* GradingSession.swift */; };
 		256F450297662965424AE8A3 /* CompanionPresence.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7CDCA27785FCD626FF554343 /* CompanionPresence.swift */; };
 		26445B3E9165FAB91EBDFDBB /* KaruiLinkKit in Frameworks */ = {isa = PBXBuildFile; productRef = 1EEF910B98DBB071B7129E5A /* KaruiLinkKit */; };
 		29D7C805F698B12B4188AB8B /* DeepLinkSync.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1A75765EC9DF2745AF8F9FD /* DeepLinkSync.swift */; };
@@ -24,6 +25,7 @@
 		48BC8B8FE8B3454F291F732C /* InboxView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 59EF49CEA27DDE8349D1BB63 /* InboxView.swift */; };
 		506A24EE70DB7B87395F9679 /* SparkHarvester.swift in Sources */ = {isa = PBXBuildFile; fileRef = F9695E99FA85CB7DC2E8B73A /* SparkHarvester.swift */; };
 		54758AD1ACDF40494DD0EB17 /* AutoUpdateService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9FBC7F39D73658B323FE3E33 /* AutoUpdateService.swift */; };
+		556709BD6ED36A7AEBCFBE0D /* GradingWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 207319D9CE13A64B5E709CA0 /* GradingWindowController.swift */; };
 		58B843671087828476A17A1A /* AppIconSource.png in Resources */ = {isa = PBXBuildFile; fileRef = 6CA9E859EEC0683C3C84FEEB /* AppIconSource.png */; };
 		5916F4769E5F40D48B463BFF /* Sparkle in Frameworks */ = {isa = PBXBuildFile; productRef = 782A9236982375E69B998D37 /* Sparkle */; };
 		59B02B06504F73D2E33FBDDB /* MacSorter.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF88AF701CB740F31C522CBC /* MacSorter.swift */; };
@@ -35,6 +37,7 @@
 		783DCCFA1398709247A2056B /* MacSubscriptions.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1DA9C372451E0B7DFE5804E /* MacSubscriptions.swift */; };
 		81CB8D99097C43010B9E2FC2 /* CorrespondentTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17304FF1E3D049F3C656DA86 /* CorrespondentTests.swift */; };
 		820F35FC5B53F16C8C79C1D5 /* NotificationDatabase.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2EF2A3CF2E9957E0C0B42B3 /* NotificationDatabase.swift */; };
+		84A5B0E3D233505DA98331E4 /* GradingSessionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D93392F8F852EAF234D01396 /* GradingSessionTests.swift */; };
 		8D32B45A548B847970B9406E /* MacSortingEnvironment.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84FE6D61A57CB963CB4C5CCC /* MacSortingEnvironment.swift */; };
 		8DEB9C643FA7D9081602AD21 /* CorrespondentSync.swift in Sources */ = {isa = PBXBuildFile; fileRef = DF4BF525FF076257FB084C2A /* CorrespondentSync.swift */; };
 		9938A77BD4938C9D62BB75C0 /* KaruiSorting in Frameworks */ = {isa = PBXBuildFile; productRef = 5E676695F40FF501D04224D5 /* KaruiSorting */; };
@@ -60,11 +63,13 @@
 		D5D5164D472F70C79643EE6A /* Localization.swift in Sources */ = {isa = PBXBuildFile; fileRef = 29A29143D3E9AA889152D714 /* Localization.swift */; };
 		D66550355B02294EBB91F582 /* NotificationPayloadTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57E3E9CF0788DE8E74AA72D0 /* NotificationPayloadTests.swift */; };
 		E00EE92CA4A237CC5AE01FB8 /* NotificationDatabaseWatcher.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B9727746C8262B05FCF0C07 /* NotificationDatabaseWatcher.swift */; };
+		E4E619C8AAC03D14FAF3E999 /* GradingInboxTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A3066717246024A3B01600D /* GradingInboxTests.swift */; };
 		E620E1F707D6E244E25C8E3E /* SafeDiagnosticLog.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01510FEECF5D3DCE0DED30E6 /* SafeDiagnosticLog.swift */; };
 		E938124FFE8ECE7B8C2CD054 /* MacSecondOpinion.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75ACA25EA222D40857A4FB20 /* MacSecondOpinion.swift */; };
 		EC296C35DFB671461EE63283 /* IPhoneSortingSettingsSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA731233B4D5A5ECA4611FD6 /* IPhoneSortingSettingsSection.swift */; };
 		F0994B4D99C5602707DEC703 /* SortingSettingsStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 462569B5AE26FA4CCA644A6A /* SortingSettingsStore.swift */; };
 		F0AB815F18DBD4B665CAFB12 /* SortRequests.swift in Sources */ = {isa = PBXBuildFile; fileRef = EB6F536E917DE437D0754E1E /* SortRequests.swift */; };
+		FBE82467D9C78C35E9E44225 /* GradingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1D5F9B22D74C389FFF17E5A /* GradingView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -87,7 +92,9 @@
 		1234CDFEE07EA21BAA319888 /* SparkLinkTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SparkLinkTests.swift; sourceTree = "<group>"; };
 		17304FF1E3D049F3C656DA86 /* CorrespondentTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CorrespondentTests.swift; sourceTree = "<group>"; };
 		18C03C189FC251D0F185F180 /* KaruiMac.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = KaruiMac.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		1A3066717246024A3B01600D /* GradingInboxTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GradingInboxTests.swift; sourceTree = "<group>"; };
 		1E81C403E1EA25EF28338C97 /* MenuBarMenu.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuBarMenu.swift; sourceTree = "<group>"; };
+		207319D9CE13A64B5E709CA0 /* GradingWindowController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GradingWindowController.swift; sourceTree = "<group>"; };
 		23A1E5BDB996F7E881DA0021 /* DemoMode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DemoMode.swift; sourceTree = "<group>"; };
 		256E396E924DE9AB3935ABB5 /* SQLiteDatabase.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SQLiteDatabase.swift; sourceTree = "<group>"; };
 		29A29143D3E9AA889152D714 /* Localization.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Localization.swift; sourceTree = "<group>"; };
@@ -116,6 +123,7 @@
 		84FE6D61A57CB963CB4C5CCC /* MacSortingEnvironment.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MacSortingEnvironment.swift; sourceTree = "<group>"; };
 		8971A5A194FC9644337F7A93 /* KaruiMacTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = KaruiMacTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		9789D39272AA5E1B1CC4C22B /* MessagesHarvester.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MessagesHarvester.swift; sourceTree = "<group>"; };
+		9EB31EDB83CEFAEFEA31A984 /* GradingSession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GradingSession.swift; sourceTree = "<group>"; };
 		9FBC7F39D73658B323FE3E33 /* AutoUpdateService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AutoUpdateService.swift; sourceTree = "<group>"; };
 		A1A75765EC9DF2745AF8F9FD /* DeepLinkSync.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeepLinkSync.swift; sourceTree = "<group>"; };
 		A2EF2A3CF2E9957E0C0B42B3 /* NotificationDatabase.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationDatabase.swift; sourceTree = "<group>"; };
@@ -126,8 +134,10 @@
 		B925C34CA7033ED768164254 /* VerdictStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VerdictStore.swift; sourceTree = "<group>"; };
 		BAA22D646B0B0086568E6C34 /* FullDiskAccess.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FullDiskAccess.swift; sourceTree = "<group>"; };
 		BF88AF701CB740F31C522CBC /* MacSorter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MacSorter.swift; sourceTree = "<group>"; };
+		C1D5F9B22D74C389FFF17E5A /* GradingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GradingView.swift; sourceTree = "<group>"; };
 		C424AFD49EBE5C89997B8D7C /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		CDA83893DD1898A941803C76 /* Acknowledgements.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = Acknowledgements.txt; sourceTree = "<group>"; };
+		D93392F8F852EAF234D01396 /* GradingSessionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GradingSessionTests.swift; sourceTree = "<group>"; };
 		DA731233B4D5A5ECA4611FD6 /* IPhoneSortingSettingsSection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IPhoneSortingSettingsSection.swift; sourceTree = "<group>"; };
 		DD78E6FA806C0CC6D07E2BEF /* SyncStatus.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SyncStatus.swift; sourceTree = "<group>"; };
 		DF4BF525FF076257FB084C2A /* CorrespondentSync.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CorrespondentSync.swift; sourceTree = "<group>"; };
@@ -156,6 +166,8 @@
 			isa = PBXGroup;
 			children = (
 				17304FF1E3D049F3C656DA86 /* CorrespondentTests.swift */,
+				1A3066717246024A3B01600D /* GradingInboxTests.swift */,
+				D93392F8F852EAF234D01396 /* GradingSessionTests.swift */,
 				5FC73E948CF81FC2CAE4C7EA /* InboxVerdictTests.swift */,
 				5986291BE197CA76F4D6CA8E /* MessagesLinkTests.swift */,
 				57E3E9CF0788DE8E74AA72D0 /* NotificationPayloadTests.swift */,
@@ -226,6 +238,7 @@
 			children = (
 				FCB80132059B74A9F4483512 /* App */,
 				F29B4464B039467766E88540 /* Correspondents */,
+				B51B383F9ED4A4ADC84F1D0C /* Grading */,
 				816B0FF06B203EE1220A5BE1 /* Harvesting */,
 				8A7DF89B2D17028784BFF4AC /* Inbox */,
 				69F5FD8E5F62FE9E958DDD80 /* Resources */,
@@ -256,6 +269,16 @@
 				277C14CCB635AAA2E2CB7D80 /* Packages */,
 				575EFB0AE06CB7910CB9DF70 /* Products */,
 			);
+			sourceTree = "<group>";
+		};
+		B51B383F9ED4A4ADC84F1D0C /* Grading */ = {
+			isa = PBXGroup;
+			children = (
+				9EB31EDB83CEFAEFEA31A984 /* GradingSession.swift */,
+				C1D5F9B22D74C389FFF17E5A /* GradingView.swift */,
+				207319D9CE13A64B5E709CA0 /* GradingWindowController.swift */,
+			);
+			path = Grading;
 			sourceTree = "<group>";
 		};
 		CE95B3523B7979876B61ACBF /* Sync */ = {
@@ -424,6 +447,9 @@
 				29D7C805F698B12B4188AB8B /* DeepLinkSync.swift in Sources */,
 				23020A8966F305767CA6C564 /* DemoMode.swift in Sources */,
 				450373E70A90D9E47C01B39A /* FullDiskAccess.swift in Sources */,
+				23AECE4A05A3D44584BEE2D3 /* GradingSession.swift in Sources */,
+				FBE82467D9C78C35E9E44225 /* GradingView.swift in Sources */,
+				556709BD6ED36A7AEBCFBE0D /* GradingWindowController.swift in Sources */,
 				03A9D4824CFC0492AF517084 /* Harvester.swift in Sources */,
 				EC296C35DFB671461EE63283 /* IPhoneSortingSettingsSection.swift in Sources */,
 				04B9EDA56D644A72178963F7 /* Inbox.swift in Sources */,
@@ -463,6 +489,8 @@
 			buildActionMask = 2147483647;
 			files = (
 				81CB8D99097C43010B9E2FC2 /* CorrespondentTests.swift in Sources */,
+				E4E619C8AAC03D14FAF3E999 /* GradingInboxTests.swift in Sources */,
+				84A5B0E3D233505DA98331E4 /* GradingSessionTests.swift in Sources */,
 				D4A3C8A89F7646C2BDF159AE /* InboxVerdictTests.swift in Sources */,
 				71FCA40B8355B8319BD331C2 /* MessagesLinkTests.swift in Sources */,
 				D66550355B02294EBB91F582 /* NotificationPayloadTests.swift in Sources */,
