@@ -11,6 +11,16 @@ final class InboxVerdictTests: XCTestCase {
         )
     }
 
+    /// A saved link survives a relaunch when it's the kind its app's harvester makes,
+    /// Slack's web permalinks included; one from another app is dropped.
+    func testSavedLinksKeptOnlyForTheirOwnApp() {
+        XCTAssertTrue(Inbox.linkFits(URL(string: "https://example.slack.com/archives/C0ABCDEFGHI/p1791879249798639")!, app: "Slack"))
+        XCTAssertTrue(Inbox.linkFits(URL(string: "slack://channel?team=T0123ABCDEF&id=C0ABCDEFGHI")!, app: "Slack"))
+        XCTAssertTrue(Inbox.linkFits(URL(string: "readdle-spark://bl=QTo")!, app: "Spark"))
+        XCTAssertFalse(Inbox.linkFits(URL(string: "readdle-spark://bl=QTo")!, app: "Slack"))
+        XCTAssertFalse(Inbox.linkFits(URL(string: "https://example.slack.com/archives/C0ABCDEFGHI/p1791879249798639")!, app: "Messages"))
+    }
+
     /// The Mac's banners go only to notifications only the iPhone received that are
     /// new here, once each.
     func testApplyReturnsNewPhoneOnlyItemsOnce() {

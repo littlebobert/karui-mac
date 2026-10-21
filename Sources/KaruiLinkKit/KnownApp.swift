@@ -17,12 +17,13 @@ public enum KnownApp: String, CaseIterable, Sendable {
         }
     }
 
-    /// The URL schemes the Mac's links for the app use.
+    /// The URL schemes the Mac's links for the app use. Slack's are mostly the
+    /// message's permalink, on the web, which opens Slack on the iPhone.
     public var linkSchemes: [String] {
         switch self {
         case .messages: ["sms", "imessage"]
         case .spark: ["readdle-spark"]
-        case .slack: ["slack"]
+        case .slack: ["slack", "https"]
         }
     }
 

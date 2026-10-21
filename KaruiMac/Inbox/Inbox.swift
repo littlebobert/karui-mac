@@ -251,8 +251,7 @@ final class Inbox {
         items = (store?.load() ?? []).map { item in
             // A link from another app was attached by a reused record ID (fixed in
             // 0.4.5); such a link is dropped rather than opening the wrong thing.
-            guard let link = item.link, let app = KnownApp(rawValue: item.app),
-                  let scheme = link.url.scheme?.lowercased(), !app.linkSchemes.contains(scheme) else { return item }
+            guard let link = item.link, !Self.linkFits(link.url, app: item.app) else { return item }
             var cleaned = item
             cleaned.link = nil
             return cleaned
@@ -365,6 +364,14 @@ final class Inbox {
     }
 
     static func id(for record: NotificationRecord) -> String { "notification-\(record.id)" }
+
+    /// Whether a saved link is one this app's harvester makes. Slack's permalinks are
+    /// `https`; until 0.7.9 they failed this at every launch and were dropped, so a
+    /// Slack item opened only Slack itself.
+    static func linkFits(_ url: URL, app: String) -> Bool {
+        guard let app = KnownApp(rawValue: app), let scheme = url.scheme?.lowercased() else { return true }
+        return app.linkSchemes.contains(scheme)
+    }
 
     /// An app with no name is shown as Unknown rather than as nothing.
     static func appName(_ name: String) -> String {
