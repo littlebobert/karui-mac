@@ -164,13 +164,38 @@ final class Inbox {
     var previewHeight: Double { didSet { defaults.set(previewHeight, forKey: "inbox.previewHeight") } }
     var shownCategories: Set<String> { didSet { defaults.set(Array(shownCategories).sorted(), forKey: "inbox.shownCategories"); invalidateCaches() } }
     /// Changing it lets go of what was kept visible: a selection already read when
-    /// the Unread filter goes on is hidden with the rest.
-    var shownReadStates: Set<ReadState> { didSet { defaults.set(shownReadStates.map(\.rawValue).sorted(), forKey: "inbox.shownReadStates"); invalidateCaches(); if !keptVisibleIDs.isEmpty { keptVisibleIDs = [] } } }
+    /// the Unread filter goes on is hidden with the rest, and leaves the selection,
+    /// so the preview doesn't show what the list doesn't.
+    var shownReadStates: Set<ReadState> {
+        didSet {
+            defaults.set(shownReadStates.map(\.rawValue).sorted(), forKey: "inbox.shownReadStates")
+            invalidateCaches()
+            if !keptVisibleIDs.isEmpty { keptVisibleIDs = [] }
+            dropHiddenFromSelection()
+        }
+    }
     var barDisplayMode: BarDisplayMode { didSet { defaults.set(barDisplayMode.rawValue, forKey: "inbox.barDisplayMode") } }
     /// Only what this Mac can open in full: items with a link.
     var showsOnlyOpenable: Bool { didSet { defaults.set(showsOnlyOpenable, forKey: "inbox.showsOnlyOpenable"); invalidateCaches() } }
     var search = "" { didSet { invalidateCaches() } }
     var selection: Set<String> = []
+    /// Set while the filter trims the selection, so the trim isn't taken for the
+    /// person selecting: one notification left selected that way isn't read.
+    private var isTrimmingSelection = false
+
+    private func dropHiddenFromSelection() {
+        guard !selection.isEmpty else { return }
+        let shown = selection.intersection(filtered.map(\.id))
+        guard shown != selection else { return }
+        isTrimmingSelection = true
+        selection = shown
+    }
+
+    /// Whether the last selection change was the filter's trim, which it then forgets.
+    func takeSelectionTrim() -> Bool {
+        defer { isTrimmingSelection = false }
+        return isTrimmingSelection
+    }
     /// Selected while only unread ones are shown: reading them doesn't drop them from
     /// the list until the selection moves on, as in Mail.
     private(set) var keptVisibleIDs: Set<String> = [] { didSet { invalidateCaches() } }
