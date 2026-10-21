@@ -80,7 +80,7 @@ While it runs, the app keeps one `Companion` record with this Mac's name, the ap
 
 ### Quiet while you use this Mac
 
-While the person is using the Mac (a key or the pointer moved in the last three minutes, the screen unlocked and awake), it keeps a `MacPresence` record with only whether it's in use and when (`MacPresenceReporter`). It's written every 30 seconds, with App Nap held off meanwhile so the writes stay on time, and marked idle at once when the screen locks or the Mac sleeps.
+While the person is using the Mac (a key or the pointer moved in the last minute, the screen unlocked and awake), it keeps a `MacPresence` record with only whether it's in use and when (`MacPresenceReporter`). It's written every 30 seconds, with App Nap held off meanwhile so the writes stay on time, and marked idle at once when the screen locks or the Mac sleeps.
 
 For the next 90 seconds, Karui on the iPhone sends its alerts quietly, to Notification Center, and the Mac shows its own banner for an Important notification only the iPhone received (`MacBanners`). Wake Me and one-time codes still alert on the iPhone. *Quiet your iPhone while you use this Mac* in Settings turns this off.
 

@@ -15,9 +15,10 @@ import KaruiLinkKit
 /// and the iPhone alerts though the person is right here.
 @MainActor
 final class MacPresenceReporter {
-    /// No input for this long counts as away. Long enough to read a message without
-    /// touching anything; walking away usually locks the screen or puts it to sleep.
-    static let idleThreshold: TimeInterval = 3 * 60
+    /// No input for this long counts as away. Three minutes kept the iPhone quiet that
+    /// long after the person had walked off without locking; reading for a minute
+    /// without touching anything only lets held alerts reach the iPhone, quietly.
+    static let idleThreshold: TimeInterval = 60
     private let database: CKDatabase?
     private let recordName: String
     private var timer: Timer?
