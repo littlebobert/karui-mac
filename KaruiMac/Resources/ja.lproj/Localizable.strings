@@ -205,3 +205,6 @@
 "%d unread Important" = "未読の重要 %d件";
 "Badges are off for Karui in System Settings." = "システム設定でKaruiのバッジがオフになっています。";
 "Open Notification Settings" = "通知設定を開く";
+"Open Focus Settings" = "集中モードの設定を開く";
+"Let Karui’s banners through your Focus" = "集中モード中もKaruiのバナーを表示";
+"The Focus you use with Karui on your iPhone is shared with this Mac, and keeps Karui’s banners here in Notification Center. In Focus settings, open that Focus and add Karui to its allowed apps." = "iPhoneのKaruiで使っている集中モードはこのMacにも共有され、Karuiのバナーを通知センターに入れたままにします。集中モードの設定でその集中モードを開き、許可するアプリにKaruiを追加してください。";

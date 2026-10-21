@@ -6,7 +6,8 @@ import SwiftUI
 /// One step toward sorting on this Mac, offered at the top of the inbox: only the
 /// next one that's missing, gone by itself once done, and gone for good after Not
 /// Now. Sorting here is on by default; what keeps it from working is the iPhone's
-/// settings not having arrived, or the Shortcut Second Opinion needs.
+/// settings not having arrived, or the Shortcut Second Opinion needs. Last, a
+/// reminder about the Focus Karui uses on the iPhone, which this Mac can't check.
 @MainActor
 @Observable
 final class SetupNudge {
@@ -17,7 +18,16 @@ final class SetupNudge {
         case secondOpinionShortcut
         /// Sorting works; notifications only this Mac received could reach the iPhone too.
         case sendToIPhone
+        /// Karui on the iPhone filters under a Focus, which follows the person to this
+        /// Mac unless they turn that off, and keeps this app's banners in Notification
+        /// Center unless it's one of the Focus's allowed apps. Nothing here can tell
+        /// whether it is (Notification Center records a held-back banner as it does a
+        /// shown one), so it's offered once, until Not Now.
+        case focusAllowsKarui
     }
+
+    /// Focus in System Settings, where the Focus's allowed apps are.
+    static let focusSettingsURL = URL(string: "x-apple.systempreferences:com.apple.Focus-Settings.extension")!
 
     private static let dismissedKey = "setupNudge.dismissed"
     private(set) var isShortcutInstalled: Bool?
@@ -31,19 +41,25 @@ final class SetupNudge {
         dismissed = Set(defaults.stringArray(forKey: Self.dismissedKey) ?? [])
     }
 
+    /// The first step still missing and not put off. A sorting step put off doesn't
+    /// keep the Focus reminder from showing after it.
     func step(settings: AppSettings, sorting: SortingSettingsStore, canSort: Bool) -> Step? {
         if let forcedStep { return forcedStep }
-        guard #available(macOS 26.0, *), settings.sortsOnThisMac, sorting.hasChecked else { return nil }
-        let next: Step? = if sorting.policy == nil {
-            .iPhoneSettings
-        } else if sorting.policy?.secondOpinionEnabled == true, isShortcutInstalled == false {
-            .secondOpinionShortcut
-        } else if canSort, !settings.asksIPhoneToSort {
-            .sendToIPhone
-        } else {
-            nil
+        guard sorting.hasChecked else { return nil }
+        var steps: [Step] = []
+        if #available(macOS 26.0, *), settings.sortsOnThisMac {
+            if sorting.policy == nil {
+                steps.append(.iPhoneSettings)
+            } else if sorting.policy?.secondOpinionEnabled == true, isShortcutInstalled == false {
+                steps.append(.secondOpinionShortcut)
+            } else if canSort, !settings.asksIPhoneToSort {
+                steps.append(.sendToIPhone)
+            }
         }
-        return next.flatMap { dismissed.contains($0.rawValue) ? nil : $0 }
+        if sorting.policy?.filtersNotifications == true {
+            steps.append(.focusAllowsKarui)
+        }
+        return steps.first { !dismissed.contains($0.rawValue) }
     }
 
     func dismiss(_ step: Step) {
@@ -91,6 +107,10 @@ struct SetupNudgeCard: View {
                             }
                         case .sendToIPhone:
                             Button(L10n.string("Turn On"), action: onTurnOnSending)
+                        case .focusAllowsKarui:
+                            Button(L10n.string("Open Focus Settings")) {
+                                NSWorkspace.shared.open(SetupNudge.focusSettingsURL)
+                            }
                         }
                         Button(L10n.string("Not Now"), action: onDismiss)
                     }
@@ -108,6 +128,7 @@ struct SetupNudgeCard: View {
         case .iPhoneSettings: "iphone"
         case .secondOpinionShortcut: "cloud"
         case .sendToIPhone: "arrow.up.forward.app"
+        case .focusAllowsKarui: "moon.fill"
         }
     }
 
@@ -116,6 +137,7 @@ struct SetupNudgeCard: View {
         case .iPhoneSettings: L10n.string("Sort notifications the moment they arrive")
         case .secondOpinionShortcut: L10n.string("Add the Second Opinion Shortcut")
         case .sendToIPhone: L10n.string("Get notifications only this Mac received on your iPhone")
+        case .focusAllowsKarui: L10n.string("Let Karui’s banners through your Focus")
         }
     }
 
@@ -127,6 +149,8 @@ struct SetupNudgeCard: View {
             L10n.string("Second Opinion is on in Karui on your iPhone. This Mac asks Apple’s Private Cloud Compute through a Shortcut of your own, with the same prompt your iPhone sends.")
         case .sendToIPhone:
             L10n.string("When your iPhone never got a notification, this Mac can send it there, already sorted and end-to-end encrypted, so it shows in History and alerts you if it’s Important.")
+        case .focusAllowsKarui:
+            L10n.string("The Focus you use with Karui on your iPhone is shared with this Mac, and keeps Karui’s banners here in Notification Center. In Focus settings, open that Focus and add Karui to its allowed apps.")
         }
     }
 }
