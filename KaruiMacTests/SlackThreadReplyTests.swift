@@ -33,12 +33,18 @@ final class SlackThreadReplyTests: XCTestCase {
     }
 
     func testTheSameReplyMatchesEitherWayRound() {
-        let phone = (subtitle: Optional("In #internal-kotoba-app-tech"), body: Optional("In #internal-kotoba-app-tech\n\(text)"))
-        let mac = (subtitle: Optional("internal-kotoba-app-tech"), body: Optional("darai: \(String(text.prefix(90)))"))
-        XCTAssertTrue(Inbox.slackThreadReplyMatches(phone, mac))
-        XCTAssertFalse(Inbox.slackThreadReplyMatches(mac, phone), "only the iPhone's says In #")
-        XCTAssertFalse(Inbox.slackThreadReplyMatches(phone, (subtitle: "internal-kotoba-app-sales", body: mac.body)), "another channel")
-        XCTAssertFalse(Inbox.slackThreadReplyMatches(phone, (subtitle: mac.subtitle, body: "darai: something else")), "other text")
+        let phone = LooseMatch.Fields(title: "darai", subtitle: "In #internal-kotoba-app-tech", body: "In #internal-kotoba-app-tech\n\(text)")
+        let mac = LooseMatch.Fields(title: "Kotoba", subtitle: "internal-kotoba-app-tech", body: "darai: \(String(text.prefix(90)))")
+        XCTAssertTrue(LooseMatch.slackThreadReply(phone, mac))
+        XCTAssertFalse(LooseMatch.slackThreadReply(mac, phone), "only the iPhone's says In #")
+        XCTAssertTrue(LooseMatch.sameNotification(app: "Slack", mac, phone))
+        XCTAssertFalse(LooseMatch.sameNotification(app: "LINE", mac, phone), "Slack's shape only")
+        var otherChannel = mac
+        otherChannel.subtitle = "internal-kotoba-app-sales"
+        XCTAssertFalse(LooseMatch.slackThreadReply(phone, otherChannel), "another channel")
+        var otherText = mac
+        otherText.body = "darai: something else"
+        XCTAssertFalse(LooseMatch.slackThreadReply(phone, otherText), "other text")
     }
 
     /// The verdict after the Mac's notification joins it, so the row has the link.

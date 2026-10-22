@@ -426,12 +426,9 @@ final class Inbox {
         openItemID = nil
     }
 
-    /// The same notification seen by both devices can hash differently when one
-    /// app fills a field the other leaves empty (Spark for Mac says "No subject"
-    /// where Spark for iPhone says nothing). When the fingerprint doesn't match,
-    /// the same app, sender, and body within a few minutes is taken as the same
-    /// notification.
-    static let looseMatchWindow: TimeInterval = 15 * 60
+    /// The same notification seen by both devices can hash differently; when the
+    /// fingerprint doesn't match, `LooseMatch` says whether it's the same one.
+    static let looseMatchWindow = LooseMatch.window
 
     /// A verdict goes with an item of its fingerprint delivered this close to when
     /// the iPhone sorted it. The fingerprint is the app, sender, and text, so "Hi"
@@ -448,39 +445,11 @@ final class Inbox {
 
     static func looselyMatches(_ item: Item, app: String, title: String?, subtitle: String? = nil, body: String?, at date: Date) -> Bool {
         guard item.app == appName(app), abs(item.deliveredAt.timeIntervalSince(date)) <= looseMatchWindow else { return false }
-        if item.app == KnownApp.slack.rawValue,
-           slackThreadReplyMatches((item.subtitle, item.body), (subtitle, body)) || slackThreadReplyMatches((subtitle, body), (item.subtitle, item.body)) {
-            return true
-        }
-        let mine = NotificationFingerprint.normalize(item.title), theirs = NotificationFingerprint.normalize(title)
-        guard !mine.isEmpty, mine == theirs else { return false }
-        let myBody = NotificationFingerprint.normalize(item.body), theirBody = NotificationFingerprint.normalize(body)
-        guard !myBody.isEmpty, !theirBody.isEmpty else { return false }
-        // The iPhone sends subject and body as one text, subject first.
-        return myBody == theirBody || myBody.hasSuffix(theirBody) || theirBody.hasSuffix(myBody)
-    }
-
-    /// Slack shapes a thread reply's notification differently on each device: the
-    /// iPhone's is titled by the sender, with "In #channel" as its subtitle and as
-    /// the first line of the text it sends; the Mac's is titled by the workspace,
-    /// with the channel as its subtitle and "sender: " before the text. So: the same
-    /// channel, and the same text as far as both go, each cut short at its own length.
-    static func slackThreadReplyMatches(_ phone: (subtitle: String?, body: String?), _ mac: (subtitle: String?, body: String?)) -> Bool {
-        let phoneSubtitle = NotificationFingerprint.normalize(phone.subtitle)
-        guard phoneSubtitle.hasPrefix("in #") else { return false }
-        let channel = phoneSubtitle.dropFirst("in #".count)
-        var macChannel = Substring(NotificationFingerprint.normalize(mac.subtitle))
-        if macChannel.hasPrefix("#") { macChannel = macChannel.dropFirst() }
-        guard !channel.isEmpty, channel == macChannel else { return false }
-        var phoneText = Substring(NotificationFingerprint.normalize(phone.body))
-        if phoneText.hasPrefix(phoneSubtitle) {
-            phoneText = phoneText.dropFirst(phoneSubtitle.count).drop { $0 == " " }
-        }
-        var macText = Substring(NotificationFingerprint.normalize(mac.body))
-        if let colon = macText.range(of: ": ") { macText = macText[colon.upperBound...] }
-        let length = min(phoneText.count, macText.count, 80)
-        guard length > 0 else { return false }
-        return phoneText.prefix(length) == macText.prefix(length)
+        return LooseMatch.sameNotification(
+            app: item.app,
+            LooseMatch.Fields(title: item.title, subtitle: item.subtitle, body: item.body),
+            LooseMatch.Fields(title: title, subtitle: subtitle, body: body)
+        )
     }
 
     static func fingerprint(for record: NotificationRecord, as app: KnownApp) -> String {
