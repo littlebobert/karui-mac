@@ -11,6 +11,19 @@ final class InboxVerdictTests: XCTestCase {
         )
     }
 
+    /// The preview says what decided the category, from the iPhone's verdict once
+    /// the iPhone sends it; an older iPhone's says nothing.
+    func testThePreviewSaysWhatSortedIt() {
+        let suite = "InboxVerdictTests.\(UUID().uuidString)"
+        let inbox = Inbox(defaults: UserDefaults(suiteName: suite)!, store: nil)
+        defer { UserDefaults().removePersistentDomain(forName: suite) }
+        var cloud = verdict("a")
+        cloud.engine = "Private Cloud Compute"
+        inbox.apply([cloud, verdict("b")])
+        XCTAssertEqual(inbox.item(id: "a")?.sortedBy, "Sorted by Private Cloud Compute")
+        XCTAssertNil(inbox.item(id: "b")?.sortedBy)
+    }
+
     /// A saved link survives a relaunch when it's the kind its app's harvester makes,
     /// Slack's web permalinks included; one from another app is dropped.
     func testSavedLinksKeptOnlyForTheirOwnApp() {

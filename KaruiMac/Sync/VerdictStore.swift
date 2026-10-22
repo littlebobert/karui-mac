@@ -167,7 +167,8 @@ actor VerdictStore {
             deletedAt: record[VerdictRecordSchema.deletedAt] as? Date,
             subtitle: record.encryptedValues[VerdictRecordSchema.subtitle] as? String,
             sender: record.encryptedValues[VerdictRecordSchema.sender] as? String,
-            recipients: record.encryptedValues[VerdictRecordSchema.recipients] as? String
+            recipients: record.encryptedValues[VerdictRecordSchema.recipients] as? String,
+            engine: record[VerdictRecordSchema.engine] as? String
         )
     }
 }

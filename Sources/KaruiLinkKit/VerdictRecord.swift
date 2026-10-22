@@ -31,6 +31,10 @@ public struct VerdictRecord: Codable, Equatable, Sendable {
     public var readAt: Date?
     public var requestedCategory: String?
     public var deletedAt: Date?
+    /// What decided the category, as `ClassificationEngine`'s raw value: the
+    /// on-device model, Private Cloud Compute, the rules, or the person. Nil from an
+    /// iPhone that predates it.
+    public var engine: String?
 
     public init(
         fingerprint: String,
@@ -47,8 +51,10 @@ public struct VerdictRecord: Codable, Equatable, Sendable {
         deletedAt: Date? = nil,
         subtitle: String? = nil,
         sender: String? = nil,
-        recipients: String? = nil
+        recipients: String? = nil,
+        engine: String? = nil
     ) {
+        self.engine = engine
         self.subtitle = subtitle
         self.sender = sender
         self.recipients = recipients
@@ -95,6 +101,8 @@ public enum VerdictRecordSchema {
     public static let readAt = "readAt"
     public static let requestedCategory = "requestedCategory"
     public static let deletedAt = "deletedAt"
+    /// What decided the category; see `VerdictRecord.engine`.
+    public static let engine = "engine"
     /// When the Mac last did any of the three; what the iPhone subscribes to.
     public static let actionAt = "actionAt"
 

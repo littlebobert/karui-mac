@@ -1,4 +1,5 @@
 import KaruiLinkKit
+import KaruiSorting
 import SwiftUI
 
 struct InboxView: View {
@@ -518,6 +519,32 @@ private struct ItemDetail: View {
     }
 }
 
+extension Inbox.Item {
+    /// What decided the category: the Mac's own verdict says, and the iPhone's does
+    /// once the iPhone sends it (nil from an older one, so nothing is shown).
+    var sortedBy: String? {
+        if let verdict {
+            return verdict.engine.flatMap(ClassificationEngine.init(rawValue:)).flatMap { Self.label($0, onThisMac: false) }
+        }
+        return macVerdict.flatMap { ClassificationEngine(rawValue: $0.engine) }.flatMap { Self.label($0, onThisMac: true) }
+    }
+
+    private static func label(_ engine: ClassificationEngine, onThisMac: Bool) -> String? {
+        switch engine {
+        case .onDeviceModel:
+            L10n.string(onThisMac ? "Sorted on this Mac by Apple’s on-device model" : "Sorted by Apple’s on-device model")
+        case .privateCloudCompute:
+            L10n.string(onThisMac ? "Sorted on this Mac by Private Cloud Compute" : "Sorted by Private Cloud Compute")
+        case .deterministicRules:
+            L10n.string(onThisMac ? "Sorted on this Mac by Karui’s rules" : "Sorted by Karui’s rules")
+        case .person:
+            L10n.string("Category set by you")
+        case .unknown:
+            nil
+        }
+    }
+}
+
 /// What a notification says, with Karui's verdict and reason: the full view's and
 /// the preview pane's.
 private struct NotificationContent: View {
@@ -545,6 +572,9 @@ private struct NotificationContent: View {
                 if let reason = item.verdict?.reason ?? item.macVerdict?.reason, !reason.isEmpty {
                     Divider()
                     Text(reason).foregroundStyle(.secondary)
+                }
+                if let sortedBy = item.sortedBy {
+                    Text(sortedBy).font(.caption).foregroundStyle(.secondary)
                 }
                 if item.readAt != nil {
                     Text(L10n.string("Read here; cleared on the iPhone")).font(.caption).foregroundStyle(.secondary)

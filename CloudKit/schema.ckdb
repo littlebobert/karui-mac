@@ -32,6 +32,7 @@ DEFINE SCHEMA
         category          STRING,
         deletedAt         TIMESTAMP,
         deliveredAt       TIMESTAMP,
+        engine            STRING,
         interest          INT64,
         isUnread          INT64,
         macCategory       STRING,
