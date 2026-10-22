@@ -520,6 +520,13 @@ private struct ItemDetail: View {
 }
 
 extension Inbox.Item {
+    /// The iPhone's search tags, as its History shows them, which the Mac's search
+    /// matches too. Nil until the iPhone has tagged the notification.
+    var tagsLine: String? {
+        guard let tags = verdict?.tags, !tags.isEmpty else { return nil }
+        return tags.joined(separator: " · ")
+    }
+
     /// What decided the category: the Mac's own verdict says, and the iPhone's does
     /// once the iPhone sends it (nil from an older one, so nothing is shown).
     var sortedBy: String? {
@@ -575,6 +582,13 @@ private struct NotificationContent: View {
                 }
                 if let sortedBy = item.sortedBy {
                     Text(sortedBy).font(.caption).foregroundStyle(.secondary)
+                }
+                if let tags = item.tagsLine {
+                    Label { Text(verbatim: tags) } icon: { Image(systemName: "tag") }
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                        .help(L10n.string("Search tags from Karui on your iPhone"))
+                        .accessibilityLabel(L10n.string("Search tags from Karui on your iPhone") + ": " + tags)
                 }
                 if item.readAt != nil {
                     Text(L10n.string("Read here; cleared on the iPhone")).font(.caption).foregroundStyle(.secondary)

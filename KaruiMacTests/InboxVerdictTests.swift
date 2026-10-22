@@ -36,11 +36,13 @@ final class InboxVerdictTests: XCTestCase {
         inbox.apply([first])
         inbox.search = "引っ越し祝い"
         XCTAssertEqual(inbox.filtered.map(\.id), [])
+        XCTAssertNil(inbox.item(id: "a")?.tagsLine)
 
         var tagged = first
         tagged.tags = ["house warming", "引っ越し祝い"]
         inbox.apply([tagged])
         XCTAssertEqual(inbox.filtered.map(\.id), ["a"])
+        XCTAssertEqual(inbox.item(id: "a")?.tagsLine, "house warming · 引っ越し祝い")
         inbox.search = "taishi"
         XCTAssertEqual(inbox.filtered.map(\.id), ["a"])
         inbox.search = "Mika"
