@@ -585,9 +585,9 @@ private struct NotificationContent: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 10) {
-                HStack(spacing: 8) {
+                HStack(alignment: .firstTextBaseline, spacing: 8) {
                     Text(item.app).foregroundStyle(.secondary)
-                    VerdictBadge(verdict: item.verdict, chosen: item.chosenCategory, mac: item.macVerdict, isWaiting: item.isWaitingForVerdict)
+                    VerdictBadge(verdict: item.verdict, chosen: item.chosenCategory, mac: item.macVerdict, isWaiting: item.isWaitingForVerdict, font: .body)
                     Spacer()
                     Text(item.deliveredAt, format: .dateTime.month(.abbreviated).day().hour().minute())
                         .foregroundStyle(.secondary)
@@ -971,8 +971,8 @@ private struct VerdictBadge: View {
     /// Sorted on this Mac; shown until the iPhone's verdict arrives.
     var mac: MacVerdict?
     let isWaiting: Bool
-    /// The table's rows use the body size like their other cells; the expanded
-    /// rows' header line is caption-sized.
+    /// The table's rows and the preview use the body size like the text beside it;
+    /// the expanded rows' header line is caption-sized.
     var font: Font = .caption
     /// Increased on a selected table row, where the system paints text white.
     @Environment(\.backgroundProminence) private var backgroundProminence
