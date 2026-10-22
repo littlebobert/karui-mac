@@ -466,7 +466,12 @@ final class Inbox {
         let id = Self.id(for: record)
         let fingerprint = Self.fingerprint(for: record, as: app)
         if let index = items.firstIndex(where: { $0.id == id }) {
-            guard items[index].fingerprint != fingerprint else { return false }
+            // The same notification again, as when the harvest catches up. One with the
+            // same fingerprint that arrived at another time is a new one under a reused
+            // ID: a bot's posts can match for as much of the text as the fingerprint keeps.
+            let isSame = items[index].fingerprint == fingerprint
+                && abs(items[index].deliveredAt.timeIntervalSince(record.deliveredAt ?? items[index].deliveredAt)) <= 60
+            guard !isSame else { return false }
             let stale = items[index]
             var rekeyed = stale
             rekeyed.id = "\(id)-\(stale.fingerprint.prefix(12))"
@@ -477,7 +482,13 @@ final class Inbox {
         }
         // The iPhone's verdict may have arrived first and stand in for this
         // notification as a text-only item; it becomes this one, keeping its verdict.
-        if let index = items.firstIndex(where: { $0.fingerprint == fingerprint && $0.id != id })
+        // Only a stand-in, and only one from about now: the fingerprint keeps the start
+        // of the text, so yesterday's post from the same bot can share it.
+        let deliveredAt = record.deliveredAt ?? Date()
+        if let index = items.firstIndex(where: {
+            $0.fingerprint == fingerprint && $0.id != id && !$0.id.hasPrefix("notification-")
+                && abs($0.deliveredAt.timeIntervalSince(deliveredAt)) <= Self.verdictMatchWindow
+        })
             ?? items.firstIndex(where: { !$0.id.hasPrefix("notification-")
                                          && Self.looselyMatches($0, app: app.rawValue, title: record.title, subtitle: record.subtitle, body: record.body, at: record.deliveredAt ?? Date()) }) {
             let standIn = items[index]

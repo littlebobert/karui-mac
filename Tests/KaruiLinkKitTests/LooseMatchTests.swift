@@ -23,4 +23,27 @@ final class LooseMatchTests: XCTestCase {
         XCTAssertTrue(LooseMatch.sameNotification(app: "Slack", mac, phone))
         XCTAssertFalse(LooseMatch.sameNotification(app: "Messages", phone, mac))
     }
+
+    /// A bot's post in a channel: the iPhone says "To channel"; the Mac's text has no
+    /// sender before it, and its own "Tag: " isn't one.
+    func testASlackBotPostMatchesEitherWayRound() {
+        let phone = LooseMatch.Fields(
+            title: "Build Bot (bot)", subtitle: "To app-tech",
+            body: "To app-tech\n📦 iOS build uploaded to TestFlight by mika Tag: release/ios/2.0.0-207"
+        )
+        let mac = LooseMatch.Fields(title: "Kotoba", subtitle: "app-tech", body: "📦 iOS build uploaded to TestFlight by mika\nTag: release/ios/2.0.0-207 • Env: .env.production")
+        XCTAssertTrue(LooseMatch.sameNotification(app: "Slack", phone, mac))
+        XCTAssertTrue(LooseMatch.sameNotification(app: "Slack", mac, phone))
+        let otherChannel = LooseMatch.Fields(title: "Kotoba", subtitle: "design", body: mac.body)
+        XCTAssertFalse(LooseMatch.sameNotification(app: "Slack", phone, otherChannel))
+        let otherBuild = LooseMatch.Fields(title: "Kotoba", subtitle: "app-tech", body: "📦 iOS build uploaded to TestFlight by mika\nTag: release/ios/2.0.0-206")
+        XCTAssertFalse(LooseMatch.sameNotification(app: "Slack", phone, otherBuild))
+    }
+
+    /// A person's post in a channel, with "sender: " before the Mac's text.
+    func testASlackChannelPostFromAPersonMatches() {
+        let phone = LooseMatch.Fields(title: "Mika", subtitle: "To #design", body: "To #design\nNew mockups are up")
+        let mac = LooseMatch.Fields(title: "Kotoba", subtitle: "design", body: "Mika: New mockups are up")
+        XCTAssertTrue(LooseMatch.sameNotification(app: "Slack", phone, mac))
+    }
 }
