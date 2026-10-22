@@ -49,6 +49,7 @@ CURRENT_BUILD="$(ruby -e 'puts File.read(ARGV[0])[/CURRENT_PROJECT_VERSION: "([0
 VERSION_ARG=""
 NOTES_FILE_ARG=""
 DRY_RUN=false
+ALLOW_PATCH=false
 NOTES=()
 
 usage() {
@@ -58,8 +59,11 @@ Usage:
   ./Scripts/deploy-github-release.sh [version] --notes-file PATH
   ./Scripts/deploy-github-release.sh --dry-run --notes "Change"
 
-Without a version, bumps the patch version and increments the numeric build.
-With an explicit version, uses that version and still increments the build.
+Without a version, bumps the patch version and increments the numeric build;
+when CloudKit/schema.ckdb has gained a record type or field since the last tag,
+bumps the minor version instead. With an explicit version, uses that version and
+still increments the build, but refuses a patch version over such a schema change
+unless --allow-patch is passed.
 
 The script validates the repositories, updates versions and release notes,
 compiles tests and creates a notarized build, commits/pushes Karui for Mac, creates the GitHub release,
@@ -87,6 +91,9 @@ while [[ $# -gt 0 ]]; do
     --dry-run)
       DRY_RUN=true
       ;;
+    --allow-patch)
+      ALLOW_PATCH=true
+      ;;
     -h|--help)
       usage
       exit 0
@@ -110,13 +117,60 @@ done
 [[ "$CURRENT_VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || { echo "error: invalid current version: $CURRENT_VERSION" >&2; exit 1; }
 [[ "$CURRENT_BUILD" =~ ^[0-9]+$ ]] || { echo "error: invalid current build: $CURRENT_BUILD" >&2; exit 1; }
 
+# The iPhone app pins KaruiLinkKit to a release tag. What the two sides must agree
+# on lives in the package and the CloudKit schema; when a release changes either,
+# the iPhone app has to be re-pinned and shipped too. Everything else is Mac-only.
+git -C "$ROOT_DIR" fetch --tags --quiet origin
+PREVIOUS_TAG="$(git -C "$ROOT_DIR" describe --tags --abbrev=0 2>/dev/null || true)"
+KIT_CHANGES=""
+SCHEMA_ADDITIONS=""
+if [[ -n "$PREVIOUS_TAG" ]]; then
+  KIT_CHANGES="$(git -C "$ROOT_DIR" diff --stat "refs/tags/$PREVIOUS_TAG"..HEAD -- Sources/KaruiLinkKit Package.swift CloudKit/schema.ckdb)"
+  # Record types and fields added since the last tag, one per line. A changed index
+  # (QUERYABLE on a field already there) isn't one.
+  SCHEMA_ADDITIONS="$(python3 - <(git -C "$ROOT_DIR" show "refs/tags/$PREVIOUS_TAG:CloudKit/schema.ckdb" 2>/dev/null || true) "$ROOT_DIR/CloudKit/schema.ckdb" <<'EOF'
+import re, sys
+
+def fields(path):
+    types, current = {}, None
+    for line in open(path, encoding="utf-8"):
+        if m := re.match(r'\s*RECORD TYPE (\w+) \(', line):
+            current = types.setdefault(m.group(1), set())
+        elif current is not None and re.match(r'\s*\);', line):
+            current = None
+        elif current is not None and not line.strip().startswith("GRANT"):
+            if m := re.match(r'\s*"?(\w+)"?\s+[A-Z]', line):
+                current.add(m.group(1))
+    return types
+
+old, new = fields(sys.argv[1]), fields(sys.argv[2])
+for name, names in new.items():
+    if name not in old:
+        print(f"record type {name}")
+    else:
+        for field in sorted(names - old[name]):
+            print(f"{name}.{field}")
+EOF
+)"
+fi
+
+IFS='.' read -r major minor patch <<<"$CURRENT_VERSION"
 if [[ -n "$VERSION_ARG" ]]; then
   VERSION="$VERSION_ARG"
+elif [[ -n "$SCHEMA_ADDITIONS" ]]; then
+  VERSION="$major.$((10#$minor + 1)).0"
 else
-  IFS='.' read -r major minor patch <<<"$CURRENT_VERSION"
   VERSION="$major.$minor.$((10#$patch + 1))"
 fi
 [[ "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || { echo "error: invalid release version: $VERSION" >&2; exit 1; }
+# A release that adds to the schema takes a minor version: it needs the schema
+# deployed first and the iPhone re-pinned.
+if [[ -n "$SCHEMA_ADDITIONS" && "$VERSION" == "$major.$minor."* && "$ALLOW_PATCH" != true ]]; then
+  echo "error: CloudKit/schema.ckdb gained these since $PREVIOUS_TAG, so release $major.$((10#$minor + 1)).0, not $VERSION:" >&2
+  echo "$SCHEMA_ADDITIONS" | sed 's/^/  /' >&2
+  echo "Pass --allow-patch to release $VERSION anyway." >&2
+  exit 1
+fi
 BUILD="$((10#$CURRENT_BUILD + 1))"
 TAG="${RELEASE_TAG:-$VERSION}"
 RELEASE_DIR="$ROOT_DIR/.build/releases"
@@ -137,15 +191,6 @@ WEBSITE_BRANCH="$(git -C "$WEBSITE_DIR" branch --show-current)"
 gh auth status >/dev/null
 gh release view "$TAG" --repo "$REPO" >/dev/null 2>&1 && { echo "error: GitHub release $TAG already exists" >&2; exit 1; }
 
-# The iPhone app pins KaruiLinkKit to a release tag. What the two sides must agree
-# on lives in the package and the CloudKit schema; when a release changes either,
-# the iPhone app has to be re-pinned and shipped too. Everything else is Mac-only.
-git -C "$ROOT_DIR" fetch --tags --quiet origin
-PREVIOUS_TAG="$(git -C "$ROOT_DIR" describe --tags --abbrev=0 2>/dev/null || true)"
-KIT_CHANGES=""
-if [[ -n "$PREVIOUS_TAG" ]]; then
-  KIT_CHANGES="$(git -C "$ROOT_DIR" diff --stat "$PREVIOUS_TAG"..HEAD -- Sources/KaruiLinkKit Package.swift CloudKit/schema.ckdb)"
-fi
 kit_change_notice() {
   if [[ -n "$KIT_CHANGES" ]]; then
     echo
