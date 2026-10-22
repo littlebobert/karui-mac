@@ -446,14 +446,41 @@ final class Inbox {
         }
     }
 
-    static func looselyMatches(_ item: Item, app: String, title: String?, body: String?, at date: Date) -> Bool {
+    static func looselyMatches(_ item: Item, app: String, title: String?, subtitle: String? = nil, body: String?, at date: Date) -> Bool {
         guard item.app == appName(app), abs(item.deliveredAt.timeIntervalSince(date)) <= looseMatchWindow else { return false }
+        if item.app == KnownApp.slack.rawValue,
+           slackThreadReplyMatches((item.subtitle, item.body), (subtitle, body)) || slackThreadReplyMatches((subtitle, body), (item.subtitle, item.body)) {
+            return true
+        }
         let mine = NotificationFingerprint.normalize(item.title), theirs = NotificationFingerprint.normalize(title)
         guard !mine.isEmpty, mine == theirs else { return false }
         let myBody = NotificationFingerprint.normalize(item.body), theirBody = NotificationFingerprint.normalize(body)
         guard !myBody.isEmpty, !theirBody.isEmpty else { return false }
         // The iPhone sends subject and body as one text, subject first.
         return myBody == theirBody || myBody.hasSuffix(theirBody) || theirBody.hasSuffix(myBody)
+    }
+
+    /// Slack shapes a thread reply's notification differently on each device: the
+    /// iPhone's is titled by the sender, with "In #channel" as its subtitle and as
+    /// the first line of the text it sends; the Mac's is titled by the workspace,
+    /// with the channel as its subtitle and "sender: " before the text. So: the same
+    /// channel, and the same text as far as both go, each cut short at its own length.
+    static func slackThreadReplyMatches(_ phone: (subtitle: String?, body: String?), _ mac: (subtitle: String?, body: String?)) -> Bool {
+        let phoneSubtitle = NotificationFingerprint.normalize(phone.subtitle)
+        guard phoneSubtitle.hasPrefix("in #") else { return false }
+        let channel = phoneSubtitle.dropFirst("in #".count)
+        var macChannel = Substring(NotificationFingerprint.normalize(mac.subtitle))
+        if macChannel.hasPrefix("#") { macChannel = macChannel.dropFirst() }
+        guard !channel.isEmpty, channel == macChannel else { return false }
+        var phoneText = Substring(NotificationFingerprint.normalize(phone.body))
+        if phoneText.hasPrefix(phoneSubtitle) {
+            phoneText = phoneText.dropFirst(phoneSubtitle.count).drop { $0 == " " }
+        }
+        var macText = Substring(NotificationFingerprint.normalize(mac.body))
+        if let colon = macText.range(of: ": ") { macText = macText[colon.upperBound...] }
+        let length = min(phoneText.count, macText.count, 80)
+        guard length > 0 else { return false }
+        return phoneText.prefix(length) == macText.prefix(length)
     }
 
     static func fingerprint(for record: NotificationRecord, as app: KnownApp) -> String {
@@ -483,7 +510,7 @@ final class Inbox {
         // notification as a text-only item; it becomes this one, keeping its verdict.
         if let index = items.firstIndex(where: { $0.fingerprint == fingerprint && $0.id != id })
             ?? items.firstIndex(where: { !$0.id.hasPrefix("notification-")
-                                         && Self.looselyMatches($0, app: app.rawValue, title: record.title, body: record.body, at: record.deliveredAt ?? Date()) }) {
+                                         && Self.looselyMatches($0, app: app.rawValue, title: record.title, subtitle: record.subtitle, body: record.body, at: record.deliveredAt ?? Date()) }) {
             let standIn = items[index]
             var merged = standIn
             merged.id = id
@@ -536,7 +563,21 @@ final class Inbox {
                 store?.delete(ids: gone)
                 continue
             }
-            let matching = indices(matching: verdict)
+            var matching = indices(matching: verdict)
+            // An earlier pass kept the iPhone's copy apart from the Mac's own, which
+            // has the link (as Slack's thread replies were): the Mac's takes over.
+            var carriedReadAt: Date?
+            if !matching.isEmpty, matching.allSatisfy({ !items[$0].id.hasPrefix("notification-") }),
+               items.contains(where: { $0.verdict == nil && $0.id.hasPrefix("notification-")
+                                       && Self.looselyMatches($0, app: verdict.app, title: verdict.title, subtitle: verdict.subtitle, body: verdict.body, at: verdict.triagedAt) }) {
+                let duplicates = Set(matching.map { items[$0].id })
+                carriedReadAt = matching.compactMap { items[$0].readAt }.max()
+                items.removeAll { duplicates.contains($0.id) }
+                store?.delete(ids: duplicates)
+                selection.subtract(duplicates)
+                matching = []
+                SafeDiagnosticLog.shared.record("verdicts: merged \(duplicates.count) copy into the Mac's own")
+            }
             if !matching.isEmpty {
                 for index in matching {
                     items[index].verdict = Self.keepingRead(verdict, over: items[index].verdict)
@@ -547,12 +588,12 @@ final class Inbox {
                     touched.insert(items[index].id)
                 }
             } else if let index = items.firstIndex(where: { $0.verdict == nil && $0.id.hasPrefix("notification-")
-                                                       && Self.looselyMatches($0, app: verdict.app, title: verdict.title, body: verdict.body, at: verdict.triagedAt) }) {
+                                                       && Self.looselyMatches($0, app: verdict.app, title: verdict.title, subtitle: verdict.subtitle, body: verdict.body, at: verdict.triagedAt) }) {
                 // The Mac's copy takes the iPhone's fingerprint, so what's done to it
                 // here reaches the iPhone's record.
                 items[index].fingerprint = verdict.fingerprint
                 items[index].verdict = verdict
-                if items[index].readAt == nil { items[index].readAt = verdict.readAt }
+                if items[index].readAt == nil { items[index].readAt = verdict.readAt ?? carriedReadAt }
                 if items[index].recipients == nil { items[index].recipients = verdict.recipients }
                 if items[index].senderName == nil { items[index].senderName = verdict.sender }
                 touched.insert(items[index].id)
@@ -587,8 +628,11 @@ final class Inbox {
     /// fingerprint, never by record ID alone (see `add`).
     func setLink(_ link: DeepLinkRecord, for record: NotificationRecord) {
         let id = Self.id(for: record)
+        // Or the notification itself, when it has taken the iPhone's fingerprint; the
+        // link then goes again under that one (`AppCoordinator.relinkMismatched`).
         guard let index = items.firstIndex(where: { $0.id == id && $0.fingerprint == link.fingerprint })
-            ?? items.firstIndex(where: { $0.fingerprint == link.fingerprint }) else { return }
+            ?? items.firstIndex(where: { $0.fingerprint == link.fingerprint })
+            ?? items.firstIndex(where: { $0.id == id }) else { return }
         items[index].link = link
         items[index].readAt = link.readAt ?? items[index].readAt
         persist([items[index].id])

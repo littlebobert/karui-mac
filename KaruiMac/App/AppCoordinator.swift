@@ -312,6 +312,25 @@ final class AppCoordinator {
         } else {
             await readWatcher.track(harvested)
         }
+        relinkMismatched()
+    }
+
+    /// A link whose item took the iPhone's fingerprint in a loose match goes again
+    /// under that fingerprint, which is what the iPhone looks up.
+    private func relinkMismatched() {
+        let relinks = inbox.items.compactMap { item -> DeepLinkRecord? in
+            guard var link = item.link, link.fingerprint != item.fingerprint else { return nil }
+            link.fingerprint = item.fingerprint
+            return link
+        }
+        guard !relinks.isEmpty else { return }
+        for link in relinks { inbox.setLink(link) }
+        Task { [sync] in
+            for link in relinks {
+                await sync.send(link)
+                SafeDiagnosticLog.shared.record("harvest: \(link.app) link sent again under the iPhone's fingerprint")
+            }
+        }
     }
 
     /// Spark can post its notification before the email is in its database, so a
@@ -338,8 +357,8 @@ final class AppCoordinator {
     /// Spark links for the emails the iPhone notified about that have none: ones
     /// this Mac didn't announce, or whose harvest here missed. Spark here has every
     /// email, so the iPhone's subject and time find it. Once per email a launch, for
-    /// the day a link lasts. Also a link whose item took the iPhone's fingerprint in
-    /// a loose match goes again under that fingerprint, which the iPhone looks up.
+    /// the day a link lasts. Then any link left under the Mac's fingerprint after a
+    /// loose match goes again under the iPhone's.
     private func linkFromVerdicts(_ verdicts: [VerdictRecord], now: Date = Date()) {
         var wanted: [VerdictRecord] = []
         for verdict in verdicts where verdict.deletedAt == nil
@@ -351,13 +370,8 @@ final class AppCoordinator {
             verdictLinkAttempts.insert(verdict.fingerprint)
             wanted.append(verdict)
         }
-        let relinks = inbox.items.compactMap { item -> DeepLinkRecord? in
-            guard var link = item.link, link.fingerprint != item.fingerprint else { return nil }
-            link.fingerprint = item.fingerprint
-            return link
-        }
-        for link in relinks { inbox.setLink(link) }
-        guard !wanted.isEmpty || !relinks.isEmpty else { return }
+        relinkMismatched()
+        guard !wanted.isEmpty else { return }
         let spark = sparkFromVerdicts
         Task { [weak self] in
             var found = 0
@@ -374,13 +388,7 @@ final class AppCoordinator {
                     await self.readWatcher.track(harvested)
                 }
             }
-            if !wanted.isEmpty {
-                SafeDiagnosticLog.shared.record("harvest: Spark from the iPhone's verdicts, \(found) of \(wanted.count) found")
-            }
-            for link in relinks {
-                await self?.sync.send(link)
-                SafeDiagnosticLog.shared.record("harvest: \(link.app) link sent again under the iPhone's fingerprint")
-            }
+            SafeDiagnosticLog.shared.record("harvest: Spark from the iPhone's verdicts, \(found) of \(wanted.count) found")
         }
     }
 
