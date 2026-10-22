@@ -3,25 +3,71 @@ import KaruiLinkKit
 
 /// Spark's notification doesn't identify the email, so the email is found in
 /// Spark's own database by subject and time, and the link built from that row.
+/// The same works from the iPhone's verdict, for an email this Mac didn't notify
+/// about: Spark here has every email, whatever it chose to announce.
 struct SparkHarvester: NotificationHarvester {
     let bundleIdentifiers = Set(KnownApp.spark.macBundleIdentifiers)
     var databaseURL = FileManager.default.homeDirectoryForCurrentUser
         .appending(path: "Library/Application Support/Spark Desktop/core-data/messages.sqlite")
-    /// How far the email's `receivedDate` may be from the notification's delivery.
-    static let receivedTolerance: TimeInterval = 300
+    /// How long before a notification the email may have arrived: Spark announces
+    /// what it fetched while the Mac slept once it wakes, long after.
+    static let lookBack: TimeInterval = 2 * 60 * 60
+    /// And after it, for clocks that disagree a little.
+    static let lookAhead: TimeInterval = 5 * 60
+
+    /// An email in Spark's database, and its link.
+    struct Email: Equatable {
+        let url: URL
+        /// When the email arrived: what the iPhone's own notification of it is
+        /// near, whenever this Mac's came.
+        let receivedAt: Date
+        let primaryKey: Int64?
+    }
 
     func harvest(_ record: NotificationRecord) async -> HarvestedLink? {
-        guard let subject = record.subtitle, let deliveredAt = record.deliveredAt else { return nil }
+        guard let subject = record.subtitle, !subject.isEmpty, let deliveredAt = record.deliveredAt else {
+            // Spark's calendar reminders have none; there's no email to open.
+            SafeDiagnosticLog.shared.record("spark: no subject, nothing to look up")
+            return nil
+        }
+        guard let email = email(subject: subject, near: deliveredAt) else { return nil }
+        return HarvestedLink(
+            link: record.deepLink(as: .spark, url: email.url, opensExactContent: true, deliveredAt: email.receivedAt),
+            readProbe: email.primaryKey.map { .spark(messagePrimaryKey: $0) },
+            notificationID: record.id
+        )
+    }
+
+    /// The link for an email the iPhone notified about, named by the iPhone's
+    /// fingerprint so its lookup finds it.
+    func harvest(fingerprint: String, subject: String, near date: Date) -> HarvestedLink? {
+        guard !subject.isEmpty, let email = email(subject: subject, near: date) else { return nil }
+        return HarvestedLink(
+            link: DeepLinkRecord(
+                fingerprint: fingerprint, app: KnownApp.spark.rawValue, url: email.url,
+                opensExactContent: true, deliveredAt: email.receivedAt
+            ),
+            readProbe: email.primaryKey.map { .spark(messagePrimaryKey: $0) },
+            notificationID: nil
+        )
+    }
+
+    /// The email with this subject that arrived nearest the time, within the window.
+    /// The range on `receivedDate` lets SQLite use Spark's index on it rather than
+    /// read every email.
+    func email(subject: String, near date: Date) -> Email? {
+        let time = date.timeIntervalSince1970
         do {
             let database = try SQLiteDatabase.opening(databaseURL)
             let rows = try database.rows("""
-                select messages.messageId, messages.gmailMessageId, accounts.additionalInfo, messages.pk
+                select messages.messageId, messages.gmailMessageId, accounts.additionalInfo, messages.pk, messages.receivedDate
                 from messages join accounts on accounts.pk = messages.accountPk
-                where messages.subject = ?1 and abs(messages.receivedDate - ?2) <= ?3
-                order by abs(messages.receivedDate - ?2)
+                where messages.receivedDate between ?2 and ?3 and messages.subject = ?1
+                order by abs(messages.receivedDate - ?4)
                 limit 1
-                """, [.text(subject), .real(deliveredAt.timeIntervalSince1970), .real(Self.receivedTolerance)])
-            guard let row = rows.first, let messageID = row[0].text, let accountInfo = row[2].text else {
+                """, [.text(subject), .real(time - Self.lookBack), .real(time + Self.lookAhead), .real(time)])
+            guard let row = rows.first, let messageID = row[0].text, let accountInfo = row[2].text,
+                  let received = row[4].real else {
                 SafeDiagnosticLog.shared.record("spark: no email matched the notification")
                 return nil
             }
@@ -30,11 +76,7 @@ struct SparkHarvester: NotificationHarvester {
                 SafeDiagnosticLog.shared.record("spark: matched an email but couldn't build its link")
                 return nil
             }
-            return HarvestedLink(
-                link: record.deepLink(as: .spark, url: url, opensExactContent: true),
-                readProbe: row[3].integer.map { .spark(messagePrimaryKey: $0) },
-                notificationID: record.id
-            )
+            return Email(url: url, receivedAt: Date(timeIntervalSince1970: received), primaryKey: row[3].integer)
         } catch {
             SafeDiagnosticLog.shared.record("spark: database read failed: \(error)")
             return nil

@@ -594,6 +594,17 @@ final class Inbox {
         persist([items[index].id])
     }
 
+    /// A link made from the iPhone's verdict, or sent again under its fingerprint:
+    /// for every item of that fingerprint.
+    func setLink(_ link: DeepLinkRecord) {
+        var touched = Set<String>()
+        for index in items.indices where items[index].fingerprint == link.fingerprint {
+            items[index].link = link
+            touched.insert(items[index].id)
+        }
+        persist(touched)
+    }
+
     func markRead(fingerprint: String, at date: Date = Date()) {
         var touched = Set<String>()
         for index in items.indices where items[index].fingerprint == fingerprint {

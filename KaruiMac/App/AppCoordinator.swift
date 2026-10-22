@@ -22,12 +22,19 @@ final class AppCoordinator {
         MessagesHarvester()
     ])
     private let readWatcher = ReadWatcher()
+    /// For links made from the iPhone's verdicts.
+    private let sparkFromVerdicts = SparkHarvester()
+    /// The verdicts already looked up in Spark since launch, by fingerprint.
+    private var verdictLinkAttempts = Set<String>()
+    /// An app may announce an item before it has saved it, so a miss is tried again.
+    private static let harvestRetryDelays: [Duration] = [.seconds(10), .seconds(60)]
     private lazy var verdicts = VerdictStore(
         awaiting: { [weak self] in await MainActor.run { self?.inbox.fingerprintsAwaitingVerdict() ?? [] } },
         found: { [weak self] verdicts in
             Task { @MainActor in
                 guard let self else { return }
                 let added = self.inbox.apply(verdicts)
+                self.linkFromVerdicts(verdicts)
                 self.noteVerdictsArrived(verdicts)
                 self.bannerIfAtMac(added)
                 self.banners.remove(ids: self.inbox.items.filter { !$0.isUnread }.map(\.id))
@@ -289,6 +296,94 @@ final class AppCoordinator {
         await sortRequests.send(items.prefix(SortRequests.batchLimit).map(SortRequests.Request.init))
     }
 
+    /// Sends a harvested link and watches for the item being read here.
+    private func linkUp(_ harvested: HarvestedLink, from record: NotificationRecord) async {
+        let link = harvested.link
+        // Field lengths and the fingerprint's start, to compare with the iPhone's
+        // developer readout when a lookup misses; never the fields themselves.
+        SafeDiagnosticLog.shared.record(
+            "harvest: \(link.app) \(link.opensExactContent ? "exact" : "conversation") · \(link.fingerprint.prefix(12))"
+            + " · title \(record.title?.count ?? 0), subtitle \(record.subtitle?.count ?? 0), body \(record.body?.count ?? 0)"
+        )
+        inbox.setLink(link, for: record)
+        let sent = await sync.send(link)
+        if let readAt = sent?.readAt {
+            inbox.markRead(fingerprint: link.fingerprint, at: readAt)
+        } else {
+            await readWatcher.track(harvested)
+        }
+    }
+
+    /// Spark can post its notification before the email is in its database, so a
+    /// notification that found nothing is looked up again a little later, twice.
+    private func retryHarvest(_ record: NotificationRecord) {
+        guard let app = KnownApp(macBundleIdentifier: record.bundleIdentifier) else { return }
+        let harvesters = harvesters
+        let fingerprint = Inbox.fingerprint(for: record, as: app)
+        Task { [weak self] in
+            for delay in Self.harvestRetryDelays {
+                try? await Task.sleep(for: delay)
+                // Gone, replaced by another notification, or linked meanwhile.
+                guard let self, let item = self.inbox.item(id: Inbox.id(for: record)),
+                      item.fingerprint == fingerprint, item.link == nil else { return }
+                if let harvested = await harvesters.harvest(record) {
+                    SafeDiagnosticLog.shared.record("harvest: found on a retry, after \(delay)")
+                    await self.linkUp(harvested, from: record)
+                    return
+                }
+            }
+        }
+    }
+
+    /// Spark links for the emails the iPhone notified about that have none: ones
+    /// this Mac didn't announce, or whose harvest here missed. Spark here has every
+    /// email, so the iPhone's subject and time find it. Once per email a launch, for
+    /// the day a link lasts. Also a link whose item took the iPhone's fingerprint in
+    /// a loose match goes again under that fingerprint, which the iPhone looks up.
+    private func linkFromVerdicts(_ verdicts: [VerdictRecord], now: Date = Date()) {
+        var wanted: [VerdictRecord] = []
+        for verdict in verdicts where verdict.deletedAt == nil
+            && Inbox.appName(verdict.app) == KnownApp.spark.rawValue
+            && now.timeIntervalSince(verdict.triagedAt) < DeepLinkRecord.lifetime
+            && verdict.subtitle?.isEmpty == false
+            && !verdictLinkAttempts.contains(verdict.fingerprint)
+            && !inbox.items.contains(where: { $0.fingerprint == verdict.fingerprint && $0.link != nil }) {
+            verdictLinkAttempts.insert(verdict.fingerprint)
+            wanted.append(verdict)
+        }
+        let relinks = inbox.items.compactMap { item -> DeepLinkRecord? in
+            guard var link = item.link, link.fingerprint != item.fingerprint else { return nil }
+            link.fingerprint = item.fingerprint
+            return link
+        }
+        for link in relinks { inbox.setLink(link) }
+        guard !wanted.isEmpty || !relinks.isEmpty else { return }
+        let spark = sparkFromVerdicts
+        Task { [weak self] in
+            var found = 0
+            for verdict in wanted {
+                guard let self,
+                      let harvested = spark.harvest(fingerprint: verdict.fingerprint, subject: verdict.subtitle ?? "", near: verdict.triagedAt)
+                else { continue }
+                found += 1
+                self.inbox.setLink(harvested.link)
+                let sent = await self.sync.send(harvested.link)
+                if let readAt = sent?.readAt {
+                    self.inbox.markRead(fingerprint: harvested.link.fingerprint, at: readAt)
+                } else if verdict.isUnread, verdict.readAt == nil {
+                    await self.readWatcher.track(harvested)
+                }
+            }
+            if !wanted.isEmpty {
+                SafeDiagnosticLog.shared.record("harvest: Spark from the iPhone's verdicts, \(found) of \(wanted.count) found")
+            }
+            for link in relinks {
+                await self?.sync.send(link)
+                SafeDiagnosticLog.shared.record("harvest: \(link.app) link sent again under the iPhone's fingerprint")
+            }
+        }
+    }
+
     private func noteVerdictsArrived(_ verdicts: [VerdictRecord]) {
         if let newest = verdicts.map(\.triagedAt).max(), newest > newestVerdictAt ?? .distantPast {
             newestVerdictAt = newest
@@ -487,20 +582,10 @@ final class AppCoordinator {
                         }
                         continue
                     }
-                    guard let harvested = await harvesters.harvest(record) else { continue }
-                    let link = harvested.link
-                    // Field lengths and the fingerprint's start, to compare with the iPhone's
-                    // developer readout when a lookup misses; never the fields themselves.
-                    SafeDiagnosticLog.shared.record(
-                        "harvest: \(link.app) \(link.opensExactContent ? "exact" : "conversation") · \(link.fingerprint.prefix(12))"
-                        + " · title \(record.title?.count ?? 0), subtitle \(record.subtitle?.count ?? 0), body \(record.body?.count ?? 0)"
-                    )
-                    inbox.setLink(link, for: record)
-                    let sent = await sync.send(link)
-                    if let readAt = sent?.readAt {
-                        inbox.markRead(fingerprint: link.fingerprint, at: readAt)
-                    } else {
-                        await readWatcher.track(harvested)
+                    if let harvested = await harvesters.harvest(record) {
+                        await self.linkUp(harvested, from: record)
+                    } else if case .appeared = event {
+                        self.retryHarvest(record)
                     }
                 case .disappeared(let id):
                     // Cleared here, or removed by its app once read: seen either way.

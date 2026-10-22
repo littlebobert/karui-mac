@@ -13,8 +13,9 @@ enum ReadProbe: Equatable, Sendable {
 struct HarvestedLink: Sendable {
     let link: DeepLinkRecord
     let readProbe: ReadProbe?
-    /// The Notification Center record it came from; its disappearance also means read.
-    let notificationID: Int64
+    /// The Notification Center record it came from; its disappearance also means
+    /// read. Nil for a link made from the iPhone's verdict.
+    let notificationID: Int64?
 }
 
 /// Turns one app's notification into the link that opens it on the iPhone, from
@@ -52,13 +53,14 @@ struct HarvesterRegistry: Sendable {
 }
 
 extension NotificationRecord {
-    func deepLink(as app: KnownApp, url: URL, opensExactContent: Bool) -> DeepLinkRecord {
+    /// Dated by the notification, unless the app knows better when its item arrived.
+    func deepLink(as app: KnownApp, url: URL, opensExactContent: Bool, deliveredAt itemDate: Date? = nil) -> DeepLinkRecord {
         DeepLinkRecord(
             fingerprint: NotificationFingerprint.make(app: app.rawValue, title: title, subtitle: subtitle, body: body),
             app: app.rawValue,
             url: url,
             opensExactContent: opensExactContent,
-            deliveredAt: deliveredAt ?? Date()
+            deliveredAt: itemDate ?? deliveredAt ?? Date()
         )
     }
 }

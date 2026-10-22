@@ -29,6 +29,7 @@
 		58B843671087828476A17A1A /* AppIconSource.png in Resources */ = {isa = PBXBuildFile; fileRef = 6CA9E859EEC0683C3C84FEEB /* AppIconSource.png */; };
 		5916F4769E5F40D48B463BFF /* Sparkle in Frameworks */ = {isa = PBXBuildFile; productRef = 782A9236982375E69B998D37 /* Sparkle */; };
 		59B02B06504F73D2E33FBDDB /* MacSorter.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF88AF701CB740F31C522CBC /* MacSorter.swift */; };
+		5E921D5093F415A0738BC953 /* SparkHarvestTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 06DF904D4FAEA78D661169BC /* SparkHarvestTests.swift */; };
 		611EDB47A4CA5D72542A9168 /* Acknowledgements.txt in Resources */ = {isa = PBXBuildFile; fileRef = CDA83893DD1898A941803C76 /* Acknowledgements.txt */; };
 		66B2B6A1F6D956AA9B7D1EFA /* SetupNudge.swift in Sources */ = {isa = PBXBuildFile; fileRef = 67CFD0E7402CC1B21A0E1966 /* SetupNudge.swift */; };
 		6F1F477087C760E2E8B83643 /* SlackHarvester.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0368E20A347FBE53765A797B /* SlackHarvester.swift */; };
@@ -89,6 +90,7 @@
 		02059342FADE2B98EE06A434 /* InboxStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InboxStore.swift; sourceTree = "<group>"; };
 		0368E20A347FBE53765A797B /* SlackHarvester.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SlackHarvester.swift; sourceTree = "<group>"; };
 		04C7D2944D42D6C87AC633F7 /* AppLauncher.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppLauncher.swift; sourceTree = "<group>"; };
+		06DF904D4FAEA78D661169BC /* SparkHarvestTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SparkHarvestTests.swift; sourceTree = "<group>"; };
 		0B249067A3ED93F34E42B336 /* MacPresenceReporter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MacPresenceReporter.swift; sourceTree = "<group>"; };
 		1234CDFEE07EA21BAA319888 /* SparkLinkTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SparkLinkTests.swift; sourceTree = "<group>"; };
 		17304FF1E3D049F3C656DA86 /* CorrespondentTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CorrespondentTests.swift; sourceTree = "<group>"; };
@@ -175,6 +177,7 @@
 				57E3E9CF0788DE8E74AA72D0 /* NotificationPayloadTests.swift */,
 				BAAE434D79EA0F6EE8E8AA7A /* SecondOpinionBackoffTests.swift */,
 				4C44EC3DE17DE1FCA7463F4E /* SlackLinkTests.swift */,
+				06DF904D4FAEA78D661169BC /* SparkHarvestTests.swift */,
 				1234CDFEE07EA21BAA319888 /* SparkLinkTests.swift */,
 			);
 			path = KaruiMacTests;
@@ -499,6 +502,7 @@
 				D66550355B02294EBB91F582 /* NotificationPayloadTests.swift in Sources */,
 				C30BA3F00993F24DDF772A47 /* SecondOpinionBackoffTests.swift in Sources */,
 				C18F4894F38E02C8FB692626 /* SlackLinkTests.swift in Sources */,
+				5E921D5093F415A0738BC953 /* SparkHarvestTests.swift in Sources */,
 				993CD23DDD32E5C0C303FEBC /* SparkLinkTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
