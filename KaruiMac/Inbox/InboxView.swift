@@ -606,14 +606,13 @@ private struct NotificationContent: View {
                     Text(reason).foregroundStyle(.secondary)
                 }
                 if let sortedBy = item.sortedBy {
-                    Text(sortedBy).font(.caption).foregroundStyle(.secondary)
+                    Text(sortedBy).font(.callout).foregroundStyle(.secondary)
                 }
                 if let tags = item.tagsLine {
-                    Label { Text(verbatim: tags) } icon: { Image(systemName: "tag") }
-                        .font(.caption)
+                    Text(L10n.format("Tags: %@", tags))
+                        .font(.callout)
                         .foregroundStyle(.secondary)
                         .help(L10n.string("Search tags from Karui on your iPhone"))
-                        .accessibilityLabel(L10n.string("Search tags from Karui on your iPhone") + ": " + tags)
                 }
                 if item.readAt != nil {
                     Text(L10n.string("Read here; cleared on the iPhone")).font(.caption).foregroundStyle(.secondary)
