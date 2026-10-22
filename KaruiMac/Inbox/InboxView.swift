@@ -148,15 +148,40 @@ private struct ControlBar: View {
             BarButton(mode: inbox.barDisplayMode, label: L10n.string(inbox.showsPreview ? "Hide Preview" : "Show Preview"), symbol: inbox.showsPreview ? "rectangle.bottomhalf.inset.filled" : "rectangle") {
                 inbox.showsPreview.toggle()
             }
-            TextField(L10n.string("Search"), text: $inbox.search)
-                .textFieldStyle(.roundedBorder)
-                .frame(maxWidth: 220)
-                .focused($isSearchFocused)
-                .onChange(of: inbox.searchFocusRequest) { _, _ in isSearchFocused = true }
-                .onExitCommand {
-                    isSearchFocused = false
-                    inbox.listFocusRequest += 1
+            // A search field's look, with a clear button once there's text, as in Mail.
+            HStack(spacing: 4) {
+                Image(systemName: "magnifyingglass")
+                    .foregroundStyle(.secondary)
+                    .accessibilityHidden(true)
+                TextField(L10n.string("Search"), text: $inbox.search)
+                    .textFieldStyle(.plain)
+                    .focused($isSearchFocused)
+                    .onChange(of: inbox.searchFocusRequest) { _, _ in isSearchFocused = true }
+                    .onExitCommand {
+                        isSearchFocused = false
+                        inbox.listFocusRequest += 1
+                    }
+                if !inbox.search.isEmpty {
+                    Button {
+                        inbox.search = ""
+                        isSearchFocused = true
+                    } label: {
+                        Image(systemName: "xmark.circle.fill")
+                            .foregroundStyle(.secondary)
+                    }
+                    .buttonStyle(.plain)
+                    .help(L10n.string("Clear Search"))
+                    .accessibilityLabel(L10n.string("Clear Search"))
                 }
+            }
+            .padding(.horizontal, 6)
+            .padding(.vertical, 3)
+            .background(.background, in: RoundedRectangle(cornerRadius: 6))
+            .overlay {
+                RoundedRectangle(cornerRadius: 6)
+                    .strokeBorder(isSearchFocused ? Color.accentColor : Color(nsColor: .separatorColor), lineWidth: isSearchFocused ? 2 : 1)
+            }
+            .frame(maxWidth: 220)
             Spacer()
             BarMenuButton(mode: inbox.barDisplayMode, label: L10n.string("Filter"), symbol: isFiltering ? "line.3.horizontal.decrease.circle.fill" : "line.3.horizontal.decrease.circle") {
                 [
