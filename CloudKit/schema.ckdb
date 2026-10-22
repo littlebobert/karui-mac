@@ -45,6 +45,7 @@ DEFINE SCHEMA
         recipients        ENCRYPTED STRING,
         sender            ENCRYPTED STRING,
         subtitle          ENCRYPTED STRING,
+        tags              ENCRYPTED STRING,
         requestedCategory STRING,
         sortRequestedAt   TIMESTAMP QUERYABLE,
         title             ENCRYPTED STRING,

@@ -114,8 +114,11 @@ final class Inbox {
             return ("\(app)|app", app)
         }
 
+        /// As the iPhone's search: the notification, who sent it and to whom, and
+        /// Karui's reason and search tags.
         func matches(_ search: String) -> Bool {
-            let haystack = [app, title, subtitle, body, verdict?.reason].compactMap { $0 }.joined(separator: "\n")
+            let fields = [app, title, subtitle, body, senderName, recipients, verdict?.reason] + (verdict?.tags ?? [])
+            let haystack = fields.compactMap { $0 }.joined(separator: "\n")
             return haystack.localizedCaseInsensitiveContains(search)
         }
     }

@@ -24,6 +24,29 @@ final class InboxVerdictTests: XCTestCase {
         XCTAssertNil(inbox.item(id: "b")?.sortedBy)
     }
 
+    /// Search finds what the iPhone's would: the tags that arrive with a later
+    /// verdict, the sender, and the recipients.
+    func testSearchCoversTagsSenderAndRecipients() {
+        let suite = "InboxVerdictTests.\(UUID().uuidString)"
+        let inbox = Inbox(defaults: UserDefaults(suiteName: suite)!, store: nil)
+        defer { UserDefaults().removePersistentDomain(forName: suite) }
+        var first = verdict("a", body: "See you Saturday")
+        first.sender = "Taishi"
+        first.recipients = "Lingyi, Mika"
+        inbox.apply([first])
+        inbox.search = "引っ越し祝い"
+        XCTAssertEqual(inbox.filtered.map(\.id), [])
+
+        var tagged = first
+        tagged.tags = ["house warming", "引っ越し祝い"]
+        inbox.apply([tagged])
+        XCTAssertEqual(inbox.filtered.map(\.id), ["a"])
+        inbox.search = "taishi"
+        XCTAssertEqual(inbox.filtered.map(\.id), ["a"])
+        inbox.search = "Mika"
+        XCTAssertEqual(inbox.filtered.map(\.id), ["a"])
+    }
+
     /// A saved link survives a relaunch when it's the kind its app's harvester makes,
     /// Slack's web permalinks included; one from another app is dropped.
     func testSavedLinksKeptOnlyForTheirOwnApp() {

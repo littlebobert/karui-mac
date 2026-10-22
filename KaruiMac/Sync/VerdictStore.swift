@@ -168,7 +168,8 @@ actor VerdictStore {
             subtitle: record.encryptedValues[VerdictRecordSchema.subtitle] as? String,
             sender: record.encryptedValues[VerdictRecordSchema.sender] as? String,
             recipients: record.encryptedValues[VerdictRecordSchema.recipients] as? String,
-            engine: record[VerdictRecordSchema.engine] as? String
+            engine: record[VerdictRecordSchema.engine] as? String,
+            tags: VerdictRecordSchema.tags(from: record.encryptedValues[VerdictRecordSchema.tags] as? String)
         )
     }
 }

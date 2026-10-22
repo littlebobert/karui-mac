@@ -35,6 +35,11 @@ public struct VerdictRecord: Codable, Equatable, Sendable {
     /// on-device model, Private Cloud Compute, the rules, or the person. Nil from an
     /// iPhone that predates it.
     public var engine: String?
+    /// The search tags the iPhone's model gave the notification, in the languages the
+    /// person reads, so a search on the Mac finds what one on the iPhone does. They
+    /// come after the verdict, from a later tagging pass. Nil until then, and from an
+    /// iPhone that predates them.
+    public var tags: [String]?
 
     public init(
         fingerprint: String,
@@ -52,9 +57,11 @@ public struct VerdictRecord: Codable, Equatable, Sendable {
         subtitle: String? = nil,
         sender: String? = nil,
         recipients: String? = nil,
-        engine: String? = nil
+        engine: String? = nil,
+        tags: [String]? = nil
     ) {
         self.engine = engine
+        self.tags = tags
         self.subtitle = subtitle
         self.sender = sender
         self.recipients = recipients
@@ -103,6 +110,17 @@ public enum VerdictRecordSchema {
     public static let deletedAt = "deletedAt"
     /// What decided the category; see `VerdictRecord.engine`.
     public static let engine = "engine"
+    /// Encrypted, like the reason: the tags paraphrase the message. One string, a tag
+    /// to a line.
+    public static let tags = "tags"
+
+    public static func tagsValue(_ tags: [String]) -> String {
+        tags.joined(separator: "\n")
+    }
+
+    public static func tags(from value: String?) -> [String]? {
+        value.map { $0.split(separator: "\n").map(String.init) }
+    }
     /// When the Mac last did any of the three; what the iPhone subscribes to.
     public static let actionAt = "actionAt"
 

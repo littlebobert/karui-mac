@@ -28,6 +28,8 @@ final class InboxEntry {
     var verdictBody: String?
     /// What decided the iPhone's verdict, when the iPhone said.
     var verdictEngine: String?
+    /// The iPhone's search tags, a tag to a line.
+    var verdictTags: String?
     /// The Mac's own verdict (`MacVerdict`), as JSON.
     var macVerdictData: Data?
 
@@ -53,6 +55,7 @@ final class InboxEntry {
         verdictTitle = item.verdict?.title
         verdictBody = item.verdict?.body
         verdictEngine = item.verdict?.engine
+        verdictTags = item.verdict?.tags.map(VerdictRecordSchema.tagsValue)
         macVerdictData = item.macVerdict.flatMap { try? JSONEncoder().encode($0) }
     }
 
@@ -72,6 +75,7 @@ final class InboxEntry {
         verdictTitle = item.verdict?.title
         verdictBody = item.verdict?.body
         verdictEngine = item.verdict?.engine
+        verdictTags = item.verdict?.tags.map(VerdictRecordSchema.tagsValue)
         macVerdictData = item.macVerdict.flatMap { try? JSONEncoder().encode($0) }
     }
 
@@ -95,7 +99,8 @@ final class InboxEntry {
             item.verdict = VerdictRecord(
                 fingerprint: fingerprint, app: app, category: verdictCategory, interest: verdictInterest,
                 reason: verdictReason ?? "", triagedAt: verdictTriagedAt, isUnread: verdictIsUnread,
-                title: verdictTitle, body: verdictBody, readAt: readAt, subtitle: subtitle, sender: senderName, recipients: recipients, engine: verdictEngine
+                title: verdictTitle, body: verdictBody, readAt: readAt, subtitle: subtitle, sender: senderName, recipients: recipients, engine: verdictEngine,
+                tags: VerdictRecordSchema.tags(from: verdictTags)
             )
         }
         return item
