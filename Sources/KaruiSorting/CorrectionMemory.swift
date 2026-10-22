@@ -227,6 +227,7 @@ public enum CorrectionMemory {
             interest: result.interest
         )
         lowered.isModelFallback = result.isModelFallback
+        lowered.rateLimitResetDate = result.rateLimitResetDate
         lowered.tags = result.tags
         lowered.modelDuration = result.modelDuration
         return lowered

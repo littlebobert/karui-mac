@@ -485,8 +485,9 @@ public struct FoundationModelClassifier: NotificationClassifying {
             result.modelDuration = elapsedSeconds
             return result
         case .failure(let error):
+            let resetDate = Self.rateLimitResetDate(of: error)
             Self.logger.error(
-                "On-device model failed for \(notification.source, privacy: .private) after \(start.duration(to: .now), privacy: .public), app \(appState, privacy: .public), device \(deviceState, privacy: .public), prompt \(prompt.count, privacy: .public) chars: \(EnhancedLogging.describe(error), privacy: .public)"
+                "On-device model failed for \(notification.source, privacy: .private) after \(start.duration(to: .now), privacy: .public), app \(appState, privacy: .public), device \(deviceState, privacy: .public), prompt \(prompt.count, privacy: .public) chars: \(EnhancedLogging.describe(error), privacy: .public)\(resetDate.map { ", resets \($0.ISO8601Format())" } ?? "", privacy: .public)"
             )
             var result = fallbackResult(
                 notification,
@@ -494,8 +495,18 @@ public struct FoundationModelClassifier: NotificationClassifying {
                 detail: KaruiLocalization.formatted("On-device model failed: %@.", String(describing: error))
             )
             result.modelDuration = elapsedSeconds
+            result.rateLimitResetDate = resetDate
             return result
         }
+    }
+
+    /// When a rate limit ends, as iOS 27's error for it says. The error it replaced,
+    /// `LanguageModelSession.GenerationError.rateLimited`, carries no date.
+    public static func rateLimitResetDate(of error: any Error) -> Date? {
+        guard #available(iOS 27.0, macOS 27.0, *),
+              let error = error as? LanguageModelError,
+              case .rateLimited(let limit) = error else { return nil }
+        return limit.resetDate
     }
 
     private static func modelResult(

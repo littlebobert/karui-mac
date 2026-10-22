@@ -29,6 +29,7 @@ public enum QuietApps {
             interest: result.interest
         )
         quieted.isModelFallback = result.isModelFallback
+        quieted.rateLimitResetDate = result.rateLimitResetDate
         quieted.tags = result.tags
         quieted.modelDuration = result.modelDuration
         return quieted

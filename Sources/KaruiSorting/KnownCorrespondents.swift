@@ -48,6 +48,7 @@ public enum KnownCorrespondents {
             interest: result.interest
         )
         raised.isModelFallback = result.isModelFallback
+        raised.rateLimitResetDate = result.rateLimitResetDate
         raised.tags = result.tags
         raised.modelDuration = result.modelDuration
         raised.deadline = result.deadline

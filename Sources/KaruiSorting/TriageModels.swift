@@ -256,6 +256,7 @@ public enum AddressedElsewhereCheck {
             interest: result.interest
         )
         checked.isModelFallback = result.isModelFallback
+        checked.rateLimitResetDate = result.rateLimitResetDate
         checked.tags = result.tags
         return checked
     }
@@ -338,9 +339,13 @@ public struct TriageResult: Sendable, Equatable {
     /// How much the person would want to see this later, 1 through 5, from the
     /// on-device model. Ranks the daily summary; nil when rules decided.
     public let interest: Int?
-    /// The on-device model failed or was unavailable, so rules decided instead. Not
-    /// stored; lets callers avoid replacing a model result with a fallback.
+    /// The on-device model failed or was unavailable, so rules decided instead. Lets
+    /// callers avoid replacing a model result with a fallback; the iPhone keeps it
+    /// with each History revision.
     public var isModelFallback = false
+    /// When iOS said the on-device model's rate limit ends, for a fallback it caused.
+    /// Nil when iOS didn't say, as its older error never does.
+    public var rateLimitResetDate: Date?
     /// How long the model took, in seconds, including attempts that failed or timed
     /// out. Nil when rules decided without trying a model. For a second opinion, the
     /// whole round trip through the Shortcut.
