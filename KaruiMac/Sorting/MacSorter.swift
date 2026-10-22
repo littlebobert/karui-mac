@@ -35,6 +35,7 @@ final class MacSorter {
     private var queue: Task<Void, Never>?
     /// Checked now and then, not before each notification.
     private var shortcutCheck: (name: String, isInstalled: Bool, at: Date)?
+    private var backoff = SecondOpinionBackoff()
 
     init(settings: SortingSettingsStore) {
         self.settings = settings
@@ -57,9 +58,16 @@ final class MacSorter {
             await previous?.value
             var result = await FoundationModelClassifier(environment: .mac).classify(notification, policy: policy)
             if MacSecondOpinion.shouldAsk(about: result, policy: policy),
-               await self?.isShortcutInstalled(shortcutName) == true,
-               let cloud = await MacSecondOpinion.ask(about: notification, policy: policy, shortcutName: shortcutName, environment: .mac) {
-                result = cloud
+               self?.backoff.isPaused(at: Date()) == false,
+               await self?.isShortcutInstalled(shortcutName) == true {
+                if let cloud = await MacSecondOpinion.ask(about: notification, policy: policy, shortcutName: shortcutName, environment: .mac) {
+                    result = cloud
+                    if self?.backoff.recordAnswer() == true {
+                        SafeDiagnosticLog.shared.record("second opinion: answering again, asking each time")
+                    }
+                } else if let pause = self?.backoff.recordFailure(at: Date()) {
+                    SafeDiagnosticLog.shared.record("second opinion: paused for \(Int(pause / 60)) min after failing; the on-device model's answers stand")
+                }
             }
             inbox.setMacVerdict(MacVerdict(result), id: itemID)
             SafeDiagnosticLog.shared.record("sorted here: \(item.app) \(result.category.rawValue) by \(result.engine.rawValue)\(result.isModelFallback ? " (rules stood in)" : "")")

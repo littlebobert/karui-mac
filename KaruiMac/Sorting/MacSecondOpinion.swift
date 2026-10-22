@@ -100,3 +100,41 @@ enum MacSecondOpinion {
         return finished
     }
 }
+
+/// Stops asking for a while after three failures in a row, so a rate-limited stretch
+/// doesn't cost each notification up to the 30-second deadline: 5 minutes, then twice
+/// as long each time the first ask after a pause fails too, up to an hour. An answer
+/// starts it over. Meanwhile the on-device model's answer stands.
+struct SecondOpinionBackoff {
+    static let failuresBeforePause = 3
+    static let firstPause: TimeInterval = 5 * 60
+    static let longestPause: TimeInterval = 60 * 60
+
+    private var failures = 0
+    private var nextPause = firstPause
+    private(set) var pausedUntil: Date?
+
+    func isPaused(at now: Date) -> Bool {
+        pausedUntil.map { now < $0 } ?? false
+    }
+
+    /// The pause this failure starts, if any.
+    mutating func recordFailure(at now: Date) -> TimeInterval? {
+        failures += 1
+        // After a pause, one more failure is enough.
+        let needed = nextPause > Self.firstPause ? 1 : Self.failuresBeforePause
+        guard failures >= needed else { return nil }
+        let pause = nextPause
+        pausedUntil = now.addingTimeInterval(pause)
+        nextPause = min(pause * 2, Self.longestPause)
+        failures = 0
+        return pause
+    }
+
+    /// Whether it had paused before this answer.
+    mutating func recordAnswer() -> Bool {
+        let hadPaused = pausedUntil != nil
+        self = SecondOpinionBackoff()
+        return hadPaused
+    }
+}
