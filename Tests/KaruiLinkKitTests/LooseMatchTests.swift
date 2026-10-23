@@ -46,4 +46,21 @@ final class LooseMatchTests: XCTestCase {
         let mac = LooseMatch.Fields(title: "Kotoba", subtitle: "design", body: "Mika: New mockups are up")
         XCTAssertTrue(LooseMatch.sameNotification(app: "Slack", phone, mac))
     }
+
+    /// A Slack direct message: the iPhone's titled by the sender, the Mac's by the
+    /// workspace with the sender as its subtitle.
+    func testASlackDirectMessageMatchesEitherWayRound() {
+        let phone = LooseMatch.Fields(title: "Sam Reyes", subtitle: nil, body: "Sorry I gotta head out for lunch")
+        let mac = LooseMatch.Fields(title: "Kotoba", subtitle: "Sam Reyes", body: "Sorry I gotta head out for lunch")
+        XCTAssertTrue(LooseMatch.sameNotification(app: "Slack", phone, mac))
+        XCTAssertTrue(LooseMatch.sameNotification(app: "Slack", mac, phone))
+        XCTAssertFalse(LooseMatch.sameNotification(app: "Messages", phone, mac), "Slack's shape only")
+        let otherSender = LooseMatch.Fields(title: "Kotoba", subtitle: "Mika", body: mac.body)
+        XCTAssertFalse(LooseMatch.sameNotification(app: "Slack", phone, otherSender))
+        let otherText = LooseMatch.Fields(title: "Kotoba", subtitle: "Sam Reyes", body: "Back in an hour")
+        XCTAssertFalse(LooseMatch.sameNotification(app: "Slack", phone, otherText))
+        // A channel post from the same person isn't a direct message.
+        let post = LooseMatch.Fields(title: "Sam Reyes", subtitle: "To #design", body: "To #design\nSorry I gotta head out for lunch")
+        XCTAssertFalse(LooseMatch.slackDirectMessage(post, mac))
+    }
 }

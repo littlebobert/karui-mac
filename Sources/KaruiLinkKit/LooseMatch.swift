@@ -2,9 +2,10 @@ import Foundation
 
 /// The same notification as each device saw it, when the fingerprints differ: one
 /// app fills a field the other leaves empty (Spark for Mac says "No subject" where
-/// Spark for iPhone says nothing), or Slack words a thread reply differently on
-/// each, a channel post or a thread reply. The Mac joins the iPhone's verdict to its own copy by this, and the iPhone
-/// answers the Mac's request to sort a notification with the copy it already filed.
+/// Spark for iPhone says nothing), or Slack words a post or a direct message
+/// differently on each. The Mac joins the iPhone's verdict to its own copy by this,
+/// and the iPhone answers the Mac's request to sort a notification with the copy it
+/// already filed.
 /// Callers check the app and that the two arrived within `window`.
 public enum LooseMatch {
     public static let window: TimeInterval = 15 * 60
@@ -22,9 +23,11 @@ public enum LooseMatch {
     }
 
     /// Either way round. The same sender and text, the iPhone sending the subject
-    /// and body as one text, subject first; or, in Slack, the same post.
+    /// and body as one text, subject first; or, in Slack, the same post or direct
+    /// message.
     public static func sameNotification(app: String, _ one: Fields, _ other: Fields) -> Bool {
-        if app == KnownApp.slack.rawValue, slackPost(one, other) || slackPost(other, one) {
+        if app == KnownApp.slack.rawValue,
+           slackPost(one, other) || slackPost(other, one) || slackDirectMessage(one, other) || slackDirectMessage(other, one) {
             return true
         }
         let title = NotificationFingerprint.normalize(one.title)
@@ -51,9 +54,24 @@ public enum LooseMatch {
         if phoneText.hasPrefix(phoneSubtitle) {
             phoneText = phoneText.dropFirst(phoneSubtitle.count).drop { $0 == " " }
         }
-        // A bot's post has no "sender: " before it, and its own text may hold ": ",
-        // as in "Tag: release": so the text as it is, or after the first ": ".
-        let macText = Substring(NotificationFingerprint.normalize(mac.body))
+        return sameSlackText(phoneText, macBody: mac.body)
+    }
+
+    /// A Slack direct message: the iPhone's is titled by the sender, with no
+    /// subtitle; the Mac's is titled by the workspace, with the sender as its
+    /// subtitle. So: the same sender, and the same text as far as both go.
+    public static func slackDirectMessage(_ phone: Fields, _ mac: Fields) -> Bool {
+        guard NotificationFingerprint.normalize(phone.subtitle).isEmpty else { return false }
+        let sender = NotificationFingerprint.normalize(phone.title)
+        guard !sender.isEmpty, sender == NotificationFingerprint.normalize(mac.subtitle) else { return false }
+        return sameSlackText(Substring(NotificationFingerprint.normalize(phone.body)), macBody: mac.body)
+    }
+
+    /// The iPhone's text against the Mac's, each cut short at its own length. A bot's
+    /// post has no "sender: " before it, and its own text may hold ": ", as in "Tag:
+    /// release": so the Mac's text as it is, or after the first ": ".
+    private static func sameSlackText(_ phoneText: Substring, macBody: String?) -> Bool {
+        let macText = Substring(NotificationFingerprint.normalize(macBody))
         var candidates = [macText]
         if let colon = macText.range(of: ": ") { candidates.append(macText[colon.upperBound...]) }
         return candidates.contains { text in
