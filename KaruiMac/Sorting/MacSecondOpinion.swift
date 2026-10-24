@@ -66,6 +66,7 @@ enum MacSecondOpinion {
         result = KnownCorrespondents.applying(to: result, for: notification, policy: policy, match: environment.correspondentMatch)
         result = QuietApps.applying(to: result, for: notification, policy: policy)
         result = environment.applyingCorrections(result, notification, policy)
+        result = SilencedSenders.applying(to: result, for: notification, policy: policy)
         SafeDiagnosticLog.shared.record("second opinion: \(result.category.rawValue) in \(elapsed)")
         return result
     }

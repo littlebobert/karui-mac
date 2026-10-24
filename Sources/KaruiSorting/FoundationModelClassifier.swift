@@ -362,7 +362,8 @@ public struct FoundationModelClassifier: NotificationClassifying {
             match: environment.correspondentMatch
         )
         let quieted = QuietApps.applying(to: raised, for: notification, policy: policy)
-        return environment.applyingCorrections(quieted, notification, policy)
+        // Last, so a learned upgrade can't undo what the person silenced.
+        return SilencedSenders.applying(to: environment.applyingCorrections(quieted, notification, policy), for: notification, policy: policy)
     }
 
     private func classifyWithFoundationModel(

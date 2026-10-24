@@ -615,6 +615,8 @@ public struct TriagePolicy: Codable, Equatable, Sendable {
     /// Saved contacts the person took off that rule from History, by the name their
     /// notifications show.
     public var savedContactExceptions: [String] = []
+    /// Senders the person silenced from History, each in one app. See `SilencedSenders`.
+    public var silencedSenders: [SilencedSender] = []
     /// Chats the person asked to always alert about, for a while or for good, from
     /// the prompt after making one of their messages Important in History. See
     /// `ImportantConversations`.
@@ -829,6 +831,37 @@ public struct TriagePolicy: Codable, Equatable, Sendable {
     public func isSavedContactException(_ name: String) -> Bool {
         let key = Self.normalizedManualName(name)
         return savedContactExceptions.contains { Self.normalizedManualName($0) == key }
+    }
+
+    public func isSilencedSender(_ name: String?, in app: String) -> Bool {
+        guard let name else { return false }
+        let key = Self.normalizedSenderName(name)
+        guard !key.isEmpty else { return false }
+        return silencedSenders.contains {
+            Self.normalizedSenderName($0.name) == key && ImportantAppMatcher.matchingApp(for: app, in: [$0.app]) != nil
+        }
+    }
+
+    public mutating func addSilencedSender(_ name: String, in app: String) {
+        let sender = SilencedSender(
+            name: name.trimmingCharacters(in: .whitespacesAndNewlines),
+            app: app.trimmingCharacters(in: .whitespacesAndNewlines)
+        )
+        guard !sender.name.isEmpty, !ImportantAppMatcher.canonicalKey(sender.app).isEmpty,
+              !isSilencedSender(sender.name, in: sender.app) else { return }
+        silencedSenders.append(sender)
+    }
+
+    public mutating func removeSilencedSender(_ name: String, in app: String) {
+        let key = Self.normalizedSenderName(name)
+        silencedSenders.removeAll {
+            Self.normalizedSenderName($0.name) == key && ImportantAppMatcher.matchingApp(for: app, in: [$0.app]) != nil
+        }
+    }
+
+    /// A sender's name as the comparisons take it: trimmed, ignoring case and accents.
+    public static func normalizedSenderName(_ name: String) -> String {
+        normalizedManualName(name)
     }
 
     public mutating func addSavedContactException(_ name: String) {
@@ -1155,6 +1188,7 @@ public struct TriagePolicy: Codable, Equatable, Sendable {
         case showsHistoryOnMac
         case sendsPhoneOnlyNotificationsToMac
         case savedContactExceptions
+        case silencedSenders
         case importantConversations
         case tagsWhenSorting
         case searchByMeaning
@@ -1222,6 +1256,7 @@ public struct TriagePolicy: Codable, Equatable, Sendable {
         showsHistoryOnMac = try container.decodeIfPresent(Bool.self, forKey: .showsHistoryOnMac) ?? false
         sendsPhoneOnlyNotificationsToMac = try container.decodeIfPresent(Bool.self, forKey: .sendsPhoneOnlyNotificationsToMac) ?? false
         savedContactExceptions = try container.decodeIfPresent([String].self, forKey: .savedContactExceptions) ?? []
+        silencedSenders = try container.decodeIfPresent([SilencedSender].self, forKey: .silencedSenders) ?? []
         importantConversations = try container.decodeIfPresent([ImportantConversation].self, forKey: .importantConversations) ?? []
         tagsWhenSorting = try container.decodeIfPresent(Bool.self, forKey: .tagsWhenSorting) ?? true
         searchByMeaning = try container.decodeIfPresent(Bool.self, forKey: .searchByMeaning) ?? true
@@ -1267,6 +1302,7 @@ public struct TriagePolicy: Codable, Equatable, Sendable {
         try container.encode(showsHistoryOnMac, forKey: .showsHistoryOnMac)
         try container.encode(sendsPhoneOnlyNotificationsToMac, forKey: .sendsPhoneOnlyNotificationsToMac)
         try container.encode(savedContactExceptions, forKey: .savedContactExceptions)
+        try container.encode(silencedSenders, forKey: .silencedSenders)
         try container.encode(importantConversations, forKey: .importantConversations)
         try container.encode(tagsWhenSorting, forKey: .tagsWhenSorting)
         try container.encode(searchByMeaning, forKey: .searchByMeaning)
