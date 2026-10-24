@@ -600,8 +600,9 @@ public struct TriagePolicy: Codable, Equatable, Sendable {
     /// day before. Off until the person asks for it, in setup or Settings. Needs
     /// Second Opinion: only Private Cloud Compute's reading of a deadline is trusted.
     public var deadlineRemindersEnabled = false
-    /// Reminders are on and can actually be made: turning either setting on turns the
-    /// other on too, but a restored backup can hold one without the other.
+    /// Reminders are on and can actually be made: turning reminders on turns Second
+    /// Opinion on, and turning Second Opinion off turns reminders off, but a restored
+    /// backup can hold reminders on without Second Opinion.
     public var deadlineRemindersActive: Bool { deadlineRemindersEnabled && secondOpinionEnabled }
     /// A one-to-one message or missed call from someone saved in Contacts alerts
     /// unless it looks like spam or an automated message. See `SavedContacts`.
