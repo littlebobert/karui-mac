@@ -212,7 +212,12 @@ if [[ -n "$NOTES_FILE_ARG" ]]; then
   cp "$NOTES_FILE_ARG" "$NOTES_FILE"
 elif [[ ${#NOTES[@]} -gt 0 ]]; then
   {
-    for note in "${NOTES[@]}"; do echo "- $note"; done
+    for note in "${NOTES[@]}"; do
+      # A note already written as a list item keeps one bullet, not two.
+      note="${note#"${note%%[![:space:]]*}"}"
+      note="${note#- }"; note="${note#• }"; note="${note#\* }"
+      echo "- $note"
+    done
   } > "$NOTES_FILE"
 else
   echo "error: provide at least one --notes value or --notes-file" >&2
@@ -439,8 +444,9 @@ page = page_path.read_text()
 page, download_count = re.subn(r'href="https://github\.com/littlebobert/karui-mac/releases/[^"]+"', f'href="{download_url}"', page, count=1)
 version_pattern = re.compile(r'<span class="download-version" data-label-en="\([^"]+\)" data-label-ja="（[^"]+）">\([^<]+\)</span>')
 page, version_count = version_pattern.subn(lambda match: f'<span class="download-version" data-label-en="(version {version})" data-label-ja="（バージョン {version}）">(version {version})</span>', page, count=1)
-if download_count != 1 or version_count != 1:
-    raise SystemExit("error: landing-page download/version markers were not found exactly once")
+# The version beside the button is optional: the page may leave it out.
+if download_count != 1 or version_count > 1:
+    raise SystemExit("error: the landing page's download link was not found exactly once")
 items = "\n".join(
     f'          <li data-label-en="{html.escape(en, quote=True)}" data-label-ja="{html.escape(ja, quote=True)}">{html.escape(en)}</li>'
     for en, ja in zip(en_notes, ja_notes)
