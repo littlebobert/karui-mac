@@ -15,6 +15,38 @@ final class LooseMatchTests: XCTestCase {
         XCTAssertFalse(LooseMatch.sameNotification(app: "Spark", mac, LooseMatch.Fields(title: "Mika", subtitle: nil, body: nil)))
     }
 
+    /// A Spark email: the iPhone sends the subject, then the first line, then the
+    /// invisible padding some senders add; the Mac keeps the subject as its subtitle and
+    /// a longer preview of the text.
+    func testASparkEmailMatchesWhenEachDeviceCutsTheTextAtItsOwnLength() {
+        let subject = "📅 Just scheduled: Morning walk in the park"
+        let phone = LooseMatch.Fields(
+            title: "Hiking Club Osaka", subtitle: nil,
+            body: subject + "\nHiking Club Osaka invites you to a new event \u{200C} \u{200C} \u{200C} \u{200C}"
+        )
+        let mac = LooseMatch.Fields(
+            title: "Hiking Club Osaka", subtitle: subject,
+            body: "Hiking Club Osaka invites you to a new event Hiking Club Osaka scheduled a new event Morning walk in the park Saturday, November 28…"
+        )
+        XCTAssertTrue(LooseMatch.sameNotification(app: "Spark", phone, mac))
+        XCTAssertTrue(LooseMatch.sameNotification(app: "Spark", mac, phone))
+
+        let otherSubject = LooseMatch.Fields(title: mac.title, subtitle: "📅 Just scheduled: Evening run", body: mac.body)
+        XCTAssertFalse(LooseMatch.sameNotification(app: "Spark", phone, otherSubject))
+        let otherText = LooseMatch.Fields(title: mac.title, subtitle: subject, body: "Hiking Club Osaka cancelled an event")
+        XCTAssertFalse(LooseMatch.sameNotification(app: "Spark", phone, otherText))
+        let otherSender = LooseMatch.Fields(title: "Running Club Kobe", subtitle: subject, body: mac.body)
+        XCTAssertFalse(LooseMatch.sameNotification(app: "Spark", phone, otherSender))
+    }
+
+    /// Two short texts from one sender that only start alike are two notifications.
+    func testShortTextsThatOnlyStartAlikeDontMatch() {
+        let hi = LooseMatch.Fields(title: "Mika", subtitle: nil, body: "Hi")
+        let hiThere = LooseMatch.Fields(title: "Mika", subtitle: nil, body: "Hi there, are you free?")
+        XCTAssertFalse(LooseMatch.sameNotification(app: "Messages", hi, hiThere))
+        XCTAssertFalse(LooseMatch.sameNotification(app: "Messages", hiThere, hi))
+    }
+
     /// A Slack thread reply, as each device words it.
     func testASlackThreadReplyMatchesEitherWayRound() {
         let phone = LooseMatch.Fields(title: "darai", subtitle: "In #app-tech", body: "In #app-tech\nShould we update the root CA list too?")

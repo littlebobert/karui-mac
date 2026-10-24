@@ -34,7 +34,45 @@ public enum LooseMatch {
         guard !title.isEmpty, title == NotificationFingerprint.normalize(other.title) else { return false }
         let body = NotificationFingerprint.normalize(one.body), otherBody = NotificationFingerprint.normalize(other.body)
         guard !body.isEmpty, !otherBody.isEmpty else { return false }
-        return body == otherBody || body.hasSuffix(otherBody) || otherBody.hasSuffix(body)
+        if body == otherBody || body.hasSuffix(otherBody) || otherBody.hasSuffix(body) { return true }
+        return sameTextAfterSubject(one, body: body, other, otherBody: otherBody)
+    }
+
+    /// Shorter than this, two texts from the same sender that start alike, as "Hi"
+    /// and "Hi there", aren't taken for one.
+    static let sharedStartLength = 20
+
+    /// Spark: the iPhone sends the subject, then the email's first line; the Mac keeps
+    /// the subject apart and a longer preview of the text. So: the same subject, as a
+    /// subtitle or at the start of the text, and after it the same text as far as
+    /// the shorter goes.
+    private static func sameTextAfterSubject(_ one: Fields, body: String, _ other: Fields, otherBody: String) -> Bool {
+        let subject = NotificationFingerprint.normalize(one.subtitle)
+        let otherSubject = NotificationFingerprint.normalize(other.subtitle)
+        func afterSubject(_ text: String, _ subject: String) -> Substring? {
+            guard !subject.isEmpty else { return Substring(text) }
+            guard text.hasPrefix(subject) else { return nil }
+            return text.dropFirst(subject.count).drop { $0 == " " }
+        }
+        let texts: (Substring?, Substring?)
+        switch (subject.isEmpty, otherSubject.isEmpty) {
+        case (false, false):
+            guard subject == otherSubject else { return false }
+            texts = (afterSubject(body, subject) ?? Substring(body), afterSubject(otherBody, subject) ?? Substring(otherBody))
+        case (false, true): texts = (afterSubject(body, subject) ?? Substring(body), afterSubject(otherBody, subject))
+        case (true, false): texts = (afterSubject(body, otherSubject), afterSubject(otherBody, otherSubject) ?? Substring(otherBody))
+        case (true, true): texts = (Substring(body), Substring(otherBody))
+        }
+        guard let text = texts.0.map(trimmingEllipsis), let otherText = texts.1.map(trimmingEllipsis) else { return false }
+        let length = min(text.count, otherText.count)
+        return length >= sharedStartLength && text.prefix(length) == otherText.prefix(length)
+    }
+
+    /// A preview cut short may end in "…".
+    private static func trimmingEllipsis(_ text: Substring) -> Substring {
+        var text = text
+        while let last = text.last, last == "…" || last == "." || last == " " { text = text.dropLast() }
+        return text
     }
 
     /// Slack shapes a post's notification differently on each device: the iPhone's
