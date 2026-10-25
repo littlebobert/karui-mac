@@ -300,6 +300,8 @@ final class Inbox {
         showsOnlyOpenable = defaults.bool(forKey: "inbox.showsOnlyOpenable")
         sortOrder = Self.savedSortOrder(defaults)
         groupSortOrder = Self.savedGroupSortOrder(defaults)
+        // Pairs kept apart before 0.8.11.
+        mergeSameLink()
     }
 
     /// The items the toolbar's bulk actions apply to: the open group's, or the filtered day.
@@ -616,6 +618,7 @@ final class Inbox {
         items[index].link = link
         items[index].readAt = link.readAt ?? items[index].readAt
         persist([items[index].id])
+        mergeSameLink()
     }
 
     /// A link made from the iPhone's verdict, or sent again under its fingerprint:
@@ -627,6 +630,62 @@ final class Inbox {
             touched.insert(items[index].id)
         }
         persist(touched)
+        mergeSameLink()
+    }
+
+    /// Apps whose link names one email (Spark: its message ID) or one post (Slack:
+    /// its timestamp). A Messages link opens the conversation, which two messages
+    /// from the same person share.
+    static let linksNameOneItem: Set<KnownApp> = [.spark, .slack]
+
+    /// An iPhone stand-in and the Mac's own copy whose links open the same email or
+    /// message are one notification, however differently each device cut its text:
+    /// Spark for Mac can repeat an email's first line, so `LooseMatch` kept them
+    /// apart until the link made from the verdict found the same email. The Mac's
+    /// copy takes the stand-in's fingerprint, verdict, and link, so what's done to it
+    /// here reaches the iPhone's record, and the stand-in goes.
+    func mergeSameLink() {
+        func namesOne(_ item: Item) -> DeepLinkRecord? {
+            guard let link = item.link, link.opensExactContent,
+                  let app = KnownApp(rawValue: item.app), Self.linksNameOneItem.contains(app) else { return nil }
+            return link
+        }
+        var macCopies: [URL: [Int]] = [:]
+        for index in items.indices where items[index].id.hasPrefix("notification-") && items[index].verdict == nil {
+            guard let link = namesOne(items[index]) else { continue }
+            macCopies[link.url, default: []].append(index)
+        }
+        guard !macCopies.isEmpty else { return }
+        var merged: [String: String] = [:]
+        for standIn in items where !standIn.id.hasPrefix("notification-") {
+            guard let link = namesOne(standIn),
+                  let index = macCopies[link.url]?.first(where: { items[$0].app == standIn.app
+                      && items[$0].verdict == nil
+                      && abs(items[$0].deliveredAt.timeIntervalSince(standIn.deliveredAt)) <= Self.looseMatchWindow })
+            else { continue }
+            var copy = items[index]
+            copy.fingerprint = standIn.fingerprint
+            copy.verdict = standIn.verdict
+            copy.link = link
+            copy.readAt = [copy.readAt, standIn.readAt].compactMap { $0 }.min()
+            if copy.recipients == nil { copy.recipients = standIn.recipients }
+            if copy.senderName == nil { copy.senderName = standIn.senderName }
+            if copy.chosenCategory == nil { copy.chosenCategory = standIn.chosenCategory }
+            if copy.chosenCategory == copy.verdict?.category { copy.chosenCategory = nil }
+            items[index] = copy
+            merged[standIn.id] = copy.id
+        }
+        guard !merged.isEmpty else { return }
+        let standIns = Set(merged.keys)
+        items.removeAll { standIns.contains($0.id) }
+        store?.delete(ids: standIns)
+        persist(Set(merged.values))
+        // Selected or open, the stand-in is so as the Mac's copy.
+        if !selection.isDisjoint(with: standIns) {
+            selection = Set(selection.map { merged[$0] ?? $0 })
+        }
+        if let open = openItemID, let copy = merged[open] { openItemID = copy }
+        SafeDiagnosticLog.shared.record("verdicts: merged \(merged.count) copy into the Mac's own, by link")
     }
 
     func markRead(fingerprint: String, at date: Date = Date()) {

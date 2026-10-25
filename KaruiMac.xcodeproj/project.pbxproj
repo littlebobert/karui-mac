@@ -47,6 +47,7 @@
 		9938A77BD4938C9D62BB75C0 /* KaruiSorting in Frameworks */ = {isa = PBXBuildFile; productRef = 5E676695F40FF501D04224D5 /* KaruiSorting */; };
 		993CD23DDD32E5C0C303FEBC /* SparkLinkTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1234CDFEE07EA21BAA319888 /* SparkLinkTests.swift */; };
 		9BD58FECF2EA7DE03C599BDF /* MacPresenceReporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B249067A3ED93F34E42B336 /* MacPresenceReporter.swift */; };
+		A04E3D9777FAE4F849543560 /* SameLinkMergeTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DCAC8A91CAFED37ADAB0ECAC /* SameLinkMergeTests.swift */; };
 		A665DA8B77CE7BEE0C570BE2 /* SQLiteDatabase.swift in Sources */ = {isa = PBXBuildFile; fileRef = 256E396E924DE9AB3935ABB5 /* SQLiteDatabase.swift */; };
 		AD28793611CC3ED7547620EB /* ReadWatcher.swift in Sources */ = {isa = PBXBuildFile; fileRef = B7677F16AEA0B585F6963745 /* ReadWatcher.swift */; };
 		ADBF1CC1490BB3D97A63E3C6 /* MessagesConversationFinder.swift in Sources */ = {isa = PBXBuildFile; fileRef = ECAB38C530C9D9906723AA6A /* MessagesConversationFinder.swift */; };
@@ -149,6 +150,7 @@
 		CDA83893DD1898A941803C76 /* Acknowledgements.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = Acknowledgements.txt; sourceTree = "<group>"; };
 		D93392F8F852EAF234D01396 /* GradingSessionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GradingSessionTests.swift; sourceTree = "<group>"; };
 		DA731233B4D5A5ECA4611FD6 /* IPhoneSortingSettingsSection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IPhoneSortingSettingsSection.swift; sourceTree = "<group>"; };
+		DCAC8A91CAFED37ADAB0ECAC /* SameLinkMergeTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SameLinkMergeTests.swift; sourceTree = "<group>"; };
 		DD78E6FA806C0CC6D07E2BEF /* SyncStatus.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SyncStatus.swift; sourceTree = "<group>"; };
 		DF4BF525FF076257FB084C2A /* CorrespondentSync.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CorrespondentSync.swift; sourceTree = "<group>"; };
 		EB6F536E917DE437D0754E1E /* SortRequests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SortRequests.swift; sourceTree = "<group>"; };
@@ -181,6 +183,7 @@
 				5FC73E948CF81FC2CAE4C7EA /* InboxVerdictTests.swift */,
 				5986291BE197CA76F4D6CA8E /* MessagesLinkTests.swift */,
 				57E3E9CF0788DE8E74AA72D0 /* NotificationPayloadTests.swift */,
+				DCAC8A91CAFED37ADAB0ECAC /* SameLinkMergeTests.swift */,
 				BAAE434D79EA0F6EE8E8AA7A /* SecondOpinionBackoffTests.swift */,
 				7D3E94E96614E7F87652D0F6 /* SlackBotPostTests.swift */,
 				A5CECAAFFCA70EBB8466C441 /* SlackDirectMessageTests.swift */,
@@ -509,6 +512,7 @@
 				D4A3C8A89F7646C2BDF159AE /* InboxVerdictTests.swift in Sources */,
 				71FCA40B8355B8319BD331C2 /* MessagesLinkTests.swift in Sources */,
 				D66550355B02294EBB91F582 /* NotificationPayloadTests.swift in Sources */,
+				A04E3D9777FAE4F849543560 /* SameLinkMergeTests.swift in Sources */,
 				C30BA3F00993F24DDF772A47 /* SecondOpinionBackoffTests.swift in Sources */,
 				090A3C098EC4BB0493E4906C /* SlackBotPostTests.swift in Sources */,
 				79C06D32AAAADDFD18DF649F /* SlackDirectMessageTests.swift in Sources */,
