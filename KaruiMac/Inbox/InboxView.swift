@@ -462,23 +462,34 @@ private struct MissingDatabaseCard: View {
 
 private struct FullDiskAccessCard: View {
     let fullDiskAccess: FullDiskAccess
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    /// Toggled as the card appears and each time Karui comes back without access:
+    /// the shield wiggles once, since nothing else works until it's on.
+    @State private var wiggle = false
 
     var body: some View {
         GroupBox {
-            VStack(alignment: .leading, spacing: 8) {
-                Text(L10n.string("Full Disk Access is off"))
-                    .font(.headline)
-                Text(L10n.string("Karui reads Notification Center's database to find where each notification opens. macOS keeps that database behind Full Disk Access and offers no prompt for it: in System Settings, press + under the list, choose Karui, and turn it on."))
-                HStack {
-                    Button(L10n.string("Open System Settings")) {
-                        fullDiskAccess.openSystemSettings()
-                    }
-                    Button(L10n.string("Show Karui in Finder")) {
-                        fullDiskAccess.revealInFinder()
-                    }
-                    if fullDiskAccess.hasOpenedSystemSettings {
-                        Button(L10n.string("Quit and Reopen Karui")) {
-                            fullDiskAccess.relaunch()
+            HStack(alignment: .top, spacing: 12) {
+                Image(systemName: "lock.shield.fill")
+                    .font(.title2)
+                    .foregroundStyle(.tint)
+                    .symbolEffect(.wiggle, options: .nonRepeating, value: wiggle)
+                    .accessibilityHidden(true)
+                VStack(alignment: .leading, spacing: 8) {
+                    Text(L10n.string("Full Disk Access is off"))
+                        .font(.headline)
+                    Text(L10n.string("Karui reads Notification Center's database to find where each notification opens. macOS keeps that database behind Full Disk Access and offers no prompt for it: in System Settings, press + under the list, choose Karui, and turn it on."))
+                    HStack {
+                        Button(L10n.string("Open System Settings")) {
+                            fullDiskAccess.openSystemSettings()
+                        }
+                        Button(L10n.string("Show Karui in Finder")) {
+                            fullDiskAccess.revealInFinder()
+                        }
+                        if fullDiskAccess.hasOpenedSystemSettings {
+                            Button(L10n.string("Quit and Reopen Karui")) {
+                                fullDiskAccess.relaunch()
+                            }
                         }
                     }
                 }
@@ -486,6 +497,16 @@ private struct FullDiskAccessCard: View {
             .frame(maxWidth: .infinity, alignment: .leading)
             .padding(4)
         }
+        .task { await wiggleSoon() }
+        .onReceive(NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)) { _ in
+            Task { await wiggleSoon() }
+        }
+    }
+
+    private func wiggleSoon() async {
+        guard !reduceMotion else { return }
+        try? await Task.sleep(for: .milliseconds(400))
+        wiggle.toggle()
     }
 }
 

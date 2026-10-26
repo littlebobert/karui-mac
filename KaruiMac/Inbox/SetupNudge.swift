@@ -87,6 +87,9 @@ struct SetupNudgeCard: View {
     let step: SetupNudge.Step
     let onTurnOnSending: () -> Void
     let onDismiss: () -> Void
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    /// Toggled once as each step appears: its icon bounces, once, to draw the eye.
+    @State private var bounce = false
 
     var body: some View {
         GroupBox {
@@ -94,7 +97,13 @@ struct SetupNudgeCard: View {
                 Image(systemName: icon)
                     .font(.title2)
                     .foregroundStyle(.tint)
+                    .symbolEffect(.bounce, options: .nonRepeating, value: bounce)
                     .accessibilityHidden(true)
+                    .task(id: step) {
+                        guard !reduceMotion else { return }
+                        try? await Task.sleep(for: .milliseconds(400))
+                        bounce.toggle()
+                    }
                 VStack(alignment: .leading, spacing: 6) {
                     Text(title).font(.headline)
                     Text(message)
