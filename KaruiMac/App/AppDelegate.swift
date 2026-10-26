@@ -43,6 +43,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         coordinator.handleRemoteNotification(userInfo)
     }
 
+    func application(_ application: NSApplication, didRegisterForRemoteNotificationsWithDeviceToken deviceToken: Data) {
+        SafeDiagnosticLog.shared.record("pushes: registered")
+    }
+
     func application(_ application: NSApplication, didFailToRegisterForRemoteNotificationsWithError error: any Error) {
         SafeDiagnosticLog.shared.record("pushes: registration failed: \(error.localizedDescription)")
     }

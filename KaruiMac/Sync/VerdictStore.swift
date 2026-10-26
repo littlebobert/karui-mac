@@ -162,14 +162,24 @@ actor VerdictStore {
             isUnread: (record[VerdictRecordSchema.isUnread] as? Int ?? 0) != 0,
             title: record.encryptedValues[VerdictRecordSchema.title] as? String,
             body: record.encryptedValues[VerdictRecordSchema.body] as? String,
-            readAt: record[VerdictRecordSchema.readAt] as? Date,
+            readAt: current(record[VerdictRecordSchema.readAt] as? Date, triagedAt: triagedAt),
             requestedCategory: record[VerdictRecordSchema.requestedCategory] as? String,
-            deletedAt: record[VerdictRecordSchema.deletedAt] as? Date,
+            deletedAt: current(record[VerdictRecordSchema.deletedAt] as? Date, triagedAt: triagedAt),
             subtitle: record.encryptedValues[VerdictRecordSchema.subtitle] as? String,
             sender: record.encryptedValues[VerdictRecordSchema.sender] as? String,
             recipients: record.encryptedValues[VerdictRecordSchema.recipients] as? String,
             engine: record[VerdictRecordSchema.engine] as? String,
             tags: VerdictRecordSchema.tags(from: record.encryptedValues[VerdictRecordSchema.tags] as? String)
         )
+    }
+
+    /// A read mark or deletion from well before the notification was sorted was made
+    /// on an earlier one with the same fingerprint, whose record this is: "sent a
+    /// photo." from one person is one record. Karui for iPhone 0.2.6 clears them as it
+    /// sends a new one; this covers records left from before, and older iPhones. A
+    /// sort request's read mark can come first, but not by more than its reach.
+    static func current(_ date: Date?, triagedAt: Date) -> Date? {
+        guard let date, date >= triagedAt.addingTimeInterval(-SortRequests.reach) else { return nil }
+        return date
     }
 }

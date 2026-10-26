@@ -215,7 +215,14 @@ final class AppCoordinator {
 
     /// A change on the iPhone, pushed by CloudKit: fetched now, not on the next poll.
     func handleRemoteNotification(_ userInfo: [String: Any]) {
-        guard let change = MacSubscriptions.change(in: userInfo) else { return }
+        guard let change = MacSubscriptions.change(in: userInfo) else {
+            SafeDiagnosticLog.shared.record("pushes: received one not for Karui's records")
+            return
+        }
+        switch change {
+        case .verdict: SafeDiagnosticLog.shared.record("pushes: a verdict changed")
+        case .settings: SafeDiagnosticLog.shared.record("pushes: sorting settings changed")
+        }
         let verdicts = verdicts
         let sortingSettings = sortingSettings
         Task {

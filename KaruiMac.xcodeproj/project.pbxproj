@@ -39,6 +39,7 @@
 		71FCA40B8355B8319BD331C2 /* MessagesLinkTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5986291BE197CA76F4D6CA8E /* MessagesLinkTests.swift */; };
 		783DCCFA1398709247A2056B /* MacSubscriptions.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1DA9C372451E0B7DFE5804E /* MacSubscriptions.swift */; };
 		79C06D32AAAADDFD18DF649F /* SlackDirectMessageTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A5CECAAFFCA70EBB8466C441 /* SlackDirectMessageTests.swift */; };
+		7CEBB1F6703D5C519195FEF8 /* StaleReadMarkTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5CF3759F576A25317D7D39F0 /* StaleReadMarkTests.swift */; };
 		81CB8D99097C43010B9E2FC2 /* CorrespondentTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17304FF1E3D049F3C656DA86 /* CorrespondentTests.swift */; };
 		820F35FC5B53F16C8C79C1D5 /* NotificationDatabase.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2EF2A3CF2E9957E0C0B42B3 /* NotificationDatabase.swift */; };
 		84A5B0E3D233505DA98331E4 /* GradingSessionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D93392F8F852EAF234D01396 /* GradingSessionTests.swift */; };
@@ -117,6 +118,7 @@
 		57E3E9CF0788DE8E74AA72D0 /* NotificationPayloadTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationPayloadTests.swift; sourceTree = "<group>"; };
 		5986291BE197CA76F4D6CA8E /* MessagesLinkTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MessagesLinkTests.swift; sourceTree = "<group>"; };
 		59EF49CEA27DDE8349D1BB63 /* InboxView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InboxView.swift; sourceTree = "<group>"; };
+		5CF3759F576A25317D7D39F0 /* StaleReadMarkTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StaleReadMarkTests.swift; sourceTree = "<group>"; };
 		5FC73E948CF81FC2CAE4C7EA /* InboxVerdictTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InboxVerdictTests.swift; sourceTree = "<group>"; };
 		61B11DFC924A31F1D18275E7 /* KaruiMacApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KaruiMacApp.swift; sourceTree = "<group>"; };
 		640B79B0B8031650B8824CEB /* Inbox.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Inbox.swift; sourceTree = "<group>"; };
@@ -191,6 +193,7 @@
 				6E10A41222910A7BEB420C2D /* SlackThreadReplyTests.swift */,
 				06DF904D4FAEA78D661169BC /* SparkHarvestTests.swift */,
 				1234CDFEE07EA21BAA319888 /* SparkLinkTests.swift */,
+				5CF3759F576A25317D7D39F0 /* StaleReadMarkTests.swift */,
 			);
 			path = KaruiMacTests;
 			sourceTree = "<group>";
@@ -520,6 +523,7 @@
 				5150A0F582BA8DD951CC9F7F /* SlackThreadReplyTests.swift in Sources */,
 				5E921D5093F415A0738BC953 /* SparkHarvestTests.swift in Sources */,
 				993CD23DDD32E5C0C303FEBC /* SparkLinkTests.swift in Sources */,
+				7CEBB1F6703D5C519195FEF8 /* StaleReadMarkTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

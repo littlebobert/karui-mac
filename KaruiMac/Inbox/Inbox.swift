@@ -283,11 +283,15 @@ final class Inbox {
         self.defaults = defaults
         self.store = store
         items = (store?.load() ?? []).map { item in
+            var cleaned = item
+            // A read mark from an earlier notification of the same fingerprint, taken
+            // from its verdict record before 0.8.12 (`VerdictStore.current`).
+            if let readAt = item.readAt, VerdictStore.current(readAt, triagedAt: item.deliveredAt) == nil {
+                cleaned.readAt = nil
+            }
             // A link from another app was attached by a reused record ID (fixed in
             // 0.4.5); such a link is dropped rather than opening the wrong thing.
-            guard let link = item.link, !Self.linkFits(link.url, app: item.app) else { return item }
-            var cleaned = item
-            cleaned.link = nil
+            if let link = item.link, !Self.linkFits(link.url, app: item.app) { cleaned.link = nil }
             return cleaned
         }
         grouping = defaults.string(forKey: "inbox.grouping").flatMap(Grouping.init(rawValue:)) ?? .none
