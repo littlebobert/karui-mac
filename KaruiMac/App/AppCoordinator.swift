@@ -107,7 +107,11 @@ final class AppCoordinator {
             guard let self else { return }
             showInbox()
             let item = inbox.item(id: id) ?? fingerprint.flatMap { value in inbox.items.first { $0.fingerprint == value } }
-            if let item { inbox.reveal(item.id) }
+            guard let item else { return }
+            inbox.reveal(item.id)
+            // Opening it reads it, as a double-click does: with the preview, selecting
+            // it reads it too, but open in full nothing else would.
+            markRead([item.id])
         }
         banners.start()
         // Read in its own app: Karui's banner for it goes too.
