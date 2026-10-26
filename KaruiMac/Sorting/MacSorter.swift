@@ -47,7 +47,8 @@ final class MacSorter {
         return settings.policy != nil
     }
 
-    func sort(itemID: String, in inbox: Inbox, shortcutName: String) {
+    /// `sorted` follows the verdict, for a banner during a Focus (`MacRepost`).
+    func sort(itemID: String, in inbox: Inbox, shortcutName: String, sorted: @escaping @MainActor (String) -> Void = { _ in }) {
         guard #available(macOS 26.0, *), let policy = settings.policy,
               let item = inbox.item(id: itemID), item.macVerdict == nil else { return }
         let notification = NotificationInput.fromMac(
@@ -70,6 +71,7 @@ final class MacSorter {
                 }
             }
             inbox.setMacVerdict(MacVerdict(result), id: itemID)
+            sorted(itemID)
             SafeDiagnosticLog.shared.record("sorted here: \(item.app) \(result.category.rawValue) by \(result.engine.rawValue)\(result.isModelFallback ? " (rules stood in)" : "")")
         }
     }

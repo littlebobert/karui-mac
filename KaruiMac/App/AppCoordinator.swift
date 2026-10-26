@@ -37,6 +37,7 @@ final class AppCoordinator {
                 self.linkFromVerdicts(verdicts)
                 self.noteVerdictsArrived(verdicts)
                 self.bannerIfAtMac(added)
+                self.repostIfFocused()
                 self.banners.remove(ids: self.inbox.items.filter { !$0.isUnread }.map(\.id))
             }
         }
@@ -107,6 +108,11 @@ final class AppCoordinator {
             if let item = inbox.item(id: id) { open(item) }
         }
         banners.start()
+        // Read in its own app: Karui's banner for it goes too.
+        inbox.onRead = { [weak self] ids in
+            self?.banners.remove(ids: Array(ids))
+            self?.reposted.subtract(ids)
+        }
         refreshSetupNudge()
         fullDiskAccess.refresh()
         startWatchingIfPossible()
@@ -266,6 +272,43 @@ final class AppCoordinator {
         }
     }
 
+    /// This Mac's own notifications given a banner during a Focus, by item ID.
+    private var reposted = Set<String>()
+
+    /// During a Focus with Karui's filter, this Mac's apps are quiet: their Important
+    /// notifications come again as Karui's. Whenever a verdict lands, this Mac's or
+    /// the iPhone's, the recent ones are looked at again (`MacRepost`).
+    private func repostIfFocused() {
+        let now = Date()
+        let candidates = inbox.items.filter {
+            $0.id.hasPrefix("notification-") && (reposted.contains($0.id) || now.timeIntervalSince($0.deliveredAt) < MacRepost.window)
+        }.map(\.id)
+        guard !candidates.isEmpty else { return }
+        Task { [weak self] in
+            let isFiltering = await MacFocusState.isFiltering()
+            guard let self else { return }
+            for id in candidates {
+                guard let item = inbox.item(id: id) else {
+                    reposted.remove(id)
+                    continue
+                }
+                switch MacRepost.action(for: item, isFiltering: isFiltering, isPosted: reposted.contains(id)) {
+                case .post:
+                    reposted.insert(id)
+                    banners.post(item)
+                case .withdraw:
+                    reposted.remove(id)
+                    banners.remove(ids: [id])
+                    SafeDiagnosticLog.shared.record("banners: withdrew one from \(item.app), read or no longer Important")
+                case .none:
+                    break
+                }
+            }
+            // Past the window, a banner stays as it is.
+            reposted = reposted.filter { inbox.item(id: $0).map { Date().timeIntervalSince($0.deliveredAt) < MacRepost.window * 4 } ?? false }
+        }
+    }
+
     // MARK: Sorting here
 
     /// Whether the Second Opinion Shortcut is here, for the inbox's setup step; on
@@ -284,7 +327,9 @@ final class AppCoordinator {
     /// With the iPhone's settings, as the notification arrives.
     private func sortHere(_ itemID: String) {
         guard settings.sortsOnThisMac else { return }
-        sorter.sort(itemID: itemID, in: inbox, shortcutName: settings.secondOpinionShortcutName)
+        sorter.sort(itemID: itemID, in: inbox, shortcutName: settings.secondOpinionShortcutName) { [weak self] _ in
+            self?.repostIfFocused()
+        }
     }
 
     var canSortHere: Bool { sorter.canSort }

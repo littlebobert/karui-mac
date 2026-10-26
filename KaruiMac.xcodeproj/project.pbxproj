@@ -24,6 +24,7 @@
 		4289776CB4A0587BFD13136C /* InboxWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 54FF85BE43728EC33D14AF15 /* InboxWindowController.swift */; };
 		450373E70A90D9E47C01B39A /* FullDiskAccess.swift in Sources */ = {isa = PBXBuildFile; fileRef = BAA22D646B0B0086568E6C34 /* FullDiskAccess.swift */; };
 		48BC8B8FE8B3454F291F732C /* InboxView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 59EF49CEA27DDE8349D1BB63 /* InboxView.swift */; };
+		4E4CB9DE07BF29ACDCB17D82 /* MacRepost.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3512D9C41E3A8B7DC5C9EE71 /* MacRepost.swift */; };
 		506A24EE70DB7B87395F9679 /* SparkHarvester.swift in Sources */ = {isa = PBXBuildFile; fileRef = F9695E99FA85CB7DC2E8B73A /* SparkHarvester.swift */; };
 		5150A0F582BA8DD951CC9F7F /* SlackThreadReplyTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6E10A41222910A7BEB420C2D /* SlackThreadReplyTests.swift */; };
 		54758AD1ACDF40494DD0EB17 /* AutoUpdateService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9FBC7F39D73658B323FE3E33 /* AutoUpdateService.swift */; };
@@ -40,9 +41,11 @@
 		783DCCFA1398709247A2056B /* MacSubscriptions.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1DA9C372451E0B7DFE5804E /* MacSubscriptions.swift */; };
 		79C06D32AAAADDFD18DF649F /* SlackDirectMessageTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A5CECAAFFCA70EBB8466C441 /* SlackDirectMessageTests.swift */; };
 		7CEBB1F6703D5C519195FEF8 /* StaleReadMarkTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5CF3759F576A25317D7D39F0 /* StaleReadMarkTests.swift */; };
+		8174F7EBE9A121A997354D3F /* MacFocusFilter.swift in Sources */ = {isa = PBXBuildFile; fileRef = A8B537E522479859BEF6FA8A /* MacFocusFilter.swift */; };
 		81CB8D99097C43010B9E2FC2 /* CorrespondentTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17304FF1E3D049F3C656DA86 /* CorrespondentTests.swift */; };
 		820F35FC5B53F16C8C79C1D5 /* NotificationDatabase.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2EF2A3CF2E9957E0C0B42B3 /* NotificationDatabase.swift */; };
 		84A5B0E3D233505DA98331E4 /* GradingSessionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D93392F8F852EAF234D01396 /* GradingSessionTests.swift */; };
+		8B670E4A37E933FC0B1DEF03 /* MacRepostTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9415F385254B465E12B36D0C /* MacRepostTests.swift */; };
 		8D32B45A548B847970B9406E /* MacSortingEnvironment.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84FE6D61A57CB963CB4C5CCC /* MacSortingEnvironment.swift */; };
 		8DEB9C643FA7D9081602AD21 /* CorrespondentSync.swift in Sources */ = {isa = PBXBuildFile; fileRef = DF4BF525FF076257FB084C2A /* CorrespondentSync.swift */; };
 		9938A77BD4938C9D62BB75C0 /* KaruiSorting in Frameworks */ = {isa = PBXBuildFile; productRef = 5E676695F40FF501D04224D5 /* KaruiSorting */; };
@@ -107,6 +110,7 @@
 		256E396E924DE9AB3935ABB5 /* SQLiteDatabase.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SQLiteDatabase.swift; sourceTree = "<group>"; };
 		29A29143D3E9AA889152D714 /* Localization.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Localization.swift; sourceTree = "<group>"; };
 		2CD87E065773D23C77EB5CCD /* InfoPlist.strings */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = InfoPlist.strings; path = ja.lproj/InfoPlist.strings; sourceTree = "<group>"; };
+		3512D9C41E3A8B7DC5C9EE71 /* MacRepost.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MacRepost.swift; sourceTree = "<group>"; };
 		462569B5AE26FA4CCA644A6A /* SortingSettingsStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SortingSettingsStore.swift; sourceTree = "<group>"; };
 		4B466F1F135069DD48A1473B /* AppCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppCoordinator.swift; sourceTree = "<group>"; };
 		4B9727746C8262B05FCF0C07 /* NotificationDatabaseWatcher.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationDatabaseWatcher.swift; sourceTree = "<group>"; };
@@ -133,6 +137,7 @@
 		7D3E94E96614E7F87652D0F6 /* SlackBotPostTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SlackBotPostTests.swift; sourceTree = "<group>"; };
 		84FE6D61A57CB963CB4C5CCC /* MacSortingEnvironment.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MacSortingEnvironment.swift; sourceTree = "<group>"; };
 		8971A5A194FC9644337F7A93 /* KaruiMacTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = KaruiMacTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		9415F385254B465E12B36D0C /* MacRepostTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MacRepostTests.swift; sourceTree = "<group>"; };
 		9789D39272AA5E1B1CC4C22B /* MessagesHarvester.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MessagesHarvester.swift; sourceTree = "<group>"; };
 		9EB31EDB83CEFAEFEA31A984 /* GradingSession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GradingSession.swift; sourceTree = "<group>"; };
 		9FBC7F39D73658B323FE3E33 /* AutoUpdateService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AutoUpdateService.swift; sourceTree = "<group>"; };
@@ -140,6 +145,7 @@
 		A2EF2A3CF2E9957E0C0B42B3 /* NotificationDatabase.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationDatabase.swift; sourceTree = "<group>"; };
 		A557411D5121D7AA92246BF3 /* CorrespondentSources.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CorrespondentSources.swift; sourceTree = "<group>"; };
 		A5CECAAFFCA70EBB8466C441 /* SlackDirectMessageTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SlackDirectMessageTests.swift; sourceTree = "<group>"; };
+		A8B537E522479859BEF6FA8A /* MacFocusFilter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MacFocusFilter.swift; sourceTree = "<group>"; };
 		AFB92E764E41E683274F5389 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		B7677F16AEA0B585F6963745 /* ReadWatcher.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReadWatcher.swift; sourceTree = "<group>"; };
 		B8640EA18112E9AC366300AA /* Harvester.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Harvester.swift; sourceTree = "<group>"; };
@@ -183,6 +189,7 @@
 				1A3066717246024A3B01600D /* GradingInboxTests.swift */,
 				D93392F8F852EAF234D01396 /* GradingSessionTests.swift */,
 				5FC73E948CF81FC2CAE4C7EA /* InboxVerdictTests.swift */,
+				9415F385254B465E12B36D0C /* MacRepostTests.swift */,
 				5986291BE197CA76F4D6CA8E /* MessagesLinkTests.swift */,
 				57E3E9CF0788DE8E74AA72D0 /* NotificationPayloadTests.swift */,
 				DCAC8A91CAFED37ADAB0ECAC /* SameLinkMergeTests.swift */,
@@ -230,6 +237,7 @@
 		78B776C6E403EA0088925B33 /* Sorting */ = {
 			isa = PBXGroup;
 			children = (
+				A8B537E522479859BEF6FA8A /* MacFocusFilter.swift */,
 				75ACA25EA222D40857A4FB20 /* MacSecondOpinion.swift */,
 				BF88AF701CB740F31C522CBC /* MacSorter.swift */,
 				84FE6D61A57CB963CB4C5CCC /* MacSortingEnvironment.swift */,
@@ -277,6 +285,7 @@
 				59EF49CEA27DDE8349D1BB63 /* InboxView.swift */,
 				54FF85BE43728EC33D14AF15 /* InboxWindowController.swift */,
 				78C8C1A1CD1C7D35804D78DE /* MacBanners.swift */,
+				3512D9C41E3A8B7DC5C9EE71 /* MacRepost.swift */,
 				67CFD0E7402CC1B21A0E1966 /* SetupNudge.swift */,
 			);
 			path = Inbox;
@@ -481,7 +490,9 @@
 				D5D5164D472F70C79643EE6A /* Localization.swift in Sources */,
 				CE9B510965CA78D9CD0F8D89 /* LoginItem.swift in Sources */,
 				BDBAFEDDEDA7A80FE70A3F05 /* MacBanners.swift in Sources */,
+				8174F7EBE9A121A997354D3F /* MacFocusFilter.swift in Sources */,
 				9BD58FECF2EA7DE03C599BDF /* MacPresenceReporter.swift in Sources */,
+				4E4CB9DE07BF29ACDCB17D82 /* MacRepost.swift in Sources */,
 				E938124FFE8ECE7B8C2CD054 /* MacSecondOpinion.swift in Sources */,
 				59B02B06504F73D2E33FBDDB /* MacSorter.swift in Sources */,
 				8D32B45A548B847970B9406E /* MacSortingEnvironment.swift in Sources */,
@@ -513,6 +524,7 @@
 				E4E619C8AAC03D14FAF3E999 /* GradingInboxTests.swift in Sources */,
 				84A5B0E3D233505DA98331E4 /* GradingSessionTests.swift in Sources */,
 				D4A3C8A89F7646C2BDF159AE /* InboxVerdictTests.swift in Sources */,
+				8B670E4A37E933FC0B1DEF03 /* MacRepostTests.swift in Sources */,
 				71FCA40B8355B8319BD331C2 /* MessagesLinkTests.swift in Sources */,
 				D66550355B02294EBB91F582 /* NotificationPayloadTests.swift in Sources */,
 				A04E3D9777FAE4F849543560 /* SameLinkMergeTests.swift in Sources */,

@@ -18,6 +18,10 @@ final class SetupNudge {
         case secondOpinionShortcut
         /// Sorting works; notifications only this Mac received could reach the iPhone too.
         case sendToIPhone
+        /// Karui's Focus filter isn't on a Focus on this Mac, so Karui can't tell when
+        /// one is on and show what this Mac's apps say that's Important (`MacRepost`).
+        /// Gone once macOS has run the filter.
+        case macFocusFilter
         /// Karui on the iPhone filters under a Focus, which follows the person to this
         /// Mac unless they turn that off, and keeps this app's banners in Notification
         /// Center unless it's one of the Focus's allowed apps. Nothing here can tell
@@ -57,6 +61,7 @@ final class SetupNudge {
             }
         }
         if sorting.policy?.filtersNotifications == true {
+            if !MacFocusState.hasRun(defaults: defaults) { steps.append(.macFocusFilter) }
             steps.append(.focusAllowsKarui)
         }
         return steps.first { !dismissed.contains($0.rawValue) }
@@ -107,9 +112,9 @@ struct SetupNudgeCard: View {
                             }
                         case .sendToIPhone:
                             Button(L10n.string("Turn On"), action: onTurnOnSending)
-                        case .focusAllowsKarui:
-                            // Nothing here can tell when it's done, so going to do it
-                            // counts as done.
+                        case .macFocusFilter, .focusAllowsKarui:
+                            // Nothing here can tell when it's done (the filter runs only
+                            // as the Focus turns on or off), so going to do it counts as done.
                             Button(L10n.string("Open Focus Settings")) {
                                 NSWorkspace.shared.open(SetupNudge.focusSettingsURL)
                                 onDismiss()
@@ -131,6 +136,7 @@ struct SetupNudgeCard: View {
         case .iPhoneSettings: "iphone"
         case .secondOpinionShortcut: "cloud"
         case .sendToIPhone: "arrow.up.forward.app"
+        case .macFocusFilter: "line.3.horizontal.decrease.circle"
         case .focusAllowsKarui: "moon.fill"
         }
     }
@@ -140,6 +146,7 @@ struct SetupNudgeCard: View {
         case .iPhoneSettings: L10n.string("Sort notifications the moment they arrive")
         case .secondOpinionShortcut: L10n.string("Add the Second Opinion Shortcut")
         case .sendToIPhone: L10n.string("Get notifications only this Mac received on your iPhone")
+        case .macFocusFilter: L10n.string("Show Important notifications during a Focus")
         case .focusAllowsKarui: L10n.string("Let Karui’s banners through your Focus")
         }
     }
@@ -152,6 +159,8 @@ struct SetupNudgeCard: View {
             L10n.string("Second Opinion is on in Karui on your iPhone. This Mac asks Apple’s Private Cloud Compute through a Shortcut of your own, with the same prompt your iPhone sends.")
         case .sendToIPhone:
             L10n.string("When your iPhone never got a notification, this Mac can send it there, already sorted and end-to-end encrypted, so it shows in History and alerts you if it’s Important.")
+        case .macFocusFilter:
+            L10n.string("During a Focus, Slack, Spark, and this Mac’s other apps stay quiet. Karui can show their Important notifications as its own, as it does on your iPhone. In Focus settings, open the Focus you use with Karui and add Karui under Focus Filters.")
         case .focusAllowsKarui:
             L10n.string("The Focus you use with Karui on your iPhone is shared with this Mac, and keeps Karui’s banners here in Notification Center. In Focus settings, open that Focus and add Karui to its allowed apps.")
         }

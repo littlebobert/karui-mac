@@ -263,6 +263,8 @@ final class Inbox {
     var openGroupID: String?
     /// A notification opened in full, when it has nowhere else to open.
     var openItemID: String?
+    /// Items read in their own app, as a read probe found.
+    @ObservationIgnored var onRead: (Set<String>) -> Void = { _ in }
 
     /// A banner at the bottom of the window with a way to take an action back,
     /// for as long as taking it back is clean.
@@ -699,6 +701,7 @@ final class Inbox {
             touched.insert(items[index].id)
         }
         persist(touched)
+        onRead(touched)
     }
 
     func markRead(ids: Set<String>, at date: Date = Date()) {

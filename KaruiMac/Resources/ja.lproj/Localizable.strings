@@ -218,3 +218,10 @@
 "Search tags from Karui on your iPhone" = "iPhoneのKaruiによる検索タグ";
 "Clear Search" = "検索をクリア";
 "Tags: %@" = "タグ：%@";
+
+/* Showing Important notifications from this Mac's apps during a Focus */
+"Show Important notifications during a Focus" = "集中モード中も重要な通知を表示";
+"During a Focus, Slack, Spark, and this Mac’s other apps stay quiet. Karui can show their Important notifications as its own, as it does on your iPhone. In Focus settings, open the Focus you use with Karui and add Karui under Focus Filters." = "集中モード中は、Slack、Sparkなど、このMacのアプリは通知しません。iPhoneと同じように、Karuiがそれらの重要な通知を自分の通知として表示できます。集中モードの設定でKaruiで使っている集中モードを開き、「集中モードフィルタ」にKaruiを追加してください。";
+"Karui Filtering" = "Karuiの振り分け";
+"Lets Karui know this Focus is on, so it shows Important notifications from your Mac’s apps while they’re silenced." = "この集中モードがオンであることをKaruiに知らせます。Macのアプリが消音されている間、Karuiがそれらの重要な通知を表示します。";
+"Show Important notifications with Karui" = "Karuiで重要な通知を表示";
