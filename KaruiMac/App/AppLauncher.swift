@@ -57,6 +57,22 @@ enum AppLauncher {
 
     static func canOpen(_ app: String) -> Bool { destination(for: app) != nil }
 
+    /// The app's bundle identifier when it's on this Mac: by the identifiers known for
+    /// it, else by its name in the Applications folders, as "LINE.app".
+    static func installedBundleIdentifier(for app: String) -> String? {
+        for identifier in targets[app]?.bundleIdentifiers ?? [] where NSWorkspace.shared.urlForApplication(withBundleIdentifier: identifier) != nil {
+            return identifier
+        }
+        let folders = ["/Applications", "/System/Applications", NSHomeDirectory() + "/Applications"]
+        for folder in folders {
+            let url = URL(fileURLWithPath: folder).appending(path: app + ".app")
+            if FileManager.default.fileExists(atPath: url.path), let identifier = Bundle(url: url)?.bundleIdentifier {
+                return identifier
+            }
+        }
+        return nil
+    }
+
     static func open(_ app: String) {
         guard let destination = destination(for: app) else { return }
         if destination.isFileURL {

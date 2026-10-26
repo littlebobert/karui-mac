@@ -23,12 +23,13 @@ final class StaleReadMarkTests: XCTestCase {
         XCTAssertEqual(VerdictStore.current(beforeTheAnswer, triagedAt: triagedAt), beforeTheAnswer)
     }
 
-    /// A verdict the push missed, found by the next full pass and the poll after it,
-    /// still gets its banner.
+    /// A banner for what only the iPhone got is for something that just arrived; the
+    /// Focus repost of this Mac's own notifications still covers the full pass.
     @MainActor
-    func testBannersCoverTheFullPass() {
+    func testBannerWindows() {
         let seconds = { (duration: Duration) in Double(duration.components.seconds) }
         let freshness = MacBanners.freshness
-        XCTAssertGreaterThan(freshness, seconds(VerdictStore.fullPassInterval) + seconds(VerdictStore.pollInterval))
+        XCTAssertLessThanOrEqual(freshness, 2 * 60)
+        XCTAssertGreaterThan(MacRepost.window, seconds(VerdictStore.fullPassInterval) + seconds(VerdictStore.pollInterval))
     }
 }

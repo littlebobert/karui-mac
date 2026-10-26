@@ -145,6 +145,20 @@ actor VerdictStore {
         }
     }
 
+    /// Whether the iPhone or a Mac has read this notification by now, from its record
+    /// in iCloud: nil when iCloud can't say.
+    func isRead(fingerprint: String) async -> Bool? {
+        guard let database else { return nil }
+        do {
+            let record = try await database.record(for: CKRecord.ID(recordName: VerdictRecordSchema.recordName(fingerprint: fingerprint)))
+            let triagedAt = record[VerdictRecordSchema.triagedAt] as? Date ?? Date()
+            let readOnAMac = Self.current(record[VerdictRecordSchema.readAt] as? Date, triagedAt: triagedAt) != nil
+            return (record[VerdictRecordSchema.isUnread] as? Int).map { $0 == 0 } == true || readOnAMac
+        } catch {
+            return nil
+        }
+    }
+
     static func verdict(from record: CKRecord) -> VerdictRecord? {
         guard let fingerprint = VerdictRecordSchema.fingerprint(recordName: record.recordID.recordName),
               let app = record[VerdictRecordSchema.app] as? String,

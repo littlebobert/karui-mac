@@ -273,7 +273,11 @@ final class AppCoordinator {
 
     /// While the person is using this Mac the iPhone alerts quietly, so Important
     /// notifications only the iPhone received get a banner here. After a moment, in
-    /// case this Mac's own copy arrives and takes the stand-in's place.
+    /// case this Mac's own copy arrives and takes the stand-in's place, and only:
+    /// - for an app that isn't on this Mac, or one a Focus is keeping quiet here. An app
+    ///   that's here shows its own banner, and when it didn't, macOS meant it not to,
+    ///   as for the conversation open in Messages;
+    /// - when iCloud doesn't say it was read meanwhile, on the iPhone or a Mac.
     private func bannerIfAtMac(_ ids: [String]) {
         guard settings.reportsUse, presenceReporter.isInUse else { return }
         let fresh = ids.filter { id in
@@ -282,11 +286,23 @@ final class AppCoordinator {
                 && Date().timeIntervalSince(verdict.triagedAt) < MacBanners.freshness
         }
         guard !fresh.isEmpty else { return }
+        let verdicts = verdicts
         Task { [weak self] in
             try? await Task.sleep(for: MacBanners.settleDelay)
-            guard let self else { return }
+            let focus = await Task.detached { MacFocusFiles.activeFocus() }.value
+            let isKaruisFocus = MacRepost.isKaruisFocus(focus)
             for id in fresh {
-                guard let item = inbox.item(id: id), item.isUnread, item.category == "notifyNow" else { continue }
+                guard let self, let item = inbox.item(id: id), item.isUnread, item.category == "notifyNow" else { continue }
+                if let appID = AppLauncher.installedBundleIdentifier(for: item.app),
+                   !isKaruisFocus || focus?.allowedApps.contains(appID) == true {
+                    SafeDiagnosticLog.shared.record("banners: none for \(item.app), its own app is on this Mac")
+                    continue
+                }
+                if await verdicts.isRead(fingerprint: item.fingerprint) == true {
+                    SafeDiagnosticLog.shared.record("banners: none for \(item.app), read meanwhile")
+                    continue
+                }
+                guard inbox.item(id: id)?.isUnread == true else { continue }
                 banners.post(item)
             }
         }

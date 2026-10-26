@@ -10,11 +10,11 @@ final class MacBanners: NSObject, UNUserNotificationCenterDelegate {
     /// How long a verdict waits before its banner, in case this Mac's own copy of
     /// the notification arrives and takes its place, with the app's own banner.
     static let settleDelay: Duration = .seconds(15)
-    /// Verdicts sorted longer ago than this are caught up, not new: no banner. Long
-    /// enough for one found by the full pass (`VerdictStore.fullPassInterval`, then a
-    /// poll) when the push doesn't come; a late banner beats none, since the iPhone
-    /// kept quiet.
-    static let freshness: TimeInterval = 7 * 60
+    /// Verdicts sorted longer ago than this are caught up, not news: no banner. Short:
+    /// a verdict that reaches this Mac late is most often for something already read in
+    /// its app here, and what's still unread reaches the iPhone as the person leaves
+    /// (`HeldReleaseSender`).
+    static let freshness: TimeInterval = 2 * 60
     private nonisolated static let itemIDKey = "itemID"
     /// To find the item again under another ID, as when the iPhone's copy has merged
     /// into this Mac's since the banner went.
