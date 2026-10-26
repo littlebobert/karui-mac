@@ -791,55 +791,71 @@ private struct ItemsList: View {
     var body: some View {
         @Bindable var inbox = coordinator.inbox
         let sorted = inbox.sortedVisibleItems
-        Group {
-            if inbox.isCompact {
-                Table(sorted, selection: $inbox.selection, sortOrder: $inbox.sortOrder, columnCustomization: $columns) {
-                    TableColumn("") { item in
-                        Circle()
-                            .fill(item.needsAttention ? Color.accentColor : Color.clear)
-                            .frame(width: 8, height: 8)
+        ScrollViewReader { proxy in
+            Group {
+                if inbox.isCompact {
+                    Table(sorted, selection: $inbox.selection, sortOrder: $inbox.sortOrder, columnCustomization: $columns) {
+                        TableColumn("") { item in
+                            Circle()
+                                .fill(item.needsAttention ? Color.accentColor : Color.clear)
+                                .frame(width: 8, height: 8)
+                        }
+                        .width(12)
+                        // Movable like the others; its width stays fixed.
+                        .customizationID("unread")
+                        TableColumn(L10n.string("Category"), value: \.categoryRank) { item in
+                            VerdictBadge(verdict: item.verdict, chosen: item.chosenCategory, mac: item.macVerdict, isWaiting: item.isWaitingForVerdict, font: .body)
+                        }
+                        .width(min: 76, ideal: 96, max: 150)
+                        .customizationID("category")
+                        TableColumn(L10n.string("App"), value: \.app) { item in
+                            AppNameLink(app: item.app)
+                        }
+                        .width(min: 70, ideal: 96, max: 160)
+                        .customizationID("app")
+                        TableColumn(L10n.string("Sender"), value: \.sender) { item in
+                            Text(item.sender).lineLimit(1).truncationMode(.tail)
+                        }
+                        .width(min: 90, ideal: 150, max: 170)
+                        .customizationID("sender")
+                        TableColumn(L10n.string("Notification"), value: \.compactLine) { item in
+                            Text(item.compactLine).lineLimit(1).truncationMode(.tail)
+                        }
+                        .customizationID("notification")
+                        TableColumn(L10n.string("Time"), value: \.deliveredAt) { item in
+                            Text(item.deliveredAt, format: Calendar.current.isDateInToday(item.deliveredAt) ? .dateTime.hour().minute() : .dateTime.month(.abbreviated).day().hour().minute())
+                                .foregroundStyle(.secondary)
+                        }
+                        .width(min: 56, ideal: 76, max: 170)
+                        .customizationID("time")
                     }
-                    .width(12)
-                    // Movable like the others; its width stays fixed.
-                    .customizationID("unread")
-                    TableColumn(L10n.string("Category"), value: \.categoryRank) { item in
-                        VerdictBadge(verdict: item.verdict, chosen: item.chosenCategory, mac: item.macVerdict, isWaiting: item.isWaitingForVerdict, font: .body)
+                    .focused($isFocused)
+                    .modifier(ItemActions(coordinator: coordinator))
+                } else {
+                    List(sorted, selection: $inbox.selection) { item in
+                        InboxRow(coordinator: coordinator, item: item)
                     }
-                    .width(min: 76, ideal: 96, max: 150)
-                    .customizationID("category")
-                    TableColumn(L10n.string("App"), value: \.app) { item in
-                        AppNameLink(app: item.app)
-                    }
-                    .width(min: 70, ideal: 96, max: 160)
-                    .customizationID("app")
-                    TableColumn(L10n.string("Sender"), value: \.sender) { item in
-                        Text(item.sender).lineLimit(1).truncationMode(.tail)
-                    }
-                    .width(min: 90, ideal: 150, max: 170)
-                    .customizationID("sender")
-                    TableColumn(L10n.string("Notification"), value: \.compactLine) { item in
-                        Text(item.compactLine).lineLimit(1).truncationMode(.tail)
-                    }
-                    .customizationID("notification")
-                    TableColumn(L10n.string("Time"), value: \.deliveredAt) { item in
-                        Text(item.deliveredAt, format: Calendar.current.isDateInToday(item.deliveredAt) ? .dateTime.hour().minute() : .dateTime.month(.abbreviated).day().hour().minute())
-                            .foregroundStyle(.secondary)
-                    }
-                    .width(min: 56, ideal: 76, max: 170)
-                    .customizationID("time")
+                    .focused($isFocused)
+                    .modifier(ItemActions(coordinator: coordinator))
                 }
-                .focused($isFocused)
-                .modifier(ItemActions(coordinator: coordinator))
-            } else {
-                List(sorted, selection: $inbox.selection) { item in
-                    InboxRow(coordinator: coordinator, item: item)
-                }
-                .focused($isFocused)
-                .modifier(ItemActions(coordinator: coordinator))
             }
+            // A banner's notification: scrolled to, here or in the group it opened.
+            .onAppear {
+                focusSoon()
+                scrollToRevealed(proxy)
+            }
+            .onChange(of: inbox.revealRequest) { _, _ in scrollToRevealed(proxy) }
         }
-        .onAppear { focusSoon() }
         .onChange(of: inbox.listFocusRequest) { _, _ in isFocused = true }
+    }
+
+    private func scrollToRevealed(_ proxy: ScrollViewProxy) {
+        guard let id = coordinator.inbox.revealedID else { return }
+        Task { @MainActor in
+            // After the list has the row: a group opened for it is a new list.
+            try? await Task.sleep(for: .milliseconds(50))
+            proxy.scrollTo(id, anchor: .center)
+        }
     }
 
     /// After the view is in the window: coming back from a notification or a group,

@@ -202,12 +202,35 @@ final class Inbox {
     /// Selected while only unread ones are shown: reading them doesn't drop them from
     /// the list until the selection moves on, as in Mail.
     private(set) var keptVisibleIDs: Set<String> = [] { didSet { invalidateCaches() } }
+    /// The notification a banner was clicked for, shown whatever the filters until the
+    /// selection moves on; `revealRequest` is bumped for the list to scroll to it.
+    private(set) var revealedID: String? { didSet { invalidateCaches() } }
+    private(set) var revealRequest = 0
+
+    /// A notification from its banner, shown here rather than in its app: selected,
+    /// with the preview under the list, or open in full when the preview is off. A
+    /// search that leaves it out goes, and a grouping opens its group.
+    func reveal(_ id: String) {
+        guard let item = item(id: id) else { return }
+        guard showsPreview else {
+            openItemID = id
+            return
+        }
+        openItemID = nil
+        let search = search.trimmingCharacters(in: .whitespaces)
+        if !search.isEmpty, !item.matches(search) { self.search = "" }
+        revealedID = id
+        openGroupID = grouping == .none ? nil : groupKey(of: item).key
+        selection = [id]
+        revealRequest &+= 1
+    }
 
     /// Called as the selection changes, before selecting reads it. Only while read
     /// items are hidden, so the caches survive arrowing through the list otherwise.
     /// What's kept is what's unread as it's selected, and what was kept already; a
     /// read item the filter hid stays hidden though still in the selection.
     func keepVisible(_ ids: Set<String>) {
+        if let revealedID, !ids.contains(revealedID) { self.revealedID = nil }
         let kept: Set<String> = shownReadStates.contains(.read) ? [] : ids.filter { id in
             keptVisibleIDs.contains(id) || item(id: id)?.isUnread == true
         }
@@ -341,6 +364,7 @@ final class Inbox {
         _ = shownCategories
         _ = shownReadStates
         _ = keptVisibleIDs
+        _ = revealedID
     }
 
     var filtered: [Item] {
@@ -348,6 +372,9 @@ final class Inbox {
         if let filteredCache { return filteredCache }
         let search = search.trimmingCharacters(in: .whitespaces)
         let result = items.filter { item in
+            // Shown from its banner: in the list whatever the filters, until the
+            // selection moves on.
+            if item.id == revealedID { return true }
             if showsOnlyOpenable, item.link == nil { return false }
             if let category = item.category, !shownCategories.contains(category) { return false }
             if !shownReadStates.contains(item.isUnread ? .unread : .read), !keptVisibleIDs.contains(item.id) { return false }
@@ -376,12 +403,18 @@ final class Inbox {
         switch grouping {
         case .none:
             return [Group(id: "all", title: "", app: "", items: items)]
-        case .apps:
-            return grouped(items) { ($0.app, $0.app) }
-        case .senders:
-            return grouped(items) { ("\($0.app)|sender|\(Conversation.normalized($0.sender))", $0.sender) }
-        case .threads:
-            return grouped(items) { let c = $0.conversation; return (c.key, c.name) }
+        case .apps, .senders, .threads:
+            return grouped(items, by: groupKey)
+        }
+    }
+
+    /// The group an item falls in, as grouped now, and the group's name.
+    private func groupKey(of item: Item) -> (key: String, name: String) {
+        switch grouping {
+        case .none: ("all", "")
+        case .apps: (item.app, item.app)
+        case .senders: ("\(item.app)|sender|\(Conversation.normalized(item.sender))", item.sender)
+        case .threads: (item.conversation.key, item.conversation.name)
         }
     }
 

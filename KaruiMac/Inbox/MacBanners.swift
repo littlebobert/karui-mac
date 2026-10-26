@@ -16,8 +16,11 @@ final class MacBanners: NSObject, UNUserNotificationCenterDelegate {
     /// kept quiet.
     static let freshness: TimeInterval = 7 * 60
     private nonisolated static let itemIDKey = "itemID"
+    /// To find the item again under another ID, as when the iPhone's copy has merged
+    /// into this Mac's since the banner went.
+    private nonisolated static let fingerprintKey = "fingerprint"
     private let center = UNUserNotificationCenter.current()
-    var open: (String) -> Void = { _ in }
+    var open: (_ id: String, _ fingerprint: String?) -> Void = { _, _ in }
 
     func start() {
         center.delegate = self
@@ -40,7 +43,7 @@ final class MacBanners: NSObject, UNUserNotificationCenterDelegate {
         content.body = item.body ?? ""
         content.sound = .default
         content.threadIdentifier = item.conversation.key
-        content.userInfo = [Self.itemIDKey: item.id]
+        content.userInfo = [Self.itemIDKey: item.id, Self.fingerprintKey: item.fingerprint]
         center.add(UNNotificationRequest(identifier: item.id, content: content, trigger: nil)) { error in
             if let error { SafeDiagnosticLog.shared.record("banners: post failed: \(error.localizedDescription)") }
         }
@@ -71,7 +74,9 @@ final class MacBanners: NSObject, UNUserNotificationCenterDelegate {
         _ center: UNUserNotificationCenter,
         didReceive response: UNNotificationResponse
     ) async {
-        guard let id = response.notification.request.content.userInfo[Self.itemIDKey] as? String else { return }
-        await MainActor.run { open(id) }
+        let userInfo = response.notification.request.content.userInfo
+        guard let id = userInfo[Self.itemIDKey] as? String else { return }
+        let fingerprint = userInfo[Self.fingerprintKey] as? String
+        await MainActor.run { open(id, fingerprint) }
     }
 }

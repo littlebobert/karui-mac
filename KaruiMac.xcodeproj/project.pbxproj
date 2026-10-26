@@ -38,6 +38,7 @@
 		6F1F477087C760E2E8B83643 /* SlackHarvester.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0368E20A347FBE53765A797B /* SlackHarvester.swift */; };
 		71995B62B28464F1978F0F94 /* VerdictStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = B925C34CA7033ED768164254 /* VerdictStore.swift */; };
 		71FCA40B8355B8319BD331C2 /* MessagesLinkTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5986291BE197CA76F4D6CA8E /* MessagesLinkTests.swift */; };
+		73F5812B811D777FF02E0A88 /* RevealTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E91FAECA5133A2FCFCD70647 /* RevealTests.swift */; };
 		783DCCFA1398709247A2056B /* MacSubscriptions.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1DA9C372451E0B7DFE5804E /* MacSubscriptions.swift */; };
 		79C06D32AAAADDFD18DF649F /* SlackDirectMessageTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A5CECAAFFCA70EBB8466C441 /* SlackDirectMessageTests.swift */; };
 		7CEBB1F6703D5C519195FEF8 /* StaleReadMarkTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5CF3759F576A25317D7D39F0 /* StaleReadMarkTests.swift */; };
@@ -165,6 +166,7 @@
 		DD78E6FA806C0CC6D07E2BEF /* SyncStatus.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SyncStatus.swift; sourceTree = "<group>"; };
 		DF4BF525FF076257FB084C2A /* CorrespondentSync.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CorrespondentSync.swift; sourceTree = "<group>"; };
 		E1B99E4E023172A85221E4E2 /* MacFocusFiles.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MacFocusFiles.swift; sourceTree = "<group>"; };
+		E91FAECA5133A2FCFCD70647 /* RevealTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RevealTests.swift; sourceTree = "<group>"; };
 		EB6F536E917DE437D0754E1E /* SortRequests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SortRequests.swift; sourceTree = "<group>"; };
 		ECAB38C530C9D9906723AA6A /* MessagesConversationFinder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MessagesConversationFinder.swift; sourceTree = "<group>"; };
 		F1DA9C372451E0B7DFE5804E /* MacSubscriptions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MacSubscriptions.swift; sourceTree = "<group>"; };
@@ -197,6 +199,7 @@
 				9415F385254B465E12B36D0C /* MacRepostTests.swift */,
 				5986291BE197CA76F4D6CA8E /* MessagesLinkTests.swift */,
 				57E3E9CF0788DE8E74AA72D0 /* NotificationPayloadTests.swift */,
+				E91FAECA5133A2FCFCD70647 /* RevealTests.swift */,
 				DCAC8A91CAFED37ADAB0ECAC /* SameLinkMergeTests.swift */,
 				BAAE434D79EA0F6EE8E8AA7A /* SecondOpinionBackoffTests.swift */,
 				7D3E94E96614E7F87652D0F6 /* SlackBotPostTests.swift */,
@@ -535,6 +538,7 @@
 				8B670E4A37E933FC0B1DEF03 /* MacRepostTests.swift in Sources */,
 				71FCA40B8355B8319BD331C2 /* MessagesLinkTests.swift in Sources */,
 				D66550355B02294EBB91F582 /* NotificationPayloadTests.swift in Sources */,
+				73F5812B811D777FF02E0A88 /* RevealTests.swift in Sources */,
 				A04E3D9777FAE4F849543560 /* SameLinkMergeTests.swift in Sources */,
 				C30BA3F00993F24DDF772A47 /* SecondOpinionBackoffTests.swift in Sources */,
 				090A3C098EC4BB0493E4906C /* SlackBotPostTests.swift in Sources */,

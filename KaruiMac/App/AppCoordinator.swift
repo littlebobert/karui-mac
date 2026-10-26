@@ -102,10 +102,12 @@ final class AppCoordinator {
             return
         }
         SafeDiagnosticLog.shared.record("app: start")
-        banners.open = { [weak self] id in
+        // A banner opens its notification here, as Mail's does, not in its app.
+        banners.open = { [weak self] id, fingerprint in
             guard let self else { return }
             showInbox()
-            if let item = inbox.item(id: id) { open(item) }
+            let item = inbox.item(id: id) ?? fingerprint.flatMap { value in inbox.items.first { $0.fingerprint == value } }
+            if let item { inbox.reveal(item.id) }
         }
         banners.start()
         // Read in its own app: Karui's banner for it goes too.
