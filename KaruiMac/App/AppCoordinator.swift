@@ -114,6 +114,9 @@ final class AppCoordinator {
             self?.reposted.subtract(ids)
         }
         refreshSetupNudge()
+        // A Focus turning on catches up on the last few minutes' Important ones.
+        focusWatcher.changed = { [weak self] _ in self?.repostIfFocused() }
+        focusWatcher.start()
         fullDiskAccess.refresh()
         startWatchingIfPossible()
         autoUpdates.start()
@@ -155,6 +158,9 @@ final class AppCoordinator {
     func applicationDidBecomeActive() {
         guard !DemoMode.isActive else { return }
         refreshSetupNudge()
+        // A Focus turning on catches up on the last few minutes' Important ones.
+        focusWatcher.changed = { [weak self] _ in self?.repostIfFocused() }
+        focusWatcher.start()
         fullDiskAccess.refresh()
         startWatchingIfPossible()
     }
@@ -274,8 +280,9 @@ final class AppCoordinator {
 
     /// This Mac's own notifications given a banner during a Focus, by item ID.
     private var reposted = Set<String>()
+    private let focusWatcher = MacFocusWatcher()
 
-    /// During a Focus with Karui's filter, this Mac's apps are quiet: their Important
+    /// During a Focus that lets Karui through, this Mac's apps are quiet: their Important
     /// notifications come again as Karui's. Whenever a verdict lands, this Mac's or
     /// the iPhone's, the recent ones are looked at again (`MacRepost`).
     private func repostIfFocused() {
@@ -285,14 +292,16 @@ final class AppCoordinator {
         }.map(\.id)
         guard !candidates.isEmpty else { return }
         Task { [weak self] in
-            let isFiltering = await MacFocusState.isFiltering()
+            let focus = await Task.detached { MacFocusFiles.activeFocus() }.value
+            // The filter, should macOS run it after all, is a second way to know.
+            let isFiltering = MacRepost.isKaruisFocus(focus) ? true : await MacFocusState.isFiltering()
             guard let self else { return }
             for id in candidates {
                 guard let item = inbox.item(id: id) else {
                     reposted.remove(id)
                     continue
                 }
-                switch MacRepost.action(for: item, isFiltering: isFiltering, isPosted: reposted.contains(id)) {
+                switch MacRepost.action(for: item, isFiltering: isFiltering, allowedApps: focus?.allowedApps ?? [], isPosted: reposted.contains(id)) {
                 case .post:
                     reposted.insert(id)
                     banners.post(item)

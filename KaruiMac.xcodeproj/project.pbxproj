@@ -62,6 +62,7 @@
 		BDBAFEDDEDA7A80FE70A3F05 /* MacBanners.swift in Sources */ = {isa = PBXBuildFile; fileRef = 78C8C1A1CD1C7D35804D78DE /* MacBanners.swift */; };
 		BDE1F47D809D94B97D3ADDFC /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01B64433CF565459941ABCA4 /* SettingsView.swift */; };
 		C18F4894F38E02C8FB692626 /* SlackLinkTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C44EC3DE17DE1FCA7463F4E /* SlackLinkTests.swift */; };
+		C1E993FF7759C56331B4BB05 /* MacFocusFilesTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D5909E5B90E7DBD843A5021C /* MacFocusFilesTests.swift */; };
 		C2E50012B0D354A658E91189 /* SyncStatus.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD78E6FA806C0CC6D07E2BEF /* SyncStatus.swift */; };
 		C30BA3F00993F24DDF772A47 /* SecondOpinionBackoffTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = BAAE434D79EA0F6EE8E8AA7A /* SecondOpinionBackoffTests.swift */; };
 		C347228A7259723AA47FB4B8 /* CloudKitEntitlement.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6E0F2603A038F4EABE382CD4 /* CloudKitEntitlement.swift */; };
@@ -72,6 +73,7 @@
 		D4A3C8A89F7646C2BDF159AE /* InboxVerdictTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5FC73E948CF81FC2CAE4C7EA /* InboxVerdictTests.swift */; };
 		D5D5164D472F70C79643EE6A /* Localization.swift in Sources */ = {isa = PBXBuildFile; fileRef = 29A29143D3E9AA889152D714 /* Localization.swift */; };
 		D66550355B02294EBB91F582 /* NotificationPayloadTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57E3E9CF0788DE8E74AA72D0 /* NotificationPayloadTests.swift */; };
+		DD6651A78243906EC65C2643 /* MacFocusFiles.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1B99E4E023172A85221E4E2 /* MacFocusFiles.swift */; };
 		E00EE92CA4A237CC5AE01FB8 /* NotificationDatabaseWatcher.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B9727746C8262B05FCF0C07 /* NotificationDatabaseWatcher.swift */; };
 		E4E619C8AAC03D14FAF3E999 /* GradingInboxTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A3066717246024A3B01600D /* GradingInboxTests.swift */; };
 		E620E1F707D6E244E25C8E3E /* SafeDiagnosticLog.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01510FEECF5D3DCE0DED30E6 /* SafeDiagnosticLog.swift */; };
@@ -156,11 +158,13 @@
 		C1D5F9B22D74C389FFF17E5A /* GradingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GradingView.swift; sourceTree = "<group>"; };
 		C424AFD49EBE5C89997B8D7C /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		CDA83893DD1898A941803C76 /* Acknowledgements.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = Acknowledgements.txt; sourceTree = "<group>"; };
+		D5909E5B90E7DBD843A5021C /* MacFocusFilesTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MacFocusFilesTests.swift; sourceTree = "<group>"; };
 		D93392F8F852EAF234D01396 /* GradingSessionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GradingSessionTests.swift; sourceTree = "<group>"; };
 		DA731233B4D5A5ECA4611FD6 /* IPhoneSortingSettingsSection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IPhoneSortingSettingsSection.swift; sourceTree = "<group>"; };
 		DCAC8A91CAFED37ADAB0ECAC /* SameLinkMergeTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SameLinkMergeTests.swift; sourceTree = "<group>"; };
 		DD78E6FA806C0CC6D07E2BEF /* SyncStatus.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SyncStatus.swift; sourceTree = "<group>"; };
 		DF4BF525FF076257FB084C2A /* CorrespondentSync.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CorrespondentSync.swift; sourceTree = "<group>"; };
+		E1B99E4E023172A85221E4E2 /* MacFocusFiles.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MacFocusFiles.swift; sourceTree = "<group>"; };
 		EB6F536E917DE437D0754E1E /* SortRequests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SortRequests.swift; sourceTree = "<group>"; };
 		ECAB38C530C9D9906723AA6A /* MessagesConversationFinder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MessagesConversationFinder.swift; sourceTree = "<group>"; };
 		F1DA9C372451E0B7DFE5804E /* MacSubscriptions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MacSubscriptions.swift; sourceTree = "<group>"; };
@@ -189,6 +193,7 @@
 				1A3066717246024A3B01600D /* GradingInboxTests.swift */,
 				D93392F8F852EAF234D01396 /* GradingSessionTests.swift */,
 				5FC73E948CF81FC2CAE4C7EA /* InboxVerdictTests.swift */,
+				D5909E5B90E7DBD843A5021C /* MacFocusFilesTests.swift */,
 				9415F385254B465E12B36D0C /* MacRepostTests.swift */,
 				5986291BE197CA76F4D6CA8E /* MessagesLinkTests.swift */,
 				57E3E9CF0788DE8E74AA72D0 /* NotificationPayloadTests.swift */,
@@ -237,6 +242,7 @@
 		78B776C6E403EA0088925B33 /* Sorting */ = {
 			isa = PBXGroup;
 			children = (
+				E1B99E4E023172A85221E4E2 /* MacFocusFiles.swift */,
 				A8B537E522479859BEF6FA8A /* MacFocusFilter.swift */,
 				75ACA25EA222D40857A4FB20 /* MacSecondOpinion.swift */,
 				BF88AF701CB740F31C522CBC /* MacSorter.swift */,
@@ -490,6 +496,7 @@
 				D5D5164D472F70C79643EE6A /* Localization.swift in Sources */,
 				CE9B510965CA78D9CD0F8D89 /* LoginItem.swift in Sources */,
 				BDBAFEDDEDA7A80FE70A3F05 /* MacBanners.swift in Sources */,
+				DD6651A78243906EC65C2643 /* MacFocusFiles.swift in Sources */,
 				8174F7EBE9A121A997354D3F /* MacFocusFilter.swift in Sources */,
 				9BD58FECF2EA7DE03C599BDF /* MacPresenceReporter.swift in Sources */,
 				4E4CB9DE07BF29ACDCB17D82 /* MacRepost.swift in Sources */,
@@ -524,6 +531,7 @@
 				E4E619C8AAC03D14FAF3E999 /* GradingInboxTests.swift in Sources */,
 				84A5B0E3D233505DA98331E4 /* GradingSessionTests.swift in Sources */,
 				D4A3C8A89F7646C2BDF159AE /* InboxVerdictTests.swift in Sources */,
+				C1E993FF7759C56331B4BB05 /* MacFocusFilesTests.swift in Sources */,
 				8B670E4A37E933FC0B1DEF03 /* MacRepostTests.swift in Sources */,
 				71FCA40B8355B8319BD331C2 /* MessagesLinkTests.swift in Sources */,
 				D66550355B02294EBB91F582 /* NotificationPayloadTests.swift in Sources */,

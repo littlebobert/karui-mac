@@ -38,6 +38,12 @@ final class MacRepostTests: XCTestCase {
         XCTAssertEqual(MacRepost.action(for: item(), isFiltering: true, isPosted: false, now: now), .none, "not sorted yet")
     }
 
+    /// An app the Focus lets through shows its own banner: none from Karui.
+    func testNotForAnAppTheFocusLetsThrough() {
+        XCTAssertEqual(MacRepost.action(for: item(mac: "notifyNow"), isFiltering: true, allowedApps: ["com.tinyspeck.slackmacgap"], isPosted: false, now: now), .none)
+        XCTAssertEqual(MacRepost.action(for: item(mac: "notifyNow"), isFiltering: true, allowedApps: ["com.readdle.sparkdesktop"], isPosted: false, now: now), .post)
+    }
+
     /// Only this Mac's own notifications: one only the iPhone got has its own banner
     /// (`MacBanners`, while at the Mac).
     func testOnlyThisMacsOwn() {
