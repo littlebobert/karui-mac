@@ -35,10 +35,15 @@ final class MacSorter {
     private var queue: Task<Void, Never>?
     /// Checked now and then, not before each notification.
     private var shortcutCheck: (name: String, isInstalled: Bool, at: Date)?
-    private var backoff = SecondOpinionBackoff()
+    private var backoff: SecondOpinionBackoff {
+        didSet { if backoff != oldValue { backoff.save(to: defaults) } }
+    }
+    private let defaults: UserDefaults
 
-    init(settings: SortingSettingsStore) {
+    init(settings: SortingSettingsStore, defaults: UserDefaults = .standard) {
         self.settings = settings
+        self.defaults = defaults
+        backoff = SecondOpinionBackoff.load(from: defaults)
     }
 
     /// Whether this Mac can sort: macOS 26 or later, and the iPhone's settings here.
@@ -58,16 +63,19 @@ final class MacSorter {
         queue = Task { [weak self] in
             await previous?.value
             var result = await FoundationModelClassifier(environment: .mac).classify(notification, policy: policy)
+            if self?.backoff.takeEndedPause(at: Date()) == true {
+                SafeDiagnosticLog.shared.record("second opinion: pause over, asking again; PCC quota: \(PrivateCloudComputeQuota.describe())")
+            }
             if MacSecondOpinion.shouldAsk(about: result, policy: policy),
                self?.backoff.isPaused(at: Date()) == false,
                await self?.isShortcutInstalled(shortcutName) == true {
                 if let cloud = await MacSecondOpinion.ask(about: notification, policy: policy, shortcutName: shortcutName, environment: .mac) {
                     result = cloud
                     if self?.backoff.recordAnswer() == true {
-                        SafeDiagnosticLog.shared.record("second opinion: answering again, asking each time")
+                        SafeDiagnosticLog.shared.record("second opinion: answering again, asking each time; PCC quota: \(PrivateCloudComputeQuota.describe())")
                     }
                 } else if let pause = self?.backoff.recordFailure(at: Date()) {
-                    SafeDiagnosticLog.shared.record("second opinion: paused for \(Int(pause / 60)) min after failing; the on-device model's answers stand")
+                    SafeDiagnosticLog.shared.record("second opinion: paused for \(Int(pause / 60)) min after failing; the on-device model's answers stand; PCC quota: \(PrivateCloudComputeQuota.describe())")
                 }
             }
             inbox.setMacVerdict(MacVerdict(result), id: itemID)

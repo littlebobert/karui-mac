@@ -1,4 +1,5 @@
 import Foundation
+import FoundationModels
 import KaruiSorting
 
 /// Second Opinion on the Mac: Karui for Mac can't use Private Cloud Compute itself
@@ -105,11 +106,13 @@ enum MacSecondOpinion {
 /// Stops asking for a while after three failures in a row, so a rate-limited stretch
 /// doesn't cost each notification up to the 30-second deadline: 5 minutes, then twice
 /// as long each time the first ask after a pause fails too, up to an hour. An answer
-/// starts it over. Meanwhile the on-device model's answer stands.
-struct SecondOpinionBackoff {
+/// starts it over. Meanwhile the on-device model's answer stands. Kept across
+/// launches (`load`, `save`): a relaunch, as each update brings, used to start it over.
+struct SecondOpinionBackoff: Codable, Equatable {
     static let failuresBeforePause = 3
     static let firstPause: TimeInterval = 5 * 60
     static let longestPause: TimeInterval = 60 * 60
+    private static let defaultsKey = "secondOpinion.backoff"
 
     private var failures = 0
     private var nextPause = firstPause
@@ -132,10 +135,45 @@ struct SecondOpinionBackoff {
         return pause
     }
 
-    /// Whether it had paused before this answer.
+    /// Whether a pause has run out since last asked, once: the moment to say so.
+    mutating func takeEndedPause(at now: Date) -> Bool {
+        guard let pausedUntil, now >= pausedUntil else { return false }
+        self.pausedUntil = nil
+        return true
+    }
+
+    /// Whether this answer ends a run of pauses.
     mutating func recordAnswer() -> Bool {
-        let hadPaused = pausedUntil != nil
+        let hadPaused = pausedUntil != nil || nextPause > Self.firstPause
         self = SecondOpinionBackoff()
         return hadPaused
+    }
+
+    static func load(from defaults: UserDefaults = .standard) -> SecondOpinionBackoff {
+        defaults.data(forKey: defaultsKey).flatMap { try? JSONDecoder().decode(Self.self, from: $0) } ?? SecondOpinionBackoff()
+    }
+
+    func save(to defaults: UserDefaults = .standard) {
+        defaults.set(try? JSONEncoder().encode(self), forKey: Self.defaultsKey)
+    }
+}
+
+/// Private Cloud Compute's quota, as this Mac reads it, for the log beside each pause.
+/// Karui for Mac can't ask Private Cloud Compute itself, but macOS 27 lets it read the
+/// quota; whether that's the quota the Shortcut draws on, shared by the device, or only
+/// Karui's own is what these lines are for. The Shortcut's rate limit is its own either
+/// way, and the quota doesn't show it.
+enum PrivateCloudComputeQuota {
+    static func describe() -> String {
+        guard #available(macOS 27.0, *) else { return "unknown before macOS 27" }
+        let model = PrivateCloudComputeLanguageModel()
+        if case .unavailable(let reason) = model.availability { return "unavailable (\(reason))" }
+        let usage = model.quotaUsage
+        let status = switch usage.status {
+        case .belowLimit(let below): below.isApproachingLimit ? "approaching limit" : "below limit"
+        case .limitReached: "limit reached"
+        @unknown default: "unknown"
+        }
+        return usage.resetDate.map { "\(status), resets \($0.formatted(date: .abbreviated, time: .shortened))" } ?? status
     }
 }
