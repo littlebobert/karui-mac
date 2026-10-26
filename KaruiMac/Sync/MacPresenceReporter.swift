@@ -32,6 +32,8 @@ final class MacPresenceReporter {
     private var activity: NSObjectProtocol?
     private var observers: [NSObjectProtocol] = []
     var isEnabled: () -> Bool = { true }
+    /// The person stopped using this Mac: idle, locked, or going to sleep.
+    var left: () -> Void = {}
 
     init(
         container: CKContainer? = CloudKitEntitlement.hasKaruiContainer
@@ -122,6 +124,7 @@ final class MacPresenceReporter {
         if inUse != lastWritten {
             SafeDiagnosticLog.shared.record("presence: \(inUse ? "in use" : "away (\(awayReason(idle: idle)))")")
         }
+        let hasLeft = !inUse && lastWritten == true
         lastWritten = inUse
         let now = Date()
         let record = CKRecord(recordType: MacPresenceRecordSchema.recordType, recordID: CKRecord.ID(recordName: recordName))
@@ -138,6 +141,8 @@ final class MacPresenceReporter {
                     hasSaved = true
                     SafeDiagnosticLog.shared.record("presence: saved to iCloud")
                 }
+                // After "away" is saved, so the iPhone, asked meanwhile, agrees.
+                if hasLeft { left() }
             } catch {
                 SafeDiagnosticLog.shared.record("presence: status failed: \(error.localizedDescription)")
                 lastWritten = nil

@@ -48,6 +48,7 @@ final class AppCoordinator {
     let sortingSettings = SortingSettingsStore()
     private let subscriptions = MacSubscriptions()
     private let presenceReporter = MacPresenceReporter()
+    private let heldRelease = HeldReleaseSender()
     private let banners = MacBanners()
     let setupNudge = SetupNudge()
     private lazy var sorter = MacSorter(settings: sortingSettings)
@@ -140,6 +141,13 @@ final class AppCoordinator {
                     NSApp.registerForRemoteNotifications()
                     let settings = self.settings
                     self.presenceReporter.isEnabled = { settings.reportsUse }
+                    // Leaving: what the iPhone held meanwhile and is still unread goes to it now.
+                    self.presenceReporter.left = { [weak self] in
+                        guard let self else { return }
+                        let readHere = Set(self.inbox.items.filter { !$0.isUnread }.map(\.fingerprint))
+                        let heldRelease = self.heldRelease
+                        Task { await heldRelease.send(readHere: readHere) }
+                    }
                     self.presenceReporter.start()
                     // Banners need it, and once asked, the Dock badge needs it too.
                     if settings.reportsUse || settings.showsUnreadBadge { self.banners.requestPermission() }

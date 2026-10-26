@@ -33,6 +33,7 @@ DEFINE SCHEMA
         deletedAt         TIMESTAMP,
         deliveredAt       TIMESTAMP,
         engine            STRING,
+        heldAt            TIMESTAMP QUERYABLE,
         interest          INT64,
         isUnread          INT64,
         macCategory       STRING,
@@ -87,6 +88,20 @@ DEFINE SCHEMA
         GRANT READ TO "_icloud"
     );
 
+    RECORD TYPE HeldRelease (
+        "___createTime"   TIMESTAMP,
+        "___createdBy"    REFERENCE,
+        "___etag"         STRING,
+        "___modTime"      TIMESTAMP,
+        "___modifiedBy"   REFERENCE,
+        "___recordID"     REFERENCE QUERYABLE,
+        read              STRING,
+        releasedAt        TIMESTAMP QUERYABLE,
+        unread            STRING,
+        GRANT WRITE TO "_creator",
+        GRANT CREATE TO "_icloud",
+        GRANT READ TO "_icloud"
+    );
     RECORD TYPE MacPresence (
         "___createTime"   TIMESTAMP,
         "___createdBy"    REFERENCE,

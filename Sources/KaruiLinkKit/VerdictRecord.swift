@@ -106,6 +106,9 @@ public enum VerdictRecordSchema {
     public static let sender = "sender"
     public static let recipients = "recipients"
     public static let readAt = "readAt"
+    /// When the iPhone held this notification's alert because the person was at a Mac
+    /// (`HeldReleaseRecordSchema`); cleared once a Mac has told the iPhone about it.
+    public static let heldAt = "heldAt"
     public static let requestedCategory = "requestedCategory"
     public static let deletedAt = "deletedAt"
     /// What decided the category; see `VerdictRecord.engine`.
