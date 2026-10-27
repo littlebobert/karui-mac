@@ -70,6 +70,32 @@ struct ChatDatabase: Sendable {
         return rows.compactMap { $0[0].text }
     }
 
+    /// How far from the iPhone's notification a message can be and still be its.
+    static let matchWindow: TimeInterval = 10 * 60
+
+    /// Whether the incoming message the iPhone's notification was for is read, found by
+    /// its text near that time: nil when there's no such message. For a notification
+    /// only the iPhone got, as when its conversation was open here and macOS posted
+    /// nothing. Its text may be cut short and end in "…", so the start is compared.
+    func isRead(text: String, near date: Date) throws -> Bool? {
+        var start = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        while start.hasSuffix("…") || start.hasSuffix("...") {
+            start = String(start.dropLast(start.hasSuffix("…") ? 1 : 3)).trimmingCharacters(in: .whitespaces)
+        }
+        start = String(start.prefix(60))
+        guard !start.isEmpty else { return nil }
+        let center = Int64(date.timeIntervalSinceReferenceDate * 1_000_000_000)
+        let window = Int64(Self.matchWindow * 1_000_000_000)
+        let database = try SQLiteDatabase.opening(url)
+        let rows = try database.rows("""
+            select is_read from message
+            where is_from_me = 0 and date between ?1 and ?2 and substr(text, 1, ?3) = ?4
+            order by abs(date - ?5) limit 1
+            """, [.integer(center - window), .integer(center + window), .integer(Int64(start.count)), .text(start), .integer(center)])
+        guard let isRead = rows.first?[0].integer else { return nil }
+        return isRead != 0
+    }
+
     /// Messages marks a message read once its chat is opened, on any device.
     func isRead(messageGUID guid: String) throws -> Bool? {
         let database = try SQLiteDatabase.opening(url)

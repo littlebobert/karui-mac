@@ -40,6 +40,7 @@
 		6F1F477087C760E2E8B83643 /* SlackHarvester.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0368E20A347FBE53765A797B /* SlackHarvester.swift */; };
 		71995B62B28464F1978F0F94 /* VerdictStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = B925C34CA7033ED768164254 /* VerdictStore.swift */; };
 		71FCA40B8355B8319BD331C2 /* MessagesLinkTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5986291BE197CA76F4D6CA8E /* MessagesLinkTests.swift */; };
+		72C2AEC48E84A34A0346842C /* IPhoneOnlyMessagesTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F4586BDD1E2D2FAA45D013BC /* IPhoneOnlyMessagesTests.swift */; };
 		73F5812B811D777FF02E0A88 /* RevealTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E91FAECA5133A2FCFCD70647 /* RevealTests.swift */; };
 		783DCCFA1398709247A2056B /* MacSubscriptions.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1DA9C372451E0B7DFE5804E /* MacSubscriptions.swift */; };
 		79C06D32AAAADDFD18DF649F /* SlackDirectMessageTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A5CECAAFFCA70EBB8466C441 /* SlackDirectMessageTests.swift */; };
@@ -177,6 +178,7 @@
 		F1DA9C372451E0B7DFE5804E /* MacSubscriptions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MacSubscriptions.swift; sourceTree = "<group>"; };
 		F2CBB39966F3BAAF566A69CC /* HeldReleaseSender.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HeldReleaseSender.swift; sourceTree = "<group>"; };
 		F3632FBB53F7B8E38A5FFB1B /* Localizable.strings */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = Localizable.strings; path = ja.lproj/Localizable.strings; sourceTree = "<group>"; };
+		F4586BDD1E2D2FAA45D013BC /* IPhoneOnlyMessagesTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IPhoneOnlyMessagesTests.swift; sourceTree = "<group>"; };
 		F9695E99FA85CB7DC2E8B73A /* SparkHarvester.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SparkHarvester.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -203,6 +205,7 @@
 				5F8A8E24AC672721C575D699 /* HeldReleaseTests.swift */,
 				5FC73E948CF81FC2CAE4C7EA /* InboxVerdictTests.swift */,
 				B4E4F4AD73C858B7F477B797 /* InstalledAppTests.swift */,
+				F4586BDD1E2D2FAA45D013BC /* IPhoneOnlyMessagesTests.swift */,
 				D5909E5B90E7DBD843A5021C /* MacFocusFilesTests.swift */,
 				9415F385254B465E12B36D0C /* MacRepostTests.swift */,
 				5986291BE197CA76F4D6CA8E /* MessagesLinkTests.swift */,
@@ -544,6 +547,7 @@
 				E4E619C8AAC03D14FAF3E999 /* GradingInboxTests.swift in Sources */,
 				84A5B0E3D233505DA98331E4 /* GradingSessionTests.swift in Sources */,
 				8588228878C40A8C5DE4AC48 /* HeldReleaseTests.swift in Sources */,
+				72C2AEC48E84A34A0346842C /* IPhoneOnlyMessagesTests.swift in Sources */,
 				D4A3C8A89F7646C2BDF159AE /* InboxVerdictTests.swift in Sources */,
 				3AB0460E7B8E363EE8473FEC /* InstalledAppTests.swift in Sources */,
 				C1E993FF7759C56331B4BB05 /* MacFocusFilesTests.swift in Sources */,

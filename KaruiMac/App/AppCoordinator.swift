@@ -551,6 +551,27 @@ final class AppCoordinator {
 
     // MARK: Actions on the inbox, applied here at once and sent to the iPhone.
 
+    /// Messages only the iPhone's notification brought here: with the conversation open
+    /// in Messages, macOS posts nothing, so there's no notification of this Mac's to
+    /// watch. Found in Messages' own database by their text and time, and read here,
+    /// and on the iPhone, once Messages says so.
+    private func readIPhoneOnlyMessages() async {
+        let now = Date()
+        let lookups = inbox.items.compactMap { item -> (id: String, text: String, at: Date)? in
+            guard item.app == KnownApp.messages.rawValue, !item.id.hasPrefix("notification-"), item.isUnread,
+                  now.timeIntervalSince(item.deliveredAt) < ReadWatcher.lifetime,
+                  let body = item.body, !body.isEmpty else { return nil }
+            return (item.id, body, item.deliveredAt)
+        }
+        guard !lookups.isEmpty else { return }
+        let read = await Task.detached {
+            lookups.filter { (try? ChatDatabase.standard.isRead(text: $0.text, near: $0.at)) == true }.map(\.id)
+        }.value
+        guard !read.isEmpty else { return }
+        SafeDiagnosticLog.shared.record("read: \(read.count) Messages only the iPhone got, in Messages here")
+        markRead(Set(read))
+    }
+
     func markRead(_ ids: Set<String>) {
         let items = inbox.items.filter { ids.contains($0.id) && $0.isUnread }
         guard !items.isEmpty else { return }
@@ -696,7 +717,7 @@ final class AppCoordinator {
                 }
             }
         }
-        readPollTask = Task {
+        readPollTask = Task { [weak self] in
             while !Task.isCancelled {
                 try? await Task.sleep(for: Self.readPollInterval)
                 for harvested in await readWatcher.poll(using: harvesters) {
@@ -704,6 +725,7 @@ final class AppCoordinator {
                     inbox.markRead(fingerprint: harvested.link.fingerprint)
                     await sync.markRead(fingerprint: harvested.link.fingerprint)
                 }
+                await self?.readIPhoneOnlyMessages()
             }
         }
     }
