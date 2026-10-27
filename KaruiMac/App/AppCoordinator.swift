@@ -407,19 +407,24 @@ final class AppCoordinator {
     }
 
     /// A link whose item took the iPhone's fingerprint in a loose match goes again
-    /// under that fingerprint, which is what the iPhone looks up.
+    /// under that fingerprint, which is what the iPhone looks up. Read here already,
+    /// it goes read, so the iPhone clears its alert; read later, the read is reported
+    /// under that fingerprint too.
     private func relinkMismatched() {
-        let relinks = inbox.items.compactMap { item -> DeepLinkRecord? in
-            guard var link = item.link, link.fingerprint != item.fingerprint else { return nil }
-            link.fingerprint = item.fingerprint
-            return link
-        }
+        let relinks = inbox.relinks()
         guard !relinks.isEmpty else { return }
-        for link in relinks { inbox.setLink(link) }
-        Task { [sync] in
-            for link in relinks {
-                await sync.send(link)
+        for relink in relinks { inbox.setLink(relink.link) }
+        Task { [sync, verdicts, readWatcher] in
+            for relink in relinks {
+                let link = relink.link
+                await readWatcher.rename(relink.previousFingerprint, to: link.fingerprint)
+                let sent = await sync.send(link)
                 SafeDiagnosticLog.shared.record("harvest: \(link.app) link sent again under the iPhone's fingerprint")
+                if relink.readHere, let sent, sent.readAt == nil {
+                    await sync.markRead(fingerprint: link.fingerprint)
+                    await verdicts.apply(.read, to: [link.fingerprint])
+                    SafeDiagnosticLog.shared.record("read: \(link.app), read here before the iPhone's copy matched")
+                }
             }
         }
     }

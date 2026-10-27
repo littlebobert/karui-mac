@@ -37,6 +37,7 @@
 		5E921D5093F415A0738BC953 /* SparkHarvestTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 06DF904D4FAEA78D661169BC /* SparkHarvestTests.swift */; };
 		611EDB47A4CA5D72542A9168 /* Acknowledgements.txt in Resources */ = {isa = PBXBuildFile; fileRef = CDA83893DD1898A941803C76 /* Acknowledgements.txt */; };
 		66B2B6A1F6D956AA9B7D1EFA /* SetupNudge.swift in Sources */ = {isa = PBXBuildFile; fileRef = 67CFD0E7402CC1B21A0E1966 /* SetupNudge.swift */; };
+		6A22D362EE06F68C6D7B6737 /* LooseMatchReadTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A084182F88496A184687D07E /* LooseMatchReadTests.swift */; };
 		6F1F477087C760E2E8B83643 /* SlackHarvester.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0368E20A347FBE53765A797B /* SlackHarvester.swift */; };
 		71995B62B28464F1978F0F94 /* VerdictStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = B925C34CA7033ED768164254 /* VerdictStore.swift */; };
 		71FCA40B8355B8319BD331C2 /* MessagesLinkTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5986291BE197CA76F4D6CA8E /* MessagesLinkTests.swift */; };
@@ -149,6 +150,7 @@
 		9789D39272AA5E1B1CC4C22B /* MessagesHarvester.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MessagesHarvester.swift; sourceTree = "<group>"; };
 		9EB31EDB83CEFAEFEA31A984 /* GradingSession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GradingSession.swift; sourceTree = "<group>"; };
 		9FBC7F39D73658B323FE3E33 /* AutoUpdateService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AutoUpdateService.swift; sourceTree = "<group>"; };
+		A084182F88496A184687D07E /* LooseMatchReadTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LooseMatchReadTests.swift; sourceTree = "<group>"; };
 		A1A75765EC9DF2745AF8F9FD /* DeepLinkSync.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeepLinkSync.swift; sourceTree = "<group>"; };
 		A2EF2A3CF2E9957E0C0B42B3 /* NotificationDatabase.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationDatabase.swift; sourceTree = "<group>"; };
 		A557411D5121D7AA92246BF3 /* CorrespondentSources.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CorrespondentSources.swift; sourceTree = "<group>"; };
@@ -206,6 +208,7 @@
 				5FC73E948CF81FC2CAE4C7EA /* InboxVerdictTests.swift */,
 				B4E4F4AD73C858B7F477B797 /* InstalledAppTests.swift */,
 				F4586BDD1E2D2FAA45D013BC /* IPhoneOnlyMessagesTests.swift */,
+				A084182F88496A184687D07E /* LooseMatchReadTests.swift */,
 				D5909E5B90E7DBD843A5021C /* MacFocusFilesTests.swift */,
 				9415F385254B465E12B36D0C /* MacRepostTests.swift */,
 				5986291BE197CA76F4D6CA8E /* MessagesLinkTests.swift */,
@@ -550,6 +553,7 @@
 				72C2AEC48E84A34A0346842C /* IPhoneOnlyMessagesTests.swift in Sources */,
 				D4A3C8A89F7646C2BDF159AE /* InboxVerdictTests.swift in Sources */,
 				3AB0460E7B8E363EE8473FEC /* InstalledAppTests.swift in Sources */,
+				6A22D362EE06F68C6D7B6737 /* LooseMatchReadTests.swift in Sources */,
 				C1E993FF7759C56331B4BB05 /* MacFocusFilesTests.swift in Sources */,
 				8B670E4A37E933FC0B1DEF03 /* MacRepostTests.swift in Sources */,
 				71FCA40B8355B8319BD331C2 /* MessagesLinkTests.swift in Sources */,

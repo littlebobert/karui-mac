@@ -18,6 +18,16 @@ actor ReadWatcher {
         pending[harvested.link.fingerprint] = Pending(harvested: harvested, since: date)
     }
 
+    /// A link sent again under the iPhone's fingerprint, after a loose match: its read
+    /// is reported under that one, which the inbox and the iPhone now know it by.
+    func rename(_ fingerprint: String, to newFingerprint: String) {
+        guard let item = pending.removeValue(forKey: fingerprint) else { return }
+        var link = item.harvested.link
+        link.fingerprint = newFingerprint
+        let harvested = HarvestedLink(link: link, readProbe: item.harvested.readProbe, notificationID: item.harvested.notificationID)
+        pending[newFingerprint] = Pending(harvested: harvested, since: item.since)
+    }
+
     /// The links whose notification this was, if any; no longer tracked.
     func notificationDisappeared(id: Int64) -> [HarvestedLink] {
         let matched = pending.values.filter { $0.harvested.notificationID == id }.map(\.harvested)

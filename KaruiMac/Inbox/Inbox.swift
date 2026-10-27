@@ -660,6 +660,28 @@ final class Inbox {
         mergeSameLink()
     }
 
+    /// A link to send again under the iPhone's fingerprint, its item having taken that
+    /// fingerprint in a loose match (`apply`).
+    struct Relink: Equatable {
+        var link: DeepLinkRecord
+        /// The fingerprint it was sent under, the Mac's own.
+        var previousFingerprint: String
+        /// Read here before the match, and not yet on the iPhone's record: nothing
+        /// else marks it read under the iPhone's fingerprint, so the iPhone would
+        /// keep its alert.
+        var readHere: Bool
+    }
+
+    func relinks() -> [Relink] {
+        items.compactMap { item in
+            guard var link = item.link, link.fingerprint != item.fingerprint else { return nil }
+            let previous = link.fingerprint
+            link.fingerprint = item.fingerprint
+            let readElsewhere = item.verdict.map { !$0.isUnread || $0.readAt != nil } ?? false
+            return Relink(link: link, previousFingerprint: previous, readHere: item.readAt != nil && !readElsewhere)
+        }
+    }
+
     /// A link made from the iPhone's verdict, or sent again under its fingerprint:
     /// for every item of that fingerprint.
     func setLink(_ link: DeepLinkRecord) {
