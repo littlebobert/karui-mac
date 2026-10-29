@@ -277,3 +277,33 @@ final class AgreementTests: XCTestCase {
         XCTAssertTrue(agreement.markdown(standIn: "gemma", goldenFile: "g.jsonl").contains("**Same answer as Private Cloud Compute: 60% (3/5)**"))
     }
 }
+
+final class GoldenSetTests: XCTestCase {
+    /// Lines as Export Golden Set writes them, extra keys and all.
+    func testRuleDecidedItemsGoByTheFirstSortAndFallbacksStay() throws {
+        let line = { (engines: String) in
+            #"{"triagedAt":"2026-10-20T09:00:00Z","source":"Messages","title":"mom","body":"hi","category":"notifyNow","label":"notifyNow","origin":"export",\#(engines)}"#
+        }
+        let lines = [
+            line(#""engine":"Transparent rules","firstEngine":"Transparent rules","firstWasModelFallback":false"#),
+            line(#""engine":"Transparent rules","firstEngine":"Transparent rules","firstWasModelFallback":true"#),
+            line(#""engine":"Your correction","firstEngine":"Transparent rules""#),
+            line(#""engine":"Transparent rules","firstEngine":"On-device model""#),
+            line(#""engine":"Transparent rules""#),
+            line(#""engine":"On-device model""#),
+        ]
+        let url = FileManager.default.temporaryDirectory.appending(path: "golden-\(UUID().uuidString).jsonl")
+        defer { try? FileManager.default.removeItem(at: url) }
+        try Data(lines.joined(separator: "\n").utf8).write(to: url)
+        let items = try GoldenItem.load(from: url)
+        XCTAssertEqual(items.map(\.isDecidedByRules), [true, false, true, false, true, false])
+    }
+
+    func testTheReportSaysHowManyTheRulesDecided() {
+        let context = { (rules: Int) in
+            ReportWriter.Context(goldenFile: "golden.jsonl", itemCount: 4, unclearCount: 1, ruleDecidedCount: rules, runs: 1, backend: "Private Cloud Compute", progress: .init(), stoppedEarly: false)
+        }
+        XCTAssertTrue(ReportWriter.markdown([], context: context(6)).contains("4 items (1 graded Unclear and 6 decided by the rules left out)"))
+        XCTAssertTrue(ReportWriter.markdown([], context: context(0)).contains("4 items (1 graded Unclear left out)"))
+    }
+}

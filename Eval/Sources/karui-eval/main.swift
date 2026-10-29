@@ -4,9 +4,11 @@ import KaruiSorting
 
 let usage = """
 Usage:
-  karui-eval run --golden FILE [--variant FILE]... [options]
+  karui-eval run --golden FILE [--variant FILE]... [--shipping-only] [options]
       Runs every graded item through the shipping Second Opinion prompt and each
-      variant (default: every .txt in ./variants), and writes a report.
+      variant (default: every .txt in ./variants), and writes a report. Items the
+      rules decided are left out, here and in every command: no prompt changes them.
+      --shipping-only     Only the shipping prompt, no variants
       --runs N            Answers per item and prompt (default 3)
       --limit N           Only the first N items, to try a variant cheaply
       --dry-run           Count what would be asked, and ask nothing
@@ -46,7 +48,7 @@ struct Arguments {
         guard let command = arguments.first else { throw EvalError(usage) }
         self.command = command
         var rest = arguments.dropFirst()
-        let flagNames: Set<String> = ["--expanded", "--dry-run", "--help"]
+        let flagNames: Set<String> = ["--expanded", "--dry-run", "--shipping-only", "--help"]
         while let argument = rest.popFirst() {
             if flagNames.contains(argument) {
                 flags.insert(argument)
@@ -79,15 +81,23 @@ func policy(_ arguments: Arguments) throws -> TriagePolicy {
     return try JSONDecoder().decode(TriagePolicy.self, from: data)
 }
 
-func golden(_ arguments: Arguments) throws -> (URL, [GoldenItem]) {
+/// The golden set's items, less those the rules decided, and how many those were.
+func golden(_ arguments: Arguments) throws -> (URL, [GoldenItem], ruleDecided: Int) {
     guard let url = arguments.url("--golden") else { throw EvalError("--golden is needed: the file from Grade History's Export Golden Set.") }
     guard FileManager.default.fileExists(atPath: url.path) else { throw EvalError("There's no golden set at \(url.path).") }
-    let items = try GoldenItem.load(from: url)
-    guard !items.isEmpty else { throw EvalError("\(url.lastPathComponent) has no items.") }
-    return (url, items)
+    let all = try GoldenItem.load(from: url)
+    let items = all.filter { !$0.isDecidedByRules }
+    guard !items.isEmpty else {
+        throw EvalError(all.isEmpty ? "\(url.lastPathComponent) has no items." : "The rules decided every item in \(url.lastPathComponent), and no prompt changes those.")
+    }
+    return (url, items, all.count - items.count)
 }
 
 func templates(_ arguments: Arguments) throws -> [PromptTemplate] {
+    if arguments.flags.contains("--shipping-only") {
+        guard arguments.values["--variant"] == nil else { throw EvalError("--shipping-only and --variant don't go together.") }
+        return [.shipping]
+    }
     var urls = (arguments.values["--variant"] ?? []).map { URL(fileURLWithPath: ($0 as NSString).expandingTildeInPath) }
     if urls.isEmpty {
         let folder = URL(fileURLWithPath: "variants", isDirectory: true)
@@ -148,7 +158,7 @@ func reportFolder(_ arguments: Arguments) throws -> URL {
 }
 
 func run(_ arguments: Arguments) throws {
-    let (goldenURL, items) = try golden(arguments)
+    let (goldenURL, items, ruleDecided) = try golden(arguments)
     let limited = Array(items.prefix(try arguments.int("--limit", default: items.count)))
     let runs = try arguments.int("--runs", default: 3)
     let templates = try templates(arguments)
@@ -157,13 +167,14 @@ func run(_ arguments: Arguments) throws {
     var results = try runner.prepare(templates)
     let unclear = limited.filter { $0.labelCategory == nil }.count
     let toAsk = runner.uncached(results)
+    if ruleDecided > 0 { print("Leaving out \(ruleDecided) items the rules decided.") }
     print("\(limited.count - unclear) graded items × \(templates.count) prompts (\(templates.map(\.name).joined(separator: ", "))) × \(runs) runs, \(backend.name): \(toAsk) to ask, the rest cached.")
     if arguments.flags.contains("--dry-run") { return }
     if toAsk > 0 { try backend.check() }
     let (progress, stoppedEarly) = runner.run(&results)
     printError("")
     let context = ReportWriter.Context(
-        goldenFile: goldenURL.lastPathComponent, itemCount: limited.count, unclearCount: unclear, runs: runs,
+        goldenFile: goldenURL.lastPathComponent, itemCount: limited.count, unclearCount: unclear, ruleDecidedCount: ruleDecided, runs: runs,
         backend: backend.name, progress: progress, stoppedEarly: stoppedEarly
     )
     let markdown = ReportWriter.markdown(results, context: context)
@@ -177,7 +188,7 @@ func run(_ arguments: Arguments) throws {
 func agree(_ arguments: Arguments) throws {
     let standIn = try backend(arguments)
     if case .pcc = standIn { throw EvalError("agree compares a stand-in with Private Cloud Compute: pass --backend ollama or on-device.") }
-    let (goldenURL, items) = try golden(arguments)
+    let (goldenURL, items, _) = try golden(arguments)
     let limited = Array(items.prefix(try arguments.int("--limit", default: items.count)))
     let templates = try templates(arguments)
     let cache = try cache(arguments)
@@ -221,7 +232,7 @@ struct ExportedPrompt: Codable {
 func exportPrompts(_ arguments: Arguments) throws {
     guard let name = arguments.value("--model") else { throw EvalError("--model names the external backend, such as claude-opus.") }
     guard let folder = arguments.url("--to") else { throw EvalError("--to is the folder to write the prompts in.") }
-    let (_, items) = try golden(arguments)
+    let (_, items, _) = try golden(arguments)
     let limited = Array(items.prefix(try arguments.int("--limit", default: items.count)))
     let backend = Backend.external(name)
     let runs = try arguments.int("--runs", default: 1)
@@ -268,13 +279,13 @@ func importAnswers(_ arguments: Arguments) throws {
 }
 
 func template(_ arguments: Arguments) throws {
-    let (_, items) = try golden(arguments)
+    let (_, items, _) = try golden(arguments)
     let sections = try PromptSections(item: items[0], policy: try policy(arguments), locale: locale(arguments))
     print(PromptTemplate.starter(sections: sections, expanded: arguments.flags.contains("--expanded")))
 }
 
 func prompt(_ arguments: Arguments) throws {
-    let (_, items) = try golden(arguments)
+    let (_, items, _) = try golden(arguments)
     let index = try arguments.int("--item", default: 1) - 1
     guard items.indices.contains(index) else { throw EvalError("--item goes from 1 to \(items.count).") }
     let template = try arguments.url("--variant").map(PromptTemplate.init(contentsOf:)) ?? .shipping

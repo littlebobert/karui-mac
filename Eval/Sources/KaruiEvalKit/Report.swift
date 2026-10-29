@@ -113,6 +113,8 @@ public enum ReportWriter {
         public var goldenFile: String
         public var itemCount: Int
         public var unclearCount: Int
+        /// Graded items left out before the run because the rules decided them.
+        public var ruleDecidedCount: Int
         public var runs: Int
         /// `Backend.name`.
         public var backend: String
@@ -120,10 +122,11 @@ public enum ReportWriter {
         public var stoppedEarly: Bool
         public var date: Date
 
-        public init(goldenFile: String, itemCount: Int, unclearCount: Int, runs: Int, backend: String, progress: Runner.Progress, stoppedEarly: Bool, date: Date = .now) {
+        public init(goldenFile: String, itemCount: Int, unclearCount: Int, ruleDecidedCount: Int = 0, runs: Int, backend: String, progress: Runner.Progress, stoppedEarly: Bool, date: Date = .now) {
             self.goldenFile = goldenFile
             self.itemCount = itemCount
             self.unclearCount = unclearCount
+            self.ruleDecidedCount = ruleDecidedCount
             self.runs = runs
             self.backend = backend
             self.progress = progress
@@ -137,7 +140,7 @@ public enum ReportWriter {
         var lines = [
             "# karui-eval, \(context.date.formatted(date: .abbreviated, time: .shortened))",
             "",
-            "Golden set: \(context.goldenFile), \(context.itemCount) items (\(context.unclearCount) graded Unclear left out) · \(context.runs) run\(context.runs == 1 ? "" : "s") each · \(context.backend)",
+            "Golden set: \(context.goldenFile), \(context.itemCount) items (\(context.unclearCount) graded Unclear\(context.ruleDecidedCount > 0 ? " and \(context.ruleDecidedCount) decided by the rules" : "") left out) · \(context.runs) run\(context.runs == 1 ? "" : "s") each · \(context.backend)",
             "Answers: \(context.progress.cached) cached, \(context.progress.asked) asked now, \(context.progress.failed) failed",
         ]
         if context.stoppedEarly {

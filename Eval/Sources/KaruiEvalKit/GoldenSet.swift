@@ -16,10 +16,18 @@ public struct GoldenItem: Codable, Equatable, Sendable {
     public var category: String
     /// The grade: a `TriageCategory` raw value, or `ambiguous`.
     public var label: String
+    /// What decided the category as it stands, as `ClassificationEngine` names it.
+    public var engine: String?
+    /// What made the first sort, and whether that was the rules only because the
+    /// on-device model couldn't answer. From Karui 0.2.3's export; older exports have
+    /// only `engine`.
+    public var firstEngine: String?
+    public var firstWasModelFallback: Bool?
 
     public init(
         triagedAt: Date, source: String, sender: String? = nil, title: String, subtitle: String? = nil,
-        body: String, recipients: String? = nil, isTimeSensitive: Bool? = nil, category: String, label: String
+        body: String, recipients: String? = nil, isTimeSensitive: Bool? = nil, category: String, label: String,
+        engine: String? = nil, firstEngine: String? = nil, firstWasModelFallback: Bool? = nil
     ) {
         self.triagedAt = triagedAt
         self.source = source
@@ -31,6 +39,17 @@ public struct GoldenItem: Codable, Equatable, Sendable {
         self.isTimeSensitive = isTimeSensitive
         self.category = category
         self.label = label
+        self.engine = engine
+        self.firstEngine = firstEngine
+        self.firstWasModelFallback = firstWasModelFallback
+    }
+
+    /// Decided by the rules alone (VIPs, @mentions, codes, urgent terms), which no
+    /// prompt changes, so it isn't scored: by the first sort, as Grade History's
+    /// Golden Set queue judges it, so a fallback the model should have given still counts.
+    public var isDecidedByRules: Bool {
+        guard firstWasModelFallback != true else { return false }
+        return (firstEngine ?? engine) == ClassificationEngine.deterministicRules.rawValue
     }
 
     /// The grade as a category; nil when it was graded Unclear.
