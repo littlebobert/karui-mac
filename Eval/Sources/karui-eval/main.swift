@@ -12,7 +12,7 @@ Usage:
       --runs N            Answers per item and prompt (default 3)
       --limit N           Only the first N items, to try a variant cheaply
       --dry-run           Count what would be asked, and ask nothing
-      --delay SECONDS     Pause between calls (default 1 for PCC, 0 otherwise)
+      --delay SECONDS     Pause between calls (default 5 for PCC, 0 otherwise)
       --backend NAME      pcc (default), ollama, on-device, claude (with ANTHROPIC_API_KEY set),
                           or external (with --model,
                           answers brought in by import-answers)
@@ -134,7 +134,7 @@ func backend(_ arguments: Arguments) throws -> Backend {
 
 /// A runner for one backend over the items and options given.
 func runner(_ arguments: Arguments, items: [GoldenItem], backend: Backend, runs: Int, cache: AnswerCache) throws -> Runner {
-    let defaultDelay: TimeInterval = if case .pcc = backend { 1 } else { 0 }
+    let defaultDelay: TimeInterval = if case .pcc = backend { 5 } else { 0 }
     return Runner(
         items: items, policy: try policy(arguments), locale: locale(arguments), runs: runs, cache: cache,
         namespace: backend.cacheNamespace, delay: arguments.value("--delay").flatMap(Double.init) ?? defaultDelay,
