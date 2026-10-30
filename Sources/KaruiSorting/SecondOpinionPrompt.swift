@@ -125,9 +125,9 @@ public enum SecondOpinionPrompt {
         var task: String?
         var dueDate: String?
         for line in answer.split(whereSeparator: \.isNewline).map({ $0.trimmingCharacters(in: .whitespaces) }) {
-            if let value = labeledValue(in: line, labels: ["task", "タスク", "할 일"]) {
+            if let value = labeledValue(in: line, labels: ["task", "タスク", "할 일", "aufgabe"]) {
                 task = task ?? value
-            } else if let value = labeledValue(in: line, labels: ["due", "due date", "duedate", "期限", "期日", "마감", "마감일"]) {
+            } else if let value = labeledValue(in: line, labels: ["due", "due date", "duedate", "期限", "期日", "마감", "마감일", "fällig", "frist"]) {
                 dueDate = dueDate ?? value
             }
         }
@@ -152,17 +152,17 @@ public enum SecondOpinionPrompt {
         var dueDate: String?
         var tags: [String]?
         for line in lines {
-            if let value = labeledValue(in: line, labels: ["category", "カテゴリ", "分類", "카테고리", "분류"]) {
+            if let value = labeledValue(in: line, labels: ["category", "カテゴリ", "分類", "카테고리", "분류", "kategorie"]) {
                 category = category ?? Self.category(in: value)
-            } else if let value = labeledValue(in: line, labels: ["confidence", "確信度", "信頼度", "확신도", "신뢰도"]) {
+            } else if let value = labeledValue(in: line, labels: ["confidence", "確信度", "信頼度", "확신도", "신뢰도", "sicherheit", "konfidenz"]) {
                 confidence = confidence ?? Self.number(in: value)
-            } else if let value = labeledValue(in: line, labels: ["reason", "理由", "이유"]) {
+            } else if let value = labeledValue(in: line, labels: ["reason", "理由", "이유", "grund", "begründung"]) {
                 reason = reason ?? value
-            } else if let value = labeledValue(in: line, labels: ["tags", "tag", "タグ", "태그"]) {
+            } else if let value = labeledValue(in: line, labels: ["tags", "tag", "タグ", "태그", "schlagwörter"]) {
                 tags = tags ?? SearchTags.cleaned(value.split(whereSeparator: { [",", "、", "，", ";", "/"].contains($0) }).map(String.init))
-            } else if let value = labeledValue(in: line, labels: ["task", "タスク", "할 일"]) {
+            } else if let value = labeledValue(in: line, labels: ["task", "タスク", "할 일", "aufgabe"]) {
                 task = task ?? value
-            } else if let value = labeledValue(in: line, labels: ["due", "due date", "duedate", "期限", "期日", "마감", "마감일"]) {
+            } else if let value = labeledValue(in: line, labels: ["due", "due date", "duedate", "期限", "期日", "마감", "마감일", "fällig", "frist"]) {
                 dueDate = dueDate ?? value
             }
         }
@@ -173,8 +173,8 @@ public enum SecondOpinionPrompt {
         let fallbackReason = lines.first {
             $0.contains(where: \.isLetter)
                 && Self.category(in: $0) == nil && Self.number(in: $0) == nil
-                && labeledValue(in: $0, labels: ["task", "タスク", "할 일"]) == nil
-                && labeledValue(in: $0, labels: ["tags", "tag", "タグ", "태그"]) == nil
+                && labeledValue(in: $0, labels: ["task", "タスク", "할 일", "aufgabe"]) == nil
+                && labeledValue(in: $0, labels: ["tags", "tag", "タグ", "태그", "schlagwörter"]) == nil
         } ?? ""
         let resolvedReason = String((reason ?? fallbackReason).prefix(200))
         return Answer(
@@ -246,6 +246,7 @@ public enum SecondOpinionPrompt {
         "unimportant", "not important", "non-important", "isn't important", "isn’t important",
         "重要ではない", "重要でない", "重要ではありません", "重要じゃない", "重要度は低", "重要度が低",
         "중요하지 않", "중요하진 않",
+        "unwichtig", "nicht wichtig",
     ]
 
     private static func category(in text: String) -> TriageCategory? {
@@ -256,7 +257,7 @@ public enum SecondOpinionPrompt {
             lowered = lowered.replacingOccurrences(of: negated, with: String(repeating: " ", count: negated.count))
         }
         let candidates: [(String, TriageCategory)] = [
-            ("important", .notifyNow), ("重要", .notifyNow), ("중요", .notifyNow),
+            ("important", .notifyNow), ("重要", .notifyNow), ("중요", .notifyNow), ("wichtig", .notifyNow),
             ("neutral", .summary), ("中立", .summary), ("普通", .summary), ("보통", .summary),
             ("spam", .silence), ("スパム", .silence), ("迷惑", .silence), ("스팸", .silence),
         ]

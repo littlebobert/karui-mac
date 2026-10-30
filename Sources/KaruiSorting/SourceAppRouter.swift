@@ -32,9 +32,9 @@ public enum SourceAppRouter {
     /// (Messenger before Facebook, Gmail before Mail, Google Calendar before Calendar).
     private static let entries: [Entry] = [
         Entry(appName: "Spark", url: "readdle-spark://", aliases: ["spark", "spark mail"]),
-        // Japanese and Korean iPhones name Apple's apps in their language, so those are
-        // exact aliases too.
-        Entry(appName: "Messages", url: "iChat://", aliases: ["messages", "message", "imessage"], exactAliases: ["メッセージ", "메시지"]),
+        // Japanese, Korean, and German iPhones name Apple's apps in their language, so
+        // those are exact aliases too.
+        Entry(appName: "Messages", url: "iChat://", aliases: ["messages", "message", "imessage"], exactAliases: ["メッセージ", "메시지", "nachrichten"]),
         Entry(appName: "Gmail", url: "googlegmail://", aliases: ["gmail", "google gmail"]),
         Entry(appName: "Outlook", url: "ms-outlook://", aliases: ["outlook", "microsoft outlook"]),
         Entry(appName: "Mail", url: "message://", exactAliases: ["mail", "apple mail", "メール", "메일"]),
@@ -69,8 +69,8 @@ public enum SourceAppRouter {
         Entry(appName: "ChatGPT", url: "https://chatgpt.com", aliases: ["chatgpt", "chat gpt", "codex"]),
         Entry(appName: "Claude", url: "https://claude.ai", aliases: ["claude"]),
         Entry(appName: "Google Calendar", url: "comgooglecalendar://", aliases: ["google calendar"]),
-        Entry(appName: "Calendar", url: "calshow://", exactAliases: ["calendar", "apple calendar", "カレンダー", "캘린더"]),
-        Entry(appName: "Reminders", url: "x-apple-reminderkit://", aliases: ["reminders"], exactAliases: ["リマインダー", "미리 알림"]),
+        Entry(appName: "Calendar", url: "calshow://", exactAliases: ["calendar", "apple calendar", "カレンダー", "캘린더", "kalender"]),
+        Entry(appName: "Reminders", url: "x-apple-reminderkit://", aliases: ["reminders"], exactAliases: ["リマインダー", "미리 알림", "erinnerungen"]),
         Entry(appName: "Luma", url: "luma://", aliases: ["luma", "lu ma", "luma events"]),
         Entry(appName: "Wallet", url: "shoebox://", exactAliases: ["wallet", "apple wallet", "ウォレット", "지갑"]),
         Entry(appName: "PayPay", url: "paypay://", aliases: ["paypay", "pay pay"]),

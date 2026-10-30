@@ -97,12 +97,13 @@ public enum SuggestedApps {
         return ["Instagram", "Facebook", "LinkedIn", "X", "TikTok", "Threads", "Reddit"]
     }
 
-    /// What Japanese and Korean iPhones call Apple's apps (and Mercari and KakaoTalk),
+    /// What Japanese, Korean, and German iPhones call Apple's apps (and Mercari and KakaoTalk),
     /// so the menu shows the names people see. Either spelling matches the same app.
     public static func displayName(for appName: String, locale: Locale = .current) -> String {
         switch locale.language.languageCode {
         case .japanese?: return japaneseNames[appName] ?? appName
         case .korean?: return koreanNames[appName] ?? appName
+        case .german?: return germanNames[appName] ?? appName
         default: return appName
         }
     }
@@ -123,6 +124,12 @@ public enum SuggestedApps {
         "Reminders": "미리 알림",
         "Wallet": "지갑",
         "KakaoTalk": "카카오톡",
+    ]
+
+    private static let germanNames = [
+        "Messages": "Nachrichten",
+        "Calendar": "Kalender",
+        "Reminders": "Erinnerungen",
     ]
 
     private static func isJapan(_ locale: Locale) -> Bool {
@@ -688,6 +695,10 @@ public struct TriagePolicy: Codable, Equatable, Sendable {
             adoptKoreanDefaultTerms()
             return
         }
+        if KaruiLocalization.isGerman(locale) {
+            adoptGermanDefaultTerms()
+            return
+        }
         guard KaruiLocalization.isJapanese(locale) else { return }
         let standard = TriagePolicy.standard
         if urgentKeywords == standard.urgentKeywords {
@@ -717,6 +728,22 @@ public struct TriagePolicy: Codable, Equatable, Sendable {
         }
         if wakeMeKeywords == standard.wakeMeKeywords {
             wakeMeKeywords = "응급, 긴급, 병원, 사고, 지금 전화, 일어나, 119, 112, " + standard.wakeMeKeywords
+        }
+    }
+
+    private mutating func adoptGermanDefaultTerms() {
+        let standard = TriagePolicy.standard
+        if urgentKeywords == standard.urgentKeywords {
+            urgentKeywords = "dringend, Notfall, eilt, Handlungsbedarf, Sicherheitswarnung, " + standard.urgentKeywords
+        }
+        if summaryKeywords == standard.summaryKeywords {
+            summaryKeywords = "Zusammenfassung, Kaufbeleg, Zahlungsbeleg, zugestellt, " + standard.summaryKeywords
+        }
+        if silenceKeywords == standard.silenceKeywords {
+            silenceKeywords = "Rabatt, Gutschein, Sonderangebot, nur heute, Empfohlen für dich, " + standard.silenceKeywords
+        }
+        if wakeMeKeywords == standard.wakeMeKeywords {
+            wakeMeKeywords = "Notfall, Krankenhaus, Notaufnahme, Rettungswagen, Unfall, ruf mich sofort an, 112, 110, " + standard.wakeMeKeywords
         }
     }
 

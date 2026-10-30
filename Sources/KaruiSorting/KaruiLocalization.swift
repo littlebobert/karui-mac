@@ -35,11 +35,16 @@ public enum KaruiLocalization {
         locale.language.languageCode == .korean
     }
 
+    public static func isGerman(_ locale: Locale = .current) -> Bool {
+        locale.language.languageCode == .german
+    }
+
     /// The language Apple's models should write in for this person, as an instruction
-    /// word: Japanese and Korean get their own; everyone else gets English.
+    /// word: Japanese, Korean, and German get their own; everyone else gets English.
     public static func modelLanguageName(_ locale: Locale = .current) -> String {
         if isJapanese(locale) { return "Japanese" }
         if isKorean(locale) { return "Korean" }
+        if isGerman(locale) { return "German" }
         return "English"
     }
 }

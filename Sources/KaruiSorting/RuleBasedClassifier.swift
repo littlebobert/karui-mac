@@ -54,7 +54,8 @@ public struct RuleBasedClassifier: NotificationClassifying {
         let calendarOrTravelTerms = [
             "calendar", "flight", "boarding", "gate", "train", "appointment", "meeting starts",
             "カレンダー", "フライト", "搭乗", "搭乗口", "新幹線", "会議開始",
-            "항공편", "탑승", "탑승구", "KTX", "회의 시작"
+            "항공편", "탑승", "탑승구", "KTX", "회의 시작",
+            "Kalender", "Flug", "Abflug", "Zug", "Termin", "Meeting beginnt"
         ]
         if policy.prioritizeCalendarAndTravel,
            let matchedTravelTerm = Self.firstMatch(in: allText, terms: calendarOrTravelTerms) {
@@ -64,7 +65,8 @@ public struct RuleBasedClassifier: NotificationClassifying {
         let promotionTerms = [
             "sale", "discount", "% off", "limited time", "shop now", "promo",
             "セール", "割引", "%オフ", "％オフ", "期間限定", "今すぐ購入",
-            "세일", "할인", "% 할인", "기간 한정", "지금 구매"
+            "세일", "할인", "% 할인", "기간 한정", "지금 구매",
+            "Rabatt", "% Rabatt", "nur für kurze Zeit", "jetzt kaufen", "jetzt shoppen"
         ]
         if policy.silencePromotions,
            let matchedPromotion = Self.firstMatch(in: allText, terms: promotionTerms) {
