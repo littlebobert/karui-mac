@@ -29,7 +29,7 @@ struct IPhoneSortingSettingsSection: View {
                 row("Always alert for one-time codes", onOff(policy.alertOneTimeCodes))
                 row("Important Conversations", list(policy.importantConversations.map(\.name)))
                 row("Learned", L10n.format("%lld fixes", Int64(learnedCount)))
-                row("Second Opinion", secondOpinion)
+                row("Private Cloud Sorting", secondOpinion)
             }
         } header: {
             Text(L10n.string("Your iPhone’s sorting settings"))

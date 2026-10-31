@@ -136,8 +136,8 @@ struct SettingsView: View {
                 Text(sortingStatus)
                     .foregroundStyle(.secondary)
             }
-            Section(L10n.string("Second Opinion")) {
-                TextField(L10n.string("Second Opinion Shortcut"), text: $settings.secondOpinionShortcutName)
+            Section(L10n.string("Private Cloud Sorting")) {
+                TextField(L10n.string("Private Cloud Sorting Shortcut"), text: $settings.secondOpinionShortcutName)
                 LabeledContent(L10n.string("Shortcut")) {
                     switch isShortcutInstalled {
                     case true?: Text(L10n.string("Installed"))
@@ -148,7 +148,7 @@ struct SettingsView: View {
                     case nil: ProgressView().controlSize(.small)
                     }
                 }
-                Text(L10n.string("When Second Opinion is on in Karui on your iPhone, this Mac asks Apple’s Private Cloud Compute through this Shortcut, with the same prompt your iPhone sends. The Shortcut takes text and returns what Use Model, set to Private Cloud Compute, answers."))
+                Text(L10n.string("When Private Cloud Sorting is on in Karui on your iPhone, this Mac asks Apple’s Private Cloud Compute through this Shortcut, with the same prompt your iPhone sends. The Shortcut takes text and returns what Use Model, set to Private Cloud Compute, answers."))
                     .foregroundStyle(.secondary)
             }
             if let policy = coordinator.sortingSettings.policy {

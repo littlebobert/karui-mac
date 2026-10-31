@@ -101,8 +101,8 @@
 "Open %@" = "%@を開く";
 "Sorting on this Mac" = "このMacでの仕分け";
 "Sort notifications on this Mac" = "このMacで通知を仕分ける";
-"Second Opinion Shortcut" = "セカンドオピニオンのショートカット";
-"When Second Opinion is on in Karui on your iPhone, this Mac asks Apple’s Private Cloud Compute through this Shortcut, with the same prompt your iPhone sends. The Shortcut takes text and returns what Use Model, set to Private Cloud Compute, answers." = "iPhoneのKaruiでセカンドオピニオンがオンのとき、このMacはこのショートカットを通じて、iPhoneと同じ内容でAppleのPrivate Cloud Computeに問い合わせます。ショートカットはテキストを受け取り、Private Cloud Computeに設定した「モデルを使用」の回答を返します。";
+"Private Cloud Sorting Shortcut" = "Private Cloud分類のショートカット";
+"When Private Cloud Sorting is on in Karui on your iPhone, this Mac asks Apple’s Private Cloud Compute through this Shortcut, with the same prompt your iPhone sends. The Shortcut takes text and returns what Use Model, set to Private Cloud Compute, answers." = "iPhoneのKaruiでPrivate Cloud分類がオンのとき、このMacはこのショートカットを通じて、iPhoneと同じ内容でAppleのPrivate Cloud Computeに問い合わせます。ショートカットはテキストを受け取り、Private Cloud Computeに設定した「モデルを使用」の回答を返します。";
 "Needs macOS 26 or later, with Apple Intelligence turned on." = "macOS 26以降で、Apple Intelligenceがオンになっている必要があります。";
 "Waiting for your iPhone’s settings. In Karui on your iPhone, turn on Show History on your Mac." = "iPhoneの設定を待っています。iPhoneのKaruiで「Macに履歴を表示」をオンにしてください。";
 "Sorts each notification as it arrives, with your iPhone’s settings. Nothing leaves this Mac for it." = "届いた通知をiPhoneの設定でその場で仕分けます。そのためにこのMacから送られるものはありません。";
@@ -129,7 +129,7 @@
 "Important Conversations" = "重要な会話";
 "Learned" = "学んだこと";
 "%lld fixes" = "修正 %lld件";
-"Second Opinion" = "セカンドオピニオン";
+"Private Cloud Sorting" = "Private Cloud分類";
 "Before Alerting" = "お知らせする前に";
 "Only When Needed" = "必要なときだけ";
 "None" = "なし";
@@ -138,10 +138,10 @@
 "General" = "一般";
 "Sorting" = "仕分け";
 "Sort notifications the moment they arrive" = "届いた瞬間に通知を仕分ける";
-"Add the Second Opinion Shortcut" = "セカンドオピニオンのショートカットを追加";
+"Add the Private Cloud Sorting Shortcut" = "Private Cloud分類のショートカットを追加";
 "Get notifications only this Mac received on your iPhone" = "このMacだけに届いた通知をiPhoneでも受け取る";
 "This Mac can sort each notification with your iPhone’s settings as soon as it arrives. In Karui on your iPhone, open Settings → Karui for Mac and turn on Show History on your Mac." = "このMacは、届いた通知をすぐにiPhoneの設定で仕分けられます。iPhoneのKaruiで「設定」→「Mac版Karui」を開き、「Macに履歴を表示」をオンにしてください。";
-"Second Opinion is on in Karui on your iPhone. This Mac asks Apple’s Private Cloud Compute through a Shortcut of your own, with the same prompt your iPhone sends." = "iPhoneのKaruiでセカンドオピニオンがオンになっています。このMacは、あなた自身のショートカットを通じて、iPhoneと同じ内容でAppleのPrivate Cloud Computeに問い合わせます。";
+"Private Cloud Sorting is on in Karui on your iPhone. This Mac asks Apple’s Private Cloud Compute through a Shortcut of your own, with the same prompt your iPhone sends." = "iPhoneのKaruiでPrivate Cloud分類がオンになっています。このMacは、あなた自身のショートカットを通じて、iPhoneと同じ内容でAppleのPrivate Cloud Computeに問い合わせます。";
 "When your iPhone never got a notification, this Mac can send it there, already sorted and end-to-end encrypted, so it shows in History and alerts you if it’s Important." = "iPhoneに届かなかった通知を、このMacが仕分け済みの状態でエンドツーエンド暗号化して送れます。iPhoneの履歴に表示され、重要なら通知されます。";
 "Turn On" = "オンにする";
 "Not Now" = "今はしない";

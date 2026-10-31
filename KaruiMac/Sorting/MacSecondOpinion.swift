@@ -59,7 +59,7 @@ enum MacSecondOpinion {
             confidence: parsed.confidence,
             reason: parsed.reason,
             engine: .privateCloudCompute,
-            engineDetail: "Second opinion from Private Cloud Compute, asked by Karui for Mac’s Shortcut."
+            engineDetail: "Sorted by Private Cloud Compute, asked by Karui for Mac’s Shortcut."
         )
         result.tags = parsed.tags
         result.modelDuration = TimeInterval(elapsed.components.seconds)

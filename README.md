@@ -108,15 +108,15 @@ The Mac keeps a copy in `~/Library/Application Support/Karui` so it sorts offlin
 Until it's working, a card at the top of the inbox offers the next missing step, one at a time (`SetupNudge`):
 
 1. turning on *Show History on your Mac* on the iPhone,
-2. getting the Second Opinion Shortcut when Second Opinion is on there,
+2. getting the Private Cloud Sorting Shortcut when Private Cloud Sorting is on there,
 3. sending notifications only this Mac received to the iPhone,
 4. while Karui on the iPhone filters, adding Karui to the allowed apps of the Focus it uses there, which follows the person to this Mac and otherwise keeps Karui's banners in Notification Center. This one can't be checked (Notification Center records a held-back banner as it does a shown one), so it shows until dismissed or its button is pressed.
 
 Each goes once done or dismissed, and a dismissed one doesn't hold back the next. In debug builds, Help → Show Setup Banner shows any of them.
 
-### Second Opinion
+### Private Cloud Sorting
 
-When Second Opinion is on in Karui on the iPhone, the Mac follows its *When to Ask* setting and asks Apple's Private Cloud Compute through a Shortcut of the person's own, by default named **Karui Second Opinion** (Settings → *Second Opinion Shortcut*). It runs `shortcuts run` with the same prompt the iPhone sends and reads the answer the same way.
+When Private Cloud Sorting is on in Karui on the iPhone, the Mac follows its *When to Ask* setting and asks Apple's Private Cloud Compute through a Shortcut of the person's own, by default named **Karui Second Opinion** (Settings → *Private Cloud Sorting Shortcut*). It runs `shortcuts run` with the same prompt the iPhone sends and reads the answer the same way.
 
 Karui for Mac can't use Private Cloud Compute itself, since a Developer ID profile can't carry the entitlement.
 

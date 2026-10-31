@@ -150,7 +150,7 @@ struct SetupNudgeCard: View {
     private var title: String {
         switch step {
         case .iPhoneSettings: L10n.string("Sort notifications the moment they arrive")
-        case .secondOpinionShortcut: L10n.string("Add the Second Opinion Shortcut")
+        case .secondOpinionShortcut: L10n.string("Add the Private Cloud Sorting Shortcut")
         case .sendToIPhone: L10n.string("Get notifications only this Mac received on your iPhone")
         case .focusAllowsKarui: L10n.string("Let Karui’s banners through your Focus")
         }
@@ -161,7 +161,7 @@ struct SetupNudgeCard: View {
         case .iPhoneSettings:
             L10n.string("This Mac can sort each notification with your iPhone’s settings as soon as it arrives. In Karui on your iPhone, open Settings → Karui for Mac and turn on Show History on your Mac.")
         case .secondOpinionShortcut:
-            L10n.string("Second Opinion is on in Karui on your iPhone. This Mac asks Apple’s Private Cloud Compute through a Shortcut of your own, with the same prompt your iPhone sends.")
+            L10n.string("Private Cloud Sorting is on in Karui on your iPhone. This Mac asks Apple’s Private Cloud Compute through a Shortcut of your own, with the same prompt your iPhone sends.")
         case .sendToIPhone:
             L10n.string("When your iPhone never got a notification, this Mac can send it there, already sorted and end-to-end encrypted, so it shows in History and alerts you if it’s Important.")
         case .focusAllowsKarui:
