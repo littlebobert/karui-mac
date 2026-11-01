@@ -4,8 +4,7 @@ import KaruiLinkKit
 /// A Messages notification carries the message's GUID, and Messages' own database
 /// knows which chat that message is in and who is in it. iOS has no URL for one
 /// message, so the link opens the conversation, as `ConversationRouter` in the
-/// iPhone app does when it has everyone's number. Not yet tried against a real
-/// chat.db; see Experiments/FINDINGS.md.
+/// iPhone app does when it has everyone's number. See Experiments/FINDINGS.md.
 struct MessagesHarvester: NotificationHarvester {
     let bundleIdentifiers = Set(KnownApp.messages.macBundleIdentifiers)
     var chatDatabase = ChatDatabase.standard
@@ -14,7 +13,8 @@ struct MessagesHarvester: NotificationHarvester {
         guard let guid = record.userInfo["CKBBContextKeyMessageGUID"] ?? record.identifier else { return nil }
         do {
             let handles = try chatDatabase.handles(forMessageGUID: guid)
-            guard let url = MessagesLink.url(handles: handles) else {
+            let groupID = try? chatDatabase.groupID(forMessageGUID: guid)
+            guard let url = MessagesLink.url(handles: handles, groupID: groupID) else {
                 SafeDiagnosticLog.shared.record("messages: no chat found for the notification")
                 return nil
             }
@@ -36,10 +36,14 @@ struct MessagesHarvester: NotificationHarvester {
 }
 
 enum MessagesLink {
-    /// One person's thread by their number or address; a group by everyone in it,
-    /// since a group has no address of its own.
-    static func url(handles: [String]) -> URL? {
-        switch handles.count {
+    /// One person's thread by their number or address; a group by its ID, or else by
+    /// everyone in it. A list of members doesn't find a named group: Messages starts
+    /// a new conversation with them instead.
+    static func url(handles: [String], groupID: String? = nil) -> URL? {
+        if let groupID, !groupID.isEmpty, let url = URL(string: "sms://open?groupid=\(groupID)") {
+            return url
+        }
+        return switch handles.count {
         case 0: nil
         case 1: URL(string: "sms:\(handles[0])")
         default: URL(string: "sms://open?addresses=" + handles.joined(separator: ","))
@@ -68,6 +72,34 @@ struct ChatDatabase: Sendable {
             order by handle.id
             """, [.text(guid)])
         return rows.compactMap { $0[0].text }
+    }
+
+    /// `chat.style` for a group; a one-to-one chat has a `group_id` too, which isn't
+    /// the link for it.
+    private static let groupStyle: Int64 = 43
+
+    /// The ID of the group chat holding the message, nil for a one-to-one chat.
+    func groupID(forMessageGUID guid: String) throws -> String? {
+        let database = try SQLiteDatabase.opening(url)
+        let rows = try database.rows("""
+            select chat.group_id from message
+            join chat_message_join on chat_message_join.message_id = message.ROWID
+            join chat on chat.ROWID = chat_message_join.chat_id
+            where message.guid = ?1 and chat.style = ?2
+            order by chat.ROWID desc limit 1
+            """, [.text(guid), .integer(Self.groupStyle)])
+        return rows.first?[0].text
+    }
+
+    /// The ID of the group chat with this name, if Messages has one.
+    func groupID(forChatNamed name: String) throws -> String? {
+        let database = try SQLiteDatabase.opening(url)
+        let rows = try database.rows("""
+            select group_id from chat
+            where display_name = ?1 and style = ?2
+            order by ROWID desc limit 1
+            """, [.text(name), .integer(Self.groupStyle)])
+        return rows.first?[0].text
     }
 
     /// How far from the iPhone's notification a message can be and still be its.

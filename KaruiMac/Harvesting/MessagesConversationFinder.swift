@@ -22,7 +22,7 @@ struct MessagesConversationFinder: Sendable {
         }
         let chatHandles = (try? chatDatabase.handles()) ?? []
         if let members = try? chatDatabase.handles(forChatNamed: sender), !members.isEmpty {
-            return MessagesLink.url(handles: members)
+            return MessagesLink.url(handles: members, groupID: try? chatDatabase.groupID(forChatNamed: sender))
         }
         guard let contact = await Self.contact(named: sender) else {
             SafeDiagnosticLog.shared.record("messages: no contact for the sender")
