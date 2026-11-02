@@ -20,9 +20,10 @@ struct SlackHarvester: NotificationHarvester {
             return nil
         }
         let rootState = try? Data(contentsOf: supportDirectory.appending(path: "storage/root-state.json"))
+        let thread = SlackLog.thread(forMessageTimestamp: message.timestamp, in: log)
         let probe = ReadProbe.slack(channelID: channelID, timestamp: message.timestamp)
         if let rootState, let workspace = SlackLink.workspaceURL(teamID: message.teamID, rootState: rootState),
-           let url = SlackLink.permalink(workspace: workspace, channelID: channelID, timestamp: message.timestamp) {
+           let url = SlackLink.permalink(workspace: workspace, channelID: channelID, timestamp: message.timestamp, thread: thread) {
             return HarvestedLink(link: record.deepLink(as: .slack, url: url, opensExactContent: true), readProbe: probe, notificationID: record.id)
         }
         SafeDiagnosticLog.shared.record("slack: workspace address not found; linking the channel")
@@ -55,9 +56,12 @@ enum SlackLink {
         return MessageIdentifier(teamID: String(match.1), timestamp: String(match.2))
     }
 
-    /// The message's permalink, which opens Slack on the iPhone at the message.
-    static func permalink(workspace: URL, channelID: String, timestamp: String) -> URL? {
-        workspace.appending(path: "archives/\(channelID)/p\(timestamp.replacingOccurrences(of: ".", with: ""))")
+    /// The message's permalink, which opens Slack on the iPhone at the message. A
+    /// reply also names its thread's first message, so it opens in the thread.
+    static func permalink(workspace: URL, channelID: String, timestamp: String, thread: String? = nil) -> URL? {
+        let url = workspace.appending(path: "archives/\(channelID)/p\(timestamp.replacingOccurrences(of: ".", with: ""))")
+        guard let thread, thread != timestamp else { return url }
+        return url.appending(queryItems: [URLQueryItem(name: "thread_ts", value: thread)])
     }
 
     /// Opens the channel or direct message, when the message itself can't be linked.
@@ -81,7 +85,8 @@ enum SlackLink {
     }
 
     /// `https://<workspace>/archives/<channel>/p<ts without the dot>` as
-    /// `slack://channel?team=<team>&id=<channel>&message=<ts>`.
+    /// `slack://channel?team=<team>&id=<channel>&message=<ts>`, with the permalink's
+    /// `thread_ts` when it has one.
     static func appURL(forPermalink url: URL, rootState: Data) -> URL? {
         let parts = url.pathComponents
         guard url.scheme == "https", let host = url.host(), parts.count == 4, parts[1] == "archives",
@@ -97,6 +102,9 @@ enum SlackLink {
             URLQueryItem(name: "id", value: parts[2]),
             URLQueryItem(name: "message", value: "\(digits.dropLast(6)).\(digits.suffix(6))"),
         ]
+        if let thread = URLComponents(url: url, resolvingAgainstBaseURL: false)?.queryItems?.first(where: { $0.name == "thread_ts" }) {
+            components.queryItems?.append(thread)
+        }
         return components.url
     }
 
@@ -139,6 +147,16 @@ enum SlackLog {
     /// key per line, with `"msg": "<ts>"` and `"channel": "<ID>"` among them. The
     /// search stays inside that object: its lines between a lone `{` and a lone `}`.
     static func channel(forMessageTimestamp timestamp: String, in log: String) -> String? {
+        value(of: /"channel":\s*"([A-Z0-9]+)"/, forMessageTimestamp: timestamp, in: log)
+    }
+
+    /// The first message of the thread a reply is in: `"thread_ts": "<ts>"` in the
+    /// same object, which a post outside a thread doesn't have.
+    static func thread(forMessageTimestamp timestamp: String, in log: String) -> String? {
+        value(of: /"thread_ts":\s*"(\d+\.\d+)"/, forMessageTimestamp: timestamp, in: log)
+    }
+
+    private static func value(of pattern: Regex<(Substring, Substring)>, forMessageTimestamp timestamp: String, in log: String) -> String? {
         let lines = log.split(separator: "\n", omittingEmptySubsequences: false)
         let marker = "\"msg\": \"\(timestamp)\""
         guard let index = lines.lastIndex(where: { $0.contains(marker) }) else { return nil }
@@ -148,7 +166,7 @@ enum SlackLog {
         let start = lines[...index].lastIndex { isBoundary($0, "{") } ?? index
         let end = lines[index...].firstIndex { isBoundary($0, "}") } ?? index
         for line in lines[start...end] {
-            if let match = line.firstMatch(of: /"channel":\s*"([A-Z0-9]+)"/) {
+            if let match = line.firstMatch(of: pattern) {
                 return String(match.1)
             }
         }

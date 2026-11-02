@@ -532,12 +532,22 @@ final class AppCoordinator {
     /// sender, the way the iPhone does. With the preview pane showing it already,
     /// one with nowhere more exact opens its app instead.
     func open(_ item: Inbox.Item) {
+        open(item, otherwise: openWithoutLink)
+    }
+
+    /// The Open button and Return on a notification already shown: the same, but
+    /// with nowhere more exact it opens the app, since the item is already in view.
+    func openInApp(_ item: Inbox.Item) {
+        open(item) { AppLauncher.open($0.app) }
+    }
+
+    private func open(_ item: Inbox.Item, otherwise fallback: @escaping @MainActor (Inbox.Item) -> Void) {
         if let link = item.link {
             NSWorkspace.shared.open(item.app == KnownApp.slack.rawValue ? SlackLink.macURL(for: link.url) : link.url)
             return
         }
         guard item.app == KnownApp.messages.rawValue, !DemoMode.isActive else {
-            openWithoutLink(item)
+            fallback(item)
             return
         }
         Task { @MainActor in
@@ -545,7 +555,7 @@ final class AppCoordinator {
                 SafeDiagnosticLog.shared.record("messages: conversation found by the sender")
                 NSWorkspace.shared.open(url)
             } else {
-                openWithoutLink(item)
+                fallback(item)
             }
         }
     }

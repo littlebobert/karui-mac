@@ -41,6 +41,53 @@ final class SlackLinkTests: XCTestCase {
         XCTAssertNil(SlackLink.appURL(forPermalink: URL(string: "https://example.slack.com/archives/C0ABCDEFGHI")!, rootState: state))
     }
 
+    /// A reply opens in its thread, on the iPhone and here.
+    func testAReplysLinksNameItsThread() {
+        let state = Data(#"""
+        {"workspaces":{"T0123ABCDEF":{"domain":"example","id":"T0123ABCDEF","name":"Example","url":"https://example.slack.com/"}}}
+        """#.utf8)
+        let url = SlackLink.permalink(
+            workspace: URL(string: "https://example.slack.com/")!,
+            channelID: "C0ABCDEFGHI",
+            timestamp: "1791879249.798639",
+            thread: "1791000000.000100"
+        )
+        XCTAssertEqual(url?.absoluteString, "https://example.slack.com/archives/C0ABCDEFGHI/p1791879249798639?thread_ts=1791000000.000100")
+        XCTAssertEqual(
+            url.flatMap { SlackLink.appURL(forPermalink: $0, rootState: state) }?.absoluteString,
+            "slack://channel?team=T0123ABCDEF&id=C0ABCDEFGHI&message=1791879249.798639&thread_ts=1791000000.000100"
+        )
+        XCTAssertEqual(
+            SlackLink.permalink(workspace: URL(string: "https://example.slack.com/")!, channelID: "C0ABCDEFGHI", timestamp: "1791879249.798639", thread: "1791879249.798639")?.absoluteString,
+            "https://example.slack.com/archives/C0ABCDEFGHI/p1791879249798639",
+            "a thread's first message is an ordinary post"
+        )
+    }
+
+    func testThreadComesFromTheMessagesOwnLogObject() {
+        let log = """
+        {
+          "msg": "1791000000.000200",
+          "channel": "C0ABCDEFGHI",
+          "thread_ts": "1791000000.000100",
+          "id": "T0123ABCDEF_1791000000.000200"
+        }
+        {
+          "msg": "1791000000.000300",
+          "channel": "C0ABCDEFGHI",
+          "id": "T0123ABCDEF_1791000000.000300"
+        }
+        {
+          "msg": "activity",
+          "thread_ts": "slack://open?team=T0123ABCDEF"
+        }
+        """
+        XCTAssertEqual(SlackLog.thread(forMessageTimestamp: "1791000000.000200", in: log), "1791000000.000100")
+        XCTAssertEqual(SlackLog.channel(forMessageTimestamp: "1791000000.000200", in: log), "C0ABCDEFGHI")
+        XCTAssertNil(SlackLog.thread(forMessageTimestamp: "1791000000.000300", in: log))
+        XCTAssertNil(SlackLog.thread(forMessageTimestamp: "1791000000.000999", in: log))
+    }
+
     func testWorkspaceURLComesFromRootState() {
         let state = Data(#"""
         {"workspaces":{"T0123ABCDEF":{"domain":"example","id":"T0123ABCDEF","name":"Example","url":"https://example.slack.com/"}}}

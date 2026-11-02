@@ -32,7 +32,7 @@ struct InboxView: View {
                 // One notification in full: its own bar, with nothing that belongs to a list.
                 DetailBar(coordinator: coordinator, item: item)
                 Divider()
-                ItemDetail(item: item, onBack: { coordinator.inbox.openItemID = nil }, onDelete: { coordinator.deleteOpenItem() })
+                ItemDetail(coordinator: coordinator, item: item, onBack: { coordinator.inbox.openItemID = nil }, onDelete: { coordinator.deleteOpenItem() })
             } else {
                 ControlBar(coordinator: coordinator)
                 Divider()
@@ -46,7 +46,7 @@ struct InboxView: View {
                 if coordinator.inbox.showsPreview {
                     // Not a VSplitView: it sizes the halves from their content, so the
                     // divider moved whenever a filter changed what the list held.
-                    PreviewSplit(inbox: coordinator.inbox) {
+                    PreviewSplit(coordinator: coordinator, inbox: coordinator.inbox) {
                         InboxList(coordinator: coordinator)
                     }
                 } else {
@@ -540,6 +540,7 @@ private struct InboxList: View {
 /// A notification in full, for one with nowhere else to open. It takes the
 /// keyboard so Escape goes back and Delete deletes it.
 private struct ItemDetail: View {
+    let coordinator: AppCoordinator
     let item: Inbox.Item
     let onBack: () -> Void
     let onDelete: () -> Void
@@ -554,14 +555,14 @@ private struct ItemDetail: View {
             .onExitCommand(perform: onBack)
             .onDeleteCommand(perform: onDelete)
             .onKeyPress(.return) {
-                guard AppLauncher.canOpen(item.app) else { return .ignored }
-                AppLauncher.open(item.app)
+                guard item.link != nil || AppLauncher.canOpen(item.app) else { return .ignored }
+                coordinator.openInApp(item)
                 return .handled
             }
     }
 
     private var content: some View {
-        NotificationContent(item: item)
+        NotificationContent(coordinator: coordinator, item: item)
     }
 }
 
@@ -601,6 +602,7 @@ extension Inbox.Item {
 /// What a notification says, with Karui's verdict and reason: the full view's and
 /// the preview pane's.
 private struct NotificationContent: View {
+    let coordinator: AppCoordinator
     let item: Inbox.Item
 
     var body: some View {
@@ -638,8 +640,8 @@ private struct NotificationContent: View {
                 if item.readAt != nil {
                     Text(L10n.string("Read here; cleared on the iPhone")).font(.caption).foregroundStyle(.secondary)
                 }
-                if AppLauncher.canOpen(item.app) {
-                    Button(L10n.format("Open %@", item.app)) { AppLauncher.open(item.app) }
+                if item.link != nil || AppLauncher.canOpen(item.app) {
+                    Button(L10n.format("Open %@", item.app)) { coordinator.openInApp(item) }
                         .padding(.top, 6)
                 }
             }
@@ -654,12 +656,13 @@ private struct NotificationContent: View {
 /// can be read without opening it. Selecting one already marks it read, as in Mail.
 /// Its height is kept.
 private struct PreviewPane: View {
+    let coordinator: AppCoordinator
     let inbox: Inbox
 
     var body: some View {
         Group {
             if inbox.selection.count == 1, let id = inbox.selection.first, let item = inbox.item(id: id) {
-                NotificationContent(item: item)
+                NotificationContent(coordinator: coordinator, item: item)
             } else {
                 Text(inbox.selection.count > 1 ? L10n.format("%d selected", inbox.selection.count) : L10n.string("No Notification Selected"))
                     .foregroundStyle(.secondary)
@@ -673,6 +676,7 @@ private struct PreviewPane: View {
 /// The list over the preview pane, which keeps the height the person drags it to
 /// whatever the list holds. The list keeps at least `minimumList`.
 private struct PreviewSplit<List: View>: View {
+    let coordinator: AppCoordinator
     let inbox: Inbox
     @ViewBuilder let list: List
     @State private var dragStartHeight: Double?
@@ -704,7 +708,7 @@ private struct PreviewSplit<List: View>: View {
                                     .onEnded { _ in dragStartHeight = nil }
                             )
                     }
-                PreviewPane(inbox: inbox)
+                PreviewPane(coordinator: coordinator, inbox: inbox)
                     .frame(height: height)
             }
         }

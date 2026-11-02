@@ -79,8 +79,9 @@ public enum LooseMatch {
     /// is titled by the sender, with "In #channel" (a thread reply) or "To channel"
     /// (a post in the channel) as its subtitle and as the first line of the text it
     /// sends; the Mac's is titled by the workspace, with the channel as its subtitle
-    /// and, from a person, "sender: " before the text. So: the same channel, and the
-    /// same text as far as both go, each cut short at its own length.
+    /// and, from a person, "sender: " before the text. The iPhone's text can itself
+    /// start "channel @handle: ". So: the same channel, and the same text as far as
+    /// both go, each cut short at its own length.
     public static func slackPost(_ phone: Fields, _ mac: Fields) -> Bool {
         let phoneSubtitle = NotificationFingerprint.normalize(phone.subtitle)
         guard let prefix = ["in #", "to #", "to "].first(where: phoneSubtitle.hasPrefix) else { return false }
@@ -91,6 +92,9 @@ public enum LooseMatch {
         var phoneText = Substring(NotificationFingerprint.normalize(phone.body))
         if phoneText.hasPrefix(phoneSubtitle) {
             phoneText = phoneText.dropFirst(phoneSubtitle.count).drop { $0 == " " }
+        }
+        if phoneText.hasPrefix("\(channel) @"), let colon = phoneText.range(of: ": ") {
+            phoneText = phoneText[colon.upperBound...]
         }
         return sameSlackText(phoneText, macBody: mac.body)
     }

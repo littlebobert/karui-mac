@@ -47,6 +47,20 @@ final class SlackThreadReplyTests: XCTestCase {
         XCTAssertFalse(LooseMatch.slackPost(phone, otherText), "other text")
     }
 
+    /// The iPhone's text can open with the channel and the sender's handle.
+    func testTheChannelAndHandleBeforeTheIPhonesTextStillMatch() {
+        let phone = LooseMatch.Fields(
+            title: "Kodai",
+            subtitle: "In #internal-kotoba-app-tech",
+            body: "In #internal-kotoba-app-tech\ninternal-kotoba-app-tech @kodai: \(text)"
+        )
+        let mac = LooseMatch.Fields(title: "Kotoba", subtitle: "internal-kotoba-app-tech", body: "Kodai: \(String(text.prefix(90)))")
+        XCTAssertTrue(LooseMatch.sameNotification(app: "Slack", phone, mac))
+        var otherText = mac
+        otherText.body = "Kodai: something else"
+        XCTAssertFalse(LooseMatch.sameNotification(app: "Slack", phone, otherText))
+    }
+
     /// The verdict after the Mac's notification joins it, so the row has the link.
     func testAVerdictJoinsTheMacsNotification() {
         let inbox = inbox()
