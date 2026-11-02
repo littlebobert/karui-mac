@@ -72,7 +72,9 @@
 		C2E50012B0D354A658E91189 /* SyncStatus.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD78E6FA806C0CC6D07E2BEF /* SyncStatus.swift */; };
 		C30BA3F00993F24DDF772A47 /* SecondOpinionBackoffTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = BAAE434D79EA0F6EE8E8AA7A /* SecondOpinionBackoffTests.swift */; };
 		C347228A7259723AA47FB4B8 /* CloudKitEntitlement.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6E0F2603A038F4EABE382CD4 /* CloudKitEntitlement.swift */; };
+		C43C5039D818B428147F92AE /* karui-icon-sketch.jpg in Resources */ = {isa = PBXBuildFile; fileRef = FBA486E9D9BE3F2464F6F299 /* karui-icon-sketch.jpg */; };
 		C45B77EA4308A5C8BF071917 /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = F3632FBB53F7B8E38A5FFB1B /* Localizable.strings */; };
+		CB700BE0F8E338AD7CD29D25 /* karui-icon-sketch.mp4 in Resources */ = {isa = PBXBuildFile; fileRef = 648758F78A60BBF6F2614F61 /* karui-icon-sketch.mp4 */; };
 		CE9B510965CA78D9CD0F8D89 /* LoginItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5223EA087C8D20E54B0D5DDF /* LoginItem.swift */; };
 		D1283CD1A534EAB5246E66A9 /* InboxStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 02059342FADE2B98EE06A434 /* InboxStore.swift */; };
 		D1453266EDBE1F7502E7FA75 /* AppCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B466F1F135069DD48A1473B /* AppCoordinator.swift */; };
@@ -135,6 +137,7 @@
 		5FC73E948CF81FC2CAE4C7EA /* InboxVerdictTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InboxVerdictTests.swift; sourceTree = "<group>"; };
 		61B11DFC924A31F1D18275E7 /* KaruiMacApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KaruiMacApp.swift; sourceTree = "<group>"; };
 		640B79B0B8031650B8824CEB /* Inbox.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Inbox.swift; sourceTree = "<group>"; };
+		648758F78A60BBF6F2614F61 /* karui-icon-sketch.mp4 */ = {isa = PBXFileReference; path = "karui-icon-sketch.mp4"; sourceTree = "<group>"; };
 		67CFD0E7402CC1B21A0E1966 /* SetupNudge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SetupNudge.swift; sourceTree = "<group>"; };
 		6CA9E859EEC0683C3C84FEEB /* AppIconSource.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = AppIconSource.png; sourceTree = "<group>"; };
 		6E0F2603A038F4EABE382CD4 /* CloudKitEntitlement.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CloudKitEntitlement.swift; sourceTree = "<group>"; };
@@ -182,6 +185,7 @@
 		F3632FBB53F7B8E38A5FFB1B /* Localizable.strings */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = Localizable.strings; path = ja.lproj/Localizable.strings; sourceTree = "<group>"; };
 		F4586BDD1E2D2FAA45D013BC /* IPhoneOnlyMessagesTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IPhoneOnlyMessagesTests.swift; sourceTree = "<group>"; };
 		F9695E99FA85CB7DC2E8B73A /* SparkHarvester.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SparkHarvester.swift; sourceTree = "<group>"; };
+		FBA486E9D9BE3F2464F6F299 /* karui-icon-sketch.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = "karui-icon-sketch.jpg"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -251,6 +255,8 @@
 				6CA9E859EEC0683C3C84FEEB /* AppIconSource.png */,
 				C424AFD49EBE5C89997B8D7C /* Assets.xcassets */,
 				2CD87E065773D23C77EB5CCD /* InfoPlist.strings */,
+				FBA486E9D9BE3F2464F6F299 /* karui-icon-sketch.jpg */,
+				648758F78A60BBF6F2614F61 /* karui-icon-sketch.mp4 */,
 				F3632FBB53F7B8E38A5FFB1B /* Localizable.strings */,
 			);
 			path = Resources;
@@ -478,6 +484,8 @@
 				41DDECE3C0F720A32A5B6505 /* Assets.xcassets in Resources */,
 				B84537441B5C3DF21B4C53E0 /* InfoPlist.strings in Resources */,
 				C45B77EA4308A5C8BF071917 /* Localizable.strings in Resources */,
+				C43C5039D818B428147F92AE /* karui-icon-sketch.jpg in Resources */,
+				CB700BE0F8E338AD7CD29D25 /* karui-icon-sketch.mp4 in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

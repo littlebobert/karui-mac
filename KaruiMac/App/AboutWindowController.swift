@@ -1,7 +1,8 @@
 import AppKit
+import AVFoundation
 import SwiftUI
 
-/// About Karui: the icon, the version, the line, a link home, Report a Bug, and
+/// About Karui: the icon's pencil animation, the version, the line, a link home, Report a Bug, and
 /// the acknowledgements, in a small fixed window.
 @MainActor
 final class AboutWindowController: NSObject, NSWindowDelegate {
@@ -33,6 +34,12 @@ final class AboutWindowController: NSObject, NSWindowDelegate {
             self?.showAcknowledgements()
         }))
         return window
+    }
+
+    /// Dropped, not kept hidden, so the animation doesn't play with no one watching.
+    func windowWillClose(_ notification: Notification) {
+        guard notification.object as? NSWindow === window else { return }
+        window = nil
     }
 
     /// The licenses of what the app ships with, from the bundled text.
@@ -92,15 +99,9 @@ private struct AboutView: View {
         Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? ""
     }
 
-    private var appIcon: NSImage {
-        NSWorkspace.shared.icon(forFile: Bundle.main.bundlePath)
-    }
-
     var body: some View {
         VStack(spacing: 5) {
-            Image(nsImage: appIcon)
-                .resizable()
-                .frame(width: 60, height: 60)
+            AnimatedAppIcon()
 
             VStack(spacing: 4) {
                 Text(L10n.string("Karui for Mac"))
@@ -141,6 +142,59 @@ private struct AboutView: View {
     private func reportBug() {
         reportError = BugReport.compose()
     }
+}
+
+/// The home page's pencil sketch of the icon, in the icon's shape and size. The still
+/// stays underneath, and is all that shows with Reduce Motion on.
+private struct AnimatedAppIcon: View {
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
+    private var still: NSImage {
+        Bundle.main.url(forResource: "karui-icon-sketch", withExtension: "jpg").flatMap(NSImage.init(contentsOf:))
+            ?? NSWorkspace.shared.icon(forFile: Bundle.main.bundlePath)
+    }
+
+    var body: some View {
+        ZStack {
+            Image(nsImage: still)
+                .resizable()
+            if !reduceMotion, let url = Bundle.main.url(forResource: "karui-icon-sketch", withExtension: "mp4") {
+                LoopingVideo(url: url)
+            }
+        }
+        .frame(width: 50, height: 50)
+        .clipShape(RoundedRectangle(cornerRadius: 11, style: .continuous))
+        .shadow(color: .black.opacity(0.25), radius: 1.5, y: 1)
+        .padding(5)
+        .accessibilityHidden(true)
+    }
+}
+
+private struct LoopingVideo: NSViewRepresentable {
+    let url: URL
+
+    func makeNSView(context: Context) -> LoopingVideoView { LoopingVideoView(url: url) }
+    func updateNSView(_ view: LoopingVideoView, context: Context) {}
+}
+
+private final class LoopingVideoView: NSView {
+    private let player = AVQueuePlayer()
+    private let looper: AVPlayerLooper
+
+    init(url: URL) {
+        looper = AVPlayerLooper(player: player, templateItem: AVPlayerItem(url: url))
+        super.init(frame: .zero)
+        player.isMuted = true
+        player.preventsDisplaySleepDuringVideoPlayback = false
+        let layer = AVPlayerLayer(player: player)
+        layer.videoGravity = .resizeAspectFill
+        self.layer = layer
+        wantsLayer = true
+        player.play()
+    }
+
+    @available(*, unavailable)
+    required init?(coder: NSCoder) { fatalError("init(coder:) has not been implemented") }
 }
 
 enum BugReport {
