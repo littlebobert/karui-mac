@@ -26,6 +26,21 @@ final class HeldReleaseTests: XCTestCase {
         XCTAssertEqual(HeldReleaseSender.plan(held, readHere: []).unread, ["a"])
     }
 
+    /// Past the fallback's delay, it has gone out: read, the iPhone removes it; unread,
+    /// it's already showing.
+    func testPastTheFallbackOnlyReadCounts() {
+        let long = now.addingTimeInterval(-HeldReleaseRecordSchema.window)
+        let held = [
+            HeldReleaseSender.Held(fingerprint: "a", isUnread: true, readAt: nil, triagedAt: now, heldAt: long),
+            HeldReleaseSender.Held(fingerprint: "b", isUnread: false, readAt: nil, triagedAt: now, heldAt: long),
+            HeldReleaseSender.Held(fingerprint: "c", isUnread: true, readAt: nil, triagedAt: now, heldAt: now.addingTimeInterval(-60)),
+        ]
+        let plan = HeldReleaseSender.plan(held, readHere: [], now: now)
+        XCTAssertEqual(plan.unread, ["c"])
+        XCTAssertEqual(plan.read, ["b"])
+        XCTAssertEqual(plan.expired, ["a"])
+    }
+
     func testFingerprintsRoundTrip() {
         let value = HeldReleaseRecordSchema.value(["a", "b"])
         XCTAssertEqual(HeldReleaseRecordSchema.fingerprints(from: value), ["a", "b"])

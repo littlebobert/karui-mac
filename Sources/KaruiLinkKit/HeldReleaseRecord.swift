@@ -7,7 +7,7 @@ import Foundation
 /// "held-release-" and its `Companion` record's name. The iPhone's subscription to it
 /// sends an alert push, and Karui's notification service extension turns that push
 /// into the held alerts still unread, cancelling the ones read on the Mac. Only written
-/// when something is unread: a push with nothing to show would still show something.
+/// when something is unread; otherwise it's `HeldCancelRecordSchema`.
 ///
 /// Fingerprints only, which the record names carry already, so the push can bring them
 /// (`desiredKeys`) and the extension needn't reach iCloud.
@@ -29,4 +29,17 @@ public enum HeldReleaseRecordSchema {
     public static func fingerprints(from value: String?) -> [String] {
         (value ?? "").split(separator: "\n").map(String.init).filter { !$0.isEmpty }
     }
+}
+
+/// The same as the person leaves with everything held already read: the push cancels
+/// those alerts and shows nothing. A record type of its own, since an iPhone build that
+/// only knows `HeldRelease` would show its placeholder for a push with nothing unread.
+public enum HeldCancelRecordSchema {
+    public static let recordType = "HeldCancel"
+    public static let cancelledAt = "cancelledAt"
+    /// Held and read: these are cancelled, or removed if they've gone out already. One
+    /// fingerprint to a line.
+    public static let read = "read"
+
+    public static func recordName(companionID: String) -> String { "held-cancel-" + companionID }
 }

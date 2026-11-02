@@ -88,6 +88,20 @@ DEFINE SCHEMA
         GRANT READ TO "_icloud"
     );
 
+    RECORD TYPE HeldCancel (
+        "___createTime"   TIMESTAMP,
+        "___createdBy"    REFERENCE,
+        "___etag"         STRING,
+        "___modTime"      TIMESTAMP,
+        "___modifiedBy"   REFERENCE,
+        "___recordID"     REFERENCE QUERYABLE,
+        cancelledAt       TIMESTAMP QUERYABLE,
+        read              STRING,
+        GRANT WRITE TO "_creator",
+        GRANT CREATE TO "_icloud",
+        GRANT READ TO "_icloud"
+    );
+
     RECORD TYPE HeldRelease (
         "___createTime"   TIMESTAMP,
         "___createdBy"    REFERENCE,
