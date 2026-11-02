@@ -144,9 +144,13 @@ final class AppCoordinator {
                     // Leaving: what the iPhone held meanwhile and is still unread goes to it now.
                     self.presenceReporter.left = { [weak self] in
                         guard let self else { return }
-                        let readHere = Set(self.inbox.items.filter { !$0.isUnread }.map(\.fingerprint))
                         let heldRelease = self.heldRelease
-                        Task { await heldRelease.send(readHere: readHere) }
+                        Task { @MainActor in
+                            // Read just now in an open conversation, the poll may not have seen it yet.
+                            await self.readIPhoneOnlyMessages()
+                            let readHere = Set(self.inbox.items.filter { !$0.isUnread }.map(\.fingerprint))
+                            await heldRelease.send(readHere: readHere)
+                        }
                     }
                     self.presenceReporter.start()
                     // Banners need it, and once asked, the Dock badge needs it too.
