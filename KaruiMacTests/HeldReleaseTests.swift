@@ -41,6 +41,16 @@ final class HeldReleaseTests: XCTestCase {
         XCTAssertEqual(plan.expired, ["a"])
     }
 
+    /// A push has room for so many, so the newest marks go, each once.
+    func testCancelListKeepsTheNewestOnce() {
+        XCTAssertEqual(HeldReleaseSender.cancelList(["a", "b", "a", "c"]), ["b", "a", "c"])
+        let many = (0..<100).map { "f\($0)" }
+        let list = HeldReleaseSender.cancelList(many)
+        XCTAssertEqual(list.count, HeldReleaseSender.cancelLimit)
+        XCTAssertEqual(list.last, "f99")
+        XCTAssertEqual(list.first, "f60")
+    }
+
     func testFingerprintsRoundTrip() {
         let value = HeldReleaseRecordSchema.value(["a", "b"])
         XCTAssertEqual(HeldReleaseRecordSchema.fingerprints(from: value), ["a", "b"])

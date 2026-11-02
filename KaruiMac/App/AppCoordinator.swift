@@ -588,11 +588,13 @@ final class AppCoordinator {
         banners.remove(ids: items.map(\.id))
         let sync = sync
         let verdicts = verdicts
+        let heldRelease = heldRelease
         Task {
             for item in items where item.link != nil {
                 await sync.markRead(fingerprint: item.fingerprint)
             }
             await verdicts.apply(.read, to: items.map(\.fingerprint))
+            await heldRelease.cancel(fingerprints: items.map(\.fingerprint))
         }
     }
 

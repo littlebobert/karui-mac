@@ -15,6 +15,9 @@ actor HeldReleaseSender {
     /// Sent already, by fingerprint, in case clearing a held mark didn't reach iCloud:
     /// the next departure doesn't send them again.
     private var released: [String: Date] = [:]
+    /// Marked read here and not yet sent as a cancel push.
+    private var pendingCancel: [String] = []
+    private var cancelTask: Task<Void, Never>?
 
     init(
         container: CKContainer? = CloudKitEntitlement.hasKaruiContainer
@@ -108,6 +111,50 @@ actor HeldReleaseSender {
             SafeDiagnosticLog.shared.record("held release: sent, \(plan.unread.count) unread, \(plan.read.count) read, \(plan.expired.count) expired")
         } catch {
             SafeDiagnosticLog.shared.record("held release: failed: \(error.localizedDescription)")
+        }
+    }
+
+    /// Marking several in a row sends one push.
+    static let cancelBatchDelay: Duration = .seconds(2)
+    /// What fits in a push, which carries the list; any others clear with the silent push.
+    static let cancelLimit = 40
+
+    /// The newest marks, each once.
+    static func cancelList(_ fingerprints: [String]) -> [String] {
+        var seen = Set<String>()
+        let unique = fingerprints.reversed().filter { seen.insert($0).inserted }
+        return Array(unique.prefix(cancelLimit).reversed())
+    }
+
+    /// Marked read here: the iPhone's alerts about these go within seconds, by the push
+    /// that shows nothing, rather than whenever iCloud's silent push wakes it.
+    func cancel(fingerprints: [String]) {
+        guard database != nil, !fingerprints.isEmpty else { return }
+        pendingCancel += fingerprints
+        guard cancelTask == nil else { return }
+        cancelTask = Task {
+            try? await Task.sleep(for: Self.cancelBatchDelay)
+            await sendPendingCancel()
+        }
+    }
+
+    private func sendPendingCancel(now: Date = Date()) async {
+        let read = Self.cancelList(pendingCancel)
+        pendingCancel = []
+        cancelTask = nil
+        guard let database, !read.isEmpty else { return }
+        let push = CKRecord(
+            recordType: HeldCancelRecordSchema.recordType,
+            recordID: CKRecord.ID(recordName: HeldCancelRecordSchema.recordName(companionID: companionID))
+        )
+        push[HeldCancelRecordSchema.cancelledAt] = now
+        push[HeldCancelRecordSchema.read] = HeldReleaseRecordSchema.value(read)
+        do {
+            let (saved, _) = try await database.modifyRecords(saving: [push], deleting: [], savePolicy: .changedKeys)
+            if case .failure(let error)? = saved[push.recordID] { throw error }
+            SafeDiagnosticLog.shared.record("held release: marked read, cancel sent for \(read.count)")
+        } catch {
+            SafeDiagnosticLog.shared.record("held release: cancel failed: \(error.localizedDescription)")
         }
     }
 
