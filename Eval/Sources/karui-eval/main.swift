@@ -9,6 +9,10 @@ Usage:
       variant (default: every .txt in ./variants), and writes a report. Items the
       rules decided are left out, here and in every command: no prompt changes them.
       --shipping-only     Only the shipping prompt, no variants
+      --path on-device    Karui's own on-device sort instead of the Second Opinion prompt:
+                          its instructions and structured output, with --backend on-device
+                          (Apple's model) or ollama (a model of your own, as Foundation
+                          Models would run it); no variants
       --runs N            Answers per item and prompt (default 3)
       --limit N           Only the first N items, to try a variant cheaply
       --dry-run           Count what would be asked, and ask nothing
@@ -158,6 +162,11 @@ func reportFolder(_ arguments: Arguments) throws -> URL {
 }
 
 func run(_ arguments: Arguments) throws {
+    if let path = arguments.value("--path") {
+        guard path == "on-device" else { throw EvalError("--path is on-device; leave it out for the Second Opinion prompt.") }
+        guard #available(macOS 27.0, *) else { throw EvalError("--path on-device needs macOS 27.") }
+        return try runOnDevicePath(arguments)
+    }
     let (goldenURL, items, ruleDecided) = try golden(arguments)
     let limited = Array(items.prefix(try arguments.int("--limit", default: items.count)))
     let runs = try arguments.int("--runs", default: 3)
@@ -176,6 +185,56 @@ func run(_ arguments: Arguments) throws {
     let context = ReportWriter.Context(
         goldenFile: goldenURL.lastPathComponent, itemCount: limited.count, unclearCount: unclear, ruleDecidedCount: ruleDecided, runs: runs,
         backend: backend.name, progress: progress, stoppedEarly: stoppedEarly
+    )
+    let markdown = ReportWriter.markdown(results, context: context)
+    let out = try reportFolder(arguments)
+    try Data(markdown.utf8).write(to: out.appending(path: "report.md"))
+    try ReportWriter.jsonLines(results).write(to: out.appending(path: "results.jsonl"))
+    print(markdown)
+    print("Written to \(out.path)")
+}
+
+@available(macOS 27.0, *)
+func runOnDevicePath(_ arguments: Arguments) throws {
+    guard arguments.values["--variant"] == nil else { throw EvalError("--path on-device has no variants: it runs the classifier as it is.") }
+    let model: OnDevicePath.Model
+    let check: () throws -> Void
+    switch arguments.value("--backend") ?? "on-device" {
+    case "on-device":
+        model = .apple
+        check = { try OnDeviceClient().check() }
+    case "ollama":
+        guard let name = arguments.value("--model") else { throw EvalError("--backend ollama needs --model, such as qwen3.5:4b.") }
+        model = .ollama(name)
+        check = { try OllamaClient(model: name).check() }
+    case let other:
+        throw EvalError("--path on-device runs on-device or ollama, not “\(other)”.")
+    }
+    let (goldenURL, items, ruleDecided) = try golden(arguments)
+    let limited = Array(items.prefix(try arguments.int("--limit", default: items.count)))
+    let runs = try arguments.int("--runs", default: 1)
+    let path = OnDevicePath(model: model, policy: try policy(arguments), locale: locale(arguments))
+    var (results, itemsByPrompt) = path.prepare(limited)
+    let runner = Runner(
+        items: limited, policy: try policy(arguments), locale: locale(arguments), runs: runs, cache: try cache(arguments),
+        namespace: model.cacheNamespace, delay: arguments.value("--delay").flatMap(Double.init) ?? 0,
+        ask: { prompt in itemsByPrompt[prompt].flatMap(path.ask) },
+        report: { progress in
+            let done = progress.cached + progress.asked + progress.failed
+            FileHandle.standardError.write(Data("\r\(done)/\(progress.total) answers: \(progress.cached) cached, \(progress.asked) asked, \(progress.failed) failed   ".utf8))
+        }
+    )
+    let unclear = limited.filter { $0.labelCategory == nil }.count
+    let toAsk = runner.uncached(results)
+    if ruleDecided > 0 { print("Leaving out \(ruleDecided) items the rules decided.") }
+    print("\(limited.count - unclear) graded items × \(runs) runs, \(model.name): \(toAsk) to ask, the rest cached.")
+    if arguments.flags.contains("--dry-run") { return }
+    if toAsk > 0 { try check() }
+    let (progress, stoppedEarly) = runner.run(&results)
+    printError("")
+    let context = ReportWriter.Context(
+        goldenFile: goldenURL.lastPathComponent, itemCount: limited.count, unclearCount: unclear, ruleDecidedCount: ruleDecided, runs: runs,
+        backend: model.name, progress: progress, stoppedEarly: stoppedEarly
     )
     let markdown = ReportWriter.markdown(results, context: context)
     let out = try reportFolder(arguments)

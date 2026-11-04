@@ -330,9 +330,13 @@ public struct FoundationModelClassifier: NotificationClassifying {
     public static let logger = Logger(subsystem: "com.justin.henry.karui", category: "Classifier")
     private let fallback = RuleBasedClassifier()
     public let environment: SortingEnvironment
+    /// A session on another model, given the instructions, as karui-eval runs a model
+    /// of its own the way Karui would. Nil, as in the apps, is Apple's on-device model.
+    private let makeSession: (@Sendable (String) -> LanguageModelSession)?
 
-    public init(environment: SortingEnvironment) {
+    public init(environment: SortingEnvironment, makeSession: (@Sendable (String) -> LanguageModelSession)? = nil) {
         self.environment = environment
+        self.makeSession = makeSession
     }
 
     public func classify(_ notification: NotificationInput, policy: TriagePolicy) async -> TriageResult {
@@ -366,38 +370,31 @@ public struct FoundationModelClassifier: NotificationClassifying {
         return SilencedSenders.applying(to: environment.applyingCorrections(quieted, notification, policy), for: notification, policy: policy)
     }
 
-    private func classifyWithFoundationModel(
-        _ notification: NotificationInput,
-        policy: TriagePolicy
-    ) async -> TriageResult {
-        let model = SystemLanguageModel(useCase: .general)
-        guard case .available = model.availability else {
-            Self.logger.error("On-device model unavailable: \(String(describing: model.availability), privacy: .public)")
-            return fallbackResult(
-                notification,
-                policy: policy,
-                detail: KaruiLocalization.formatted("On-device model unavailable: %@.", String(describing: model.availability))
-            )
-        }
+    /// The model's decision alone, without the rules that come before and after it:
+    /// what karui-eval scores. `now` stands in for the clock, as it replays past sorts.
+    public func modelDecision(for notification: NotificationInput, policy: TriagePolicy, now: Date = .now, locale: Locale = .current) async -> TriageResult {
+        await classifyWithFoundationModel(notification, policy: policy, now: now, locale: locale)
+    }
 
+    /// What the model is given for a notification: the session's instructions, and the
+    /// prompt.
+    public func modelInput(for notification: NotificationInput, policy: TriagePolicy, now: Date = .now, locale: Locale = .current) -> (instructions: String, prompt: String) {
         let extractsDeadline = policy.deadlineRemindersEnabled
-        let receivedAt = notification.receivedAt ?? .now
-        let tagsWhenSorting = policy.tagsWhenSorting
-        var instructions = TriageInstructions.text(reasonLanguageInstruction: reasonLanguageInstruction)
-        if tagsWhenSorting {
-            instructions += "\n" + SearchTags.instructions(languages: SearchTags.languages(readLanguages: policy.readLanguages))
+        let receivedAt = notification.receivedAt ?? now
+        var instructions = TriageInstructions.text(reasonLanguageInstruction: TriageInstructions.reasonLanguageInstruction(locale: locale))
+        if policy.tagsWhenSorting {
+            instructions += "\n" + SearchTags.instructions(languages: SearchTags.languages(readLanguages: policy.readLanguages, locale: locale))
         }
-        let session = LanguageModelSession(
-            model: model,
-            instructions: extractsDeadline ? instructions + "\n" + DeadlineExtraction.instructions : instructions
-        )
+        if extractsDeadline {
+            instructions += "\n" + DeadlineExtraction.instructions
+        }
         let calendarContext = environment.calendarContext(notification)
         let vipIdentityContext = VIPPromptContextFormatter.format(identities: policy.vipIdentities)
         let isImportantApp = ImportantAppMatcher.matchingApp(
             for: notification.source,
-            in: policy.importantApps(activeAt: .now)
+            in: policy.importantApps(activeAt: now)
         ) != nil
-        let offHoursWorkApps = policy.offHoursWorkApps(at: .now)
+        let offHoursWorkApps = policy.offHoursWorkApps(at: now)
         let triagePrompt = """
         User policy:
         \(vipIdentityContext)
@@ -419,11 +416,35 @@ public struct FoundationModelClassifier: NotificationClassifying {
         \(calendarContext)
 
         Notification:
-        \(NotificationPromptFormatter.format(notification, isImportantApp: isImportantApp, userNames: policy.commaSeparatedValues(from: policy.userNames), isKnownCorrespondent: KnownCorrespondents.name(for: notification, policy: policy, match: environment.correspondentMatch) != nil))
+        \(NotificationPromptFormatter.format(notification, isImportantApp: isImportantApp, userNames: policy.commaSeparatedValues(from: policy.userNames), isKnownCorrespondent: KnownCorrespondents.name(for: notification, policy: policy, match: environment.correspondentMatch) != nil, now: now))
         """
         let prompt = extractsDeadline
             ? triagePrompt + "\n" + DeadlineExtraction.datesPromptLine(receivedAt: receivedAt)
             : triagePrompt
+        return (instructions, prompt)
+    }
+
+    private func classifyWithFoundationModel(
+        _ notification: NotificationInput,
+        policy: TriagePolicy,
+        now: Date = .now,
+        locale: Locale = .current
+    ) async -> TriageResult {
+        let model = SystemLanguageModel(useCase: .general)
+        // Before the prompt, which reads the calendar.
+        if makeSession == nil, case .unavailable = model.availability {
+            Self.logger.error("On-device model unavailable: \(String(describing: model.availability), privacy: .public)")
+            return fallbackResult(
+                notification,
+                policy: policy,
+                detail: KaruiLocalization.formatted("On-device model unavailable: %@.", String(describing: model.availability))
+            )
+        }
+        let (instructions, prompt) = modelInput(for: notification, policy: policy, now: now, locale: locale)
+        let session = makeSession?(instructions) ?? LanguageModelSession(model: model, instructions: instructions)
+        let extractsDeadline = policy.deadlineRemindersEnabled
+        let tagsWhenSorting = policy.tagsWhenSorting
+        let receivedAt = notification.receivedAt ?? now
 
         let (appState, deviceState) = await environment.conditions()
         let start = ContinuousClock.now
@@ -533,10 +554,6 @@ public struct FoundationModelClassifier: NotificationClassifying {
     private func termsText(_ terms: String) -> String {
         let trimmed = terms.trimmingCharacters(in: .whitespacesAndNewlines)
         return trimmed.isEmpty ? "none" : trimmed
-    }
-
-    private var reasonLanguageInstruction: String {
-        TriageInstructions.reasonLanguageInstruction()
     }
 
     private func importantContactResult(
