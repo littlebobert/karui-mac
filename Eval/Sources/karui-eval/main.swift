@@ -17,11 +17,15 @@ Usage:
       --limit N           Only the first N items, to try a variant cheaply
       --dry-run           Count what would be asked, and ask nothing
       --delay SECONDS     Pause between calls (default 5 for PCC, 0 otherwise)
+      --parallel N        Ask up to N at once, for claude or openai (default 1); no delay
       --backend NAME      pcc (default), ollama, on-device, claude (with ANTHROPIC_API_KEY set),
+                          openai (with OPENAI_API_KEY set),
                           or external (with --model,
                           answers brought in by import-answers)
-      --model NAME        The Ollama model, such as gemma4:12b-mlx; for claude, default claude-opus-5-5
-      --effort LEVEL      For claude: low, medium (default), high, xhigh, or max
+      --model NAME        The Ollama model, such as gemma4:12b-mlx; for claude, default claude-opus-5-5;
+                          for openai, default gpt-6.1-sol
+      --effort LEVEL      For claude: low, medium (default), high, xhigh, or max; for openai,
+                          its reasoning effort (default medium)
       --shortcut NAME     For pcc; default “Karui Second Opinion”
       --settings FILE     The iPhone's sorting settings (default: Karui for Mac's copy)
       --locale ID         The iPhone's locale, for the reason's language (default: this Mac's)
@@ -129,10 +133,12 @@ func backend(_ arguments: Arguments) throws -> Backend {
     case "on-device": return .onDevice(OnDeviceClient())
     case "claude":
         return .claude(ClaudeClient(model: arguments.value("--model") ?? "claude-opus-5-5", effort: arguments.value("--effort") ?? "medium"))
+    case "openai":
+        return .openAI(OpenAIClient(model: arguments.value("--model") ?? "gpt-6.1-sol", effort: arguments.value("--effort") ?? "medium"))
     case "external":
         guard let name = arguments.value("--model") else { throw EvalError("--backend external needs --model, the name its answers were imported under.") }
         return .external(name)
-    case let other: throw EvalError("No backend called “\(other)”: pcc, ollama, on-device, claude, or external.")
+    case let other: throw EvalError("No backend called “\(other)”: pcc, ollama, on-device, claude, openai, or external.")
     }
 }
 
@@ -180,7 +186,9 @@ func run(_ arguments: Arguments) throws {
     print("\(limited.count - unclear) graded items × \(templates.count) prompts (\(templates.map(\.name).joined(separator: ", "))) × \(runs) runs, \(backend.name): \(toAsk) to ask, the rest cached.")
     if arguments.flags.contains("--dry-run") { return }
     if toAsk > 0 { try backend.check() }
-    let (progress, stoppedEarly) = runner.run(&results)
+    let parallel = try arguments.int("--parallel", default: 1)
+    if parallel > 1, case .pcc = backend { throw EvalError("--parallel is for an API; Private Cloud Compute answers one at a time.") }
+    let (progress, stoppedEarly) = runner.run(&results, parallel: parallel)
     printError("")
     let context = ReportWriter.Context(
         goldenFile: goldenURL.lastPathComponent, itemCount: limited.count, unclearCount: unclear, ruleDecidedCount: ruleDecided, runs: runs,

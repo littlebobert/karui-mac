@@ -39,7 +39,9 @@ public struct VariantResult: Equatable, Sendable {
 /// Sends each graded item's prompt, under each template, to Private Cloud Compute,
 /// one run at a time across everything: if Apple's limit stops it partway, every
 /// variant has the same runs to compare. Items graded Unclear aren't asked about.
-public final class Runner {
+/// Unchecked: its properties are constants, and a parallel run takes its own lock
+/// around the cache and the shared tallies.
+public final class Runner: @unchecked Sendable {
     public struct Progress: Sendable {
         public var cached = 0
         public var asked = 0
@@ -148,6 +150,71 @@ public final class Runner {
         return (progress, false)
     }
 
+    /// As `run`, with up to `parallel` answers being asked at once, for an API that
+    /// takes them. The outcomes land in the order `run` gives them. Asking stops once
+    /// `maxFailuresInARow` fail in a row, though requests already sent finish.
+    @discardableResult
+    public func run(_ results: inout [VariantResult], parallel: Int) -> (progress: Progress, stoppedEarly: Bool) {
+        guard parallel > 1 else { return run(&results) }
+        struct Slot: Hashable { let run: Int; let item: Int; let variant: Int }
+        let state = ParallelState<Slot>(progress: Progress(total: results.reduce(0) { $0 + $1.items.count } * runs))
+        var jobs: [(slot: Slot, prompt: String)] = []
+        for run in 0..<runs {
+            for itemIndex in results.first?.items.indices ?? 0..<0 {
+                for variantIndex in results.indices {
+                    let slot = Slot(run: run, item: itemIndex, variant: variantIndex)
+                    let prompt = results[variantIndex].items[itemIndex].prompt
+                    if let entry = cache.entry(prompt: prompt, run: run, namespace: namespace) {
+                        state.outcomes[slot] = Self.outcome(answer: entry.answer, seconds: entry.seconds, wasCached: true)
+                        state.progress.cached += 1
+                    } else {
+                        jobs.append((slot, prompt))
+                    }
+                }
+            }
+        }
+        report(state.progress)
+        let queued = jobs
+        DispatchQueue.concurrentPerform(iterations: min(parallel, max(jobs.count, 1))) { _ in
+            while true {
+                state.lock.lock()
+                guard !state.stopped, state.next < queued.count else {
+                    state.lock.unlock()
+                    return
+                }
+                let job = queued[state.next]
+                state.next += 1
+                state.lock.unlock()
+
+                let answer = ask(job.prompt)
+
+                state.lock.lock()
+                if let answer {
+                    state.failuresInARow = 0
+                    _ = try? cache.store(prompt: job.prompt, run: job.slot.run, namespace: namespace, answer: answer.answer, seconds: answer.seconds)
+                    state.outcomes[job.slot] = Self.outcome(answer: answer.answer, seconds: answer.seconds, wasCached: false)
+                    state.progress.asked += 1
+                } else {
+                    state.progress.failed += 1
+                    state.failuresInARow += 1
+                    if state.failuresInARow >= maxFailuresInARow { state.stopped = true }
+                }
+                report(state.progress)
+                state.lock.unlock()
+            }
+        }
+        for run in 0..<runs {
+            for itemIndex in results.first?.items.indices ?? 0..<0 {
+                for variantIndex in results.indices {
+                    if let outcome = state.outcomes[Slot(run: run, item: itemIndex, variant: variantIndex)] {
+                        results[variantIndex].items[itemIndex].outcomes.append(outcome)
+                    }
+                }
+            }
+        }
+        return (state.progress, state.stopped)
+    }
+
     /// The answers already cached, asking nothing: to compare with a backend that
     /// isn't being asked now.
     public func fillFromCache(_ results: inout [VariantResult]) {
@@ -165,5 +232,19 @@ public final class Runner {
 
     static func outcome(answer: String, seconds: Double, wasCached: Bool) -> Outcome {
         Outcome(category: SecondOpinionPrompt.parse(answer: answer)?.category, answer: answer, seconds: seconds, wasCached: wasCached)
+    }
+}
+
+/// What the workers of a parallel run share, behind its lock.
+final class ParallelState<Slot: Hashable>: @unchecked Sendable {
+    let lock = NSLock()
+    var next = 0
+    var failuresInARow = 0
+    var stopped = false
+    var outcomes: [Slot: Outcome] = [:]
+    var progress: Runner.Progress
+
+    init(progress: Runner.Progress) {
+        self.progress = progress
     }
 }

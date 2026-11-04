@@ -123,6 +123,34 @@ final class RunnerTests: XCTestCase {
         XCTAssertTrue(again[1].items[0].outcomes.allSatisfy(\.wasCached))
     }
 
+    /// Asked several at a time, the outcomes are the ones asked one at a time, in the
+    /// same places, and each is cached.
+    func testAParallelRunMatchesOneAtATime() throws {
+        let items = (0..<12).map { item("message \($0)", label: $0 % 3 == 0 ? "notifyNow" : "summary") }
+        let category: (String) -> String = { prompt in
+            ["Important", "Neutral", "Spam"][Int(prompt.unicodeScalars.reduce(0) { $0 &+ Int($1.value) }) % 3]
+        }
+        let lock = NSLock()
+        var asked = 0
+        let parallel = try runner(items) { prompt in
+            lock.lock(); asked += 1; lock.unlock()
+            Thread.sleep(forTimeInterval: 0.01)
+            return (self.answer(category(prompt)), 1)
+        }
+        var inParallel = try parallel.prepare([.shipping, reasonFirst])
+        let outcome = parallel.run(&inParallel, parallel: 4)
+        XCTAssertFalse(outcome.stoppedEarly)
+        XCTAssertEqual(outcome.progress.asked, 48)
+        XCTAssertEqual(asked, 48)
+        XCTAssertEqual(try AnswerCache(url: cacheURL).count, 48)
+
+        try FileManager.default.removeItem(at: cacheURL)
+        let sequential = try runner(items) { prompt in (self.answer(category(prompt)), 1) }
+        var oneAtATime = try sequential.prepare([.shipping, reasonFirst])
+        sequential.run(&oneAtATime)
+        XCTAssertEqual(inParallel.map { $0.items.map { $0.outcomes.map(\.category) } }, oneAtATime.map { $0.items.map { $0.outcomes.map(\.category) } })
+    }
+
     /// When the Shortcut keeps failing it stops, every prompt with the same runs, and
     /// a failure isn't cached.
     func testStopsWhenTheShortcutKeepsFailing() throws {

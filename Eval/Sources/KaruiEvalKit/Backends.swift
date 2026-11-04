@@ -9,6 +9,7 @@ public enum Backend: Sendable {
     case ollama(OllamaClient)
     case onDevice(OnDeviceClient)
     case claude(ClaudeClient)
+    case openAI(OpenAIClient)
     /// Answers from outside the tool, such as from Claude, brought in with
     /// `import-answers`; never asked from here.
     case external(String)
@@ -19,6 +20,7 @@ public enum Backend: Sendable {
         case .ollama(let client): "Ollama \(client.model)"
         case .onDevice: "Apple’s on-device model"
         case .claude(let client): "Claude API \(client.model), effort \(client.effort)"
+        case .openAI(let client): "OpenAI API \(client.model), effort \(client.effort)"
         case .external(let name): name
         }
     }
@@ -29,6 +31,7 @@ public enum Backend: Sendable {
         case .ollama(let client): client.model
         case .onDevice: "on-device"
         case .claude(let client): client.model
+        case .openAI(let client): client.model
         case .external(let name): name
         }
     }
@@ -42,6 +45,7 @@ public enum Backend: Sendable {
         case .ollama(let client): "ollama:\(client.model)"
         case .onDevice: "on-device:\(ProcessInfo.processInfo.operatingSystemVersionString)"
         case .claude(let client): "claude:\(client.model):\(client.effort)"
+        case .openAI(let client): "openai:\(client.model):\(client.effort)"
         case .external(let name): "external:\(name)"
         }
     }
@@ -55,6 +59,7 @@ public enum Backend: Sendable {
         case .ollama(let client): try client.check()
         case .onDevice(let client): try client.check()
         case .claude(let client): try client.check()
+        case .openAI(let client): try client.check()
         case .external: return
         }
     }
@@ -65,6 +70,7 @@ public enum Backend: Sendable {
         case .ollama(let client): client.ask(prompt)
         case .onDevice(let client): client.ask(prompt)
         case .claude(let client): client.ask(prompt)
+        case .openAI(let client): client.ask(prompt)
         case .external: nil
         }
     }
@@ -261,6 +267,82 @@ public struct ClaudeClient: Sendable {
                 Thread.sleep(forTimeInterval: min(wait, 60))
             default:
                 FileHandle.standardError.write(Data("\nClaude API \(response.statusCode): \(String(decoding: data, as: UTF8.self))\n".utf8))
+                return nil
+            }
+        }
+        return nil
+    }
+}
+
+/// An OpenAI model through the Responses API, sent the prompt as the one input, with
+/// `OPENAI_API_KEY` from the environment. Nothing is stored at OpenAI (`store: false`).
+public struct OpenAIClient: Sendable {
+    public let model: String
+    /// The reasoning effort, as for Claude: how much it thinks before answering.
+    public let effort: String
+    public let deadline: TimeInterval
+
+    public init(model: String = "gpt-6.1-sol", effort: String = "medium", deadline: TimeInterval = 180) {
+        self.model = model
+        self.effort = effort
+        self.deadline = deadline
+    }
+
+    private var key: String? {
+        ProcessInfo.processInfo.environment["OPENAI_API_KEY"].flatMap { $0.isEmpty ? nil : $0 }
+    }
+
+    public func check() throws {
+        guard key != nil else {
+            throw EvalError("No OpenAI key: export OPENAI_API_KEY in the terminal that runs this.")
+        }
+    }
+
+    /// The answer's text. A refusal is kept as a note, read as unreadable; nil for what
+    /// may pass (a rate limit, an overload, the network) and for a request the API
+    /// turned down, whose reason is printed.
+    public func ask(_ prompt: String) -> (answer: String, seconds: Double)? {
+        guard let key else { return nil }
+        var request = URLRequest(url: URL(string: "https://api.openai.com/v1/responses")!)
+        request.httpMethod = "POST"
+        request.timeoutInterval = deadline
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.setValue("Bearer \(key)", forHTTPHeaderField: "Authorization")
+        request.httpBody = try? JSONSerialization.data(withJSONObject: [
+            "model": model,
+            "store": false,
+            "reasoning": ["effort": effort],
+            "input": prompt,
+        ] as [String: Any])
+
+        let start = Date()
+        for attempt in 0..<3 {
+            let box = ResultBox<(Data?, HTTPURLResponse?)>((nil, nil))
+            let done = DispatchSemaphore(value: 0)
+            URLSession.shared.dataTask(with: request) { data, response, _ in
+                box.value = (data, response as? HTTPURLResponse)
+                done.signal()
+            }.resume()
+            done.wait()
+            let (data, response) = box.value
+            guard let data, let response else { return nil }
+            switch response.statusCode {
+            case 200:
+                guard let object = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+                      let output = object["output"] as? [[String: Any]] else { return nil }
+                let parts = output.filter { $0["type"] as? String == "message" }
+                    .flatMap { $0["content"] as? [[String: Any]] ?? [] }
+                if parts.contains(where: { $0["type"] as? String == "refusal" }) {
+                    return ("[OpenAI declined]", Date().timeIntervalSince(start))
+                }
+                let text = parts.filter { $0["type"] as? String == "output_text" }.compactMap { $0["text"] as? String }.joined()
+                guard !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return nil }
+                return (text, Date().timeIntervalSince(start))
+            case 429, 500..., 408:
+                let wait = response.value(forHTTPHeaderField: "retry-after").flatMap(Double.init) ?? Double(5 << attempt)
+                Thread.sleep(forTimeInterval: min(wait, 60))
+            default:
+                FileHandle.standardError.write(Data("\nOpenAI API \(response.statusCode): \(String(decoding: data, as: UTF8.self))\n".utf8))
                 return nil
             }
         }
