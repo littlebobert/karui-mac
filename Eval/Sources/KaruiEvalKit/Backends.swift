@@ -97,7 +97,9 @@ public struct OllamaClient: Sendable {
         var request = URLRequest(url: host.appending(path: "api/generate"))
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        request.httpBody = try? JSONSerialization.data(withJSONObject: ["model": model, "prompt": prompt, "stream": false])
+        // No thinking out loud first: Qwen 3.5 spent 2,000 tokens and a minute on a one-word
+        // answer, which Karui's sort can't afford.
+        request.httpBody = try? JSONSerialization.data(withJSONObject: ["model": model, "prompt": prompt, "stream": false, "think": false])
         let start = Date()
         struct Reply: Decodable { let response: String }
         guard let data = Self.send(request, deadline: deadline),
