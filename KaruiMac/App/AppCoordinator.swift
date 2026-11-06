@@ -115,10 +115,17 @@ final class AppCoordinator {
             markRead([item.id])
         }
         banners.start()
-        // Read in its own app: Karui's banner for it goes too.
+        // Read in its own app, or its notification cleared here: Karui's banner for it
+        // goes too, and so does the iPhone's alert, held or sent, by the push that shows
+        // nothing. iCloud's silent push alone can be held back or dropped, leaving a
+        // held alert to its fallback, which then shows it while the person is still here.
         inbox.onRead = { [weak self] ids in
-            self?.banners.remove(ids: Array(ids))
-            self?.reposted.subtract(ids)
+            guard let self else { return }
+            banners.remove(ids: Array(ids))
+            reposted.subtract(ids)
+            let fingerprints = inbox.items.filter { ids.contains($0.id) }.map(\.fingerprint)
+            let heldRelease = heldRelease
+            Task { await heldRelease.cancel(fingerprints: fingerprints) }
         }
         refreshSetupNudge()
         // A Focus turning on catches up on the last few minutes' Important ones.
