@@ -390,6 +390,9 @@ public enum ClassificationEngine: String, Codable, Sendable {
     case deterministicRules = "Transparent rules"
     /// Apple's larger model, asked by the Shortcut for a second opinion.
     case privateCloudCompute = "Private Cloud Compute"
+    /// Karui Cloud Sorting: OpenAI's decision model, through Karui's invite-only
+    /// backend, chose the category.
+    case karuiCloud = "Karui Cloud"
     /// The person, fixing the category from History.
     case person = "Your correction"
     /// A value from a newer Karui, read by an older one: the item still shows.
