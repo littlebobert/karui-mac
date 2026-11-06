@@ -88,4 +88,22 @@ final class SlackBotPostTests: XCTestCase {
         // The same notification read again, as when the harvest catches up, is not.
         XCTAssertFalse(inbox.add(macRecord(id: 304, build: 207, at: now), as: .slack))
     }
+
+    /// One record ID handed out three times in an afternoon, each time to a post
+    /// that starts like the others (Linear's thread updates): every post keeps its
+    /// own ID. Before, the two earlier ones were both renamed `notification-304-<print>`,
+    /// so selecting one selected both, and the store kept only one of them.
+    func testARecordIDReusedTwiceForLookAlikePostsKeepsEachPost() {
+        let inbox = inbox()
+        let first = now.addingTimeInterval(-60 * 60)
+        let second = now.addingTimeInterval(-30 * 60)
+        inbox.add(macRecord(id: 304, build: 205, at: first), as: .slack)
+        inbox.add(macRecord(id: 304, build: 206, at: second), as: .slack)
+        inbox.add(macRecord(id: 304, build: 207, at: now), as: .slack)
+        let ids = inbox.items.map(\.id)
+        XCTAssertEqual(ids.count, 3)
+        XCTAssertEqual(Set(ids).count, 3, "every post keeps its own ID: \(ids)")
+        XCTAssertEqual(inbox.items.first { $0.id == "notification-304" }?.deliveredAt, now)
+        XCTAssertEqual(Set(inbox.items.map(\.deliveredAt)), [first, second, now])
+    }
 }

@@ -467,6 +467,27 @@ final class Inbox {
         openItemID = nil
     }
 
+    /// The ID an earlier notification keeps when Notification Center gives its record
+    /// ID to a new one: the record ID, the start of its fingerprint, and when it
+    /// arrived. A bot's posts share the fingerprint (every Linear update in a thread
+    /// starts the same way), and one record ID can be handed out several times a day,
+    /// so without the time two of them got the same ID: both rows selected at once,
+    /// and the store, which keeps one entry per ID, lost one.
+    static func reusedID(_ id: String, for item: Item) -> String {
+        "\(id)-\(item.fingerprint.prefix(12))-\(Int(item.deliveredAt.timeIntervalSince1970))"
+    }
+
+    /// `base`, or with a counter when an item already has it.
+    private func unusedID(_ base: String) -> String {
+        var candidate = base
+        var counter = 2
+        while items.contains(where: { $0.id == candidate }) {
+            candidate = "\(base)-\(counter)"
+            counter += 1
+        }
+        return candidate
+    }
+
     /// The same notification seen by both devices can hash differently; when the
     /// fingerprint doesn't match, `LooseMatch` says whether it's the same one.
     static let looseMatchWindow = LooseMatch.window
@@ -515,7 +536,7 @@ final class Inbox {
             guard !isSame else { return false }
             let stale = items[index]
             var rekeyed = stale
-            rekeyed.id = "\(id)-\(stale.fingerprint.prefix(12))"
+            rekeyed.id = unusedID(Self.reusedID(id, for: stale))
             items[index] = rekeyed
             store?.delete(ids: [id])
             store?.save([rekeyed])
