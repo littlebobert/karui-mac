@@ -17,9 +17,11 @@ Usage:
       --limit N           Only the first N items, to try a variant cheaply
       --dry-run           Count what would be asked, and ask nothing
       --delay SECONDS     Pause between calls (default 5 for PCC, 0 otherwise)
-      --parallel N        Ask up to N at once, for claude or openai (default 1); no delay
+      --parallel N        Ask up to N at once, for claude, openai, or decisions (default 1); no delay
       --backend NAME      pcc (default), ollama, on-device, claude (with ANTHROPIC_API_KEY set),
-                          openai (with OPENAI_API_KEY set),
+                          openai (with OPENAI_API_KEY set), decisions (OpenAI's Decisions
+                          API, through Vercel's AI Gateway with AI_GATEWAY_API_KEY set,
+                          otherwise OpenAI with OPENAI_API_KEY),
                           or external (with --model,
                           answers brought in by import-answers)
       --model NAME        The Ollama model, such as gemma4:12b-mlx; for claude, default claude-opus-5-5;
@@ -135,10 +137,12 @@ func backend(_ arguments: Arguments) throws -> Backend {
         return .claude(ClaudeClient(model: arguments.value("--model") ?? "claude-opus-5-5", effort: arguments.value("--effort") ?? "medium"))
     case "openai":
         return .openAI(OpenAIClient(model: arguments.value("--model") ?? "gpt-6.1-sol", effort: arguments.value("--effort") ?? "medium"))
+    case "decisions":
+        return .decisions(DecisionsClient(model: arguments.value("--model")))
     case "external":
         guard let name = arguments.value("--model") else { throw EvalError("--backend external needs --model, the name its answers were imported under.") }
         return .external(name)
-    case let other: throw EvalError("No backend called “\(other)”: pcc, ollama, on-device, claude, openai, or external.")
+    case let other: throw EvalError("No backend called “\(other)”: pcc, ollama, on-device, claude, openai, decisions, or external.")
     }
 }
 

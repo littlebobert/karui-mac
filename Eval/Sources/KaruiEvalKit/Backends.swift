@@ -10,6 +10,7 @@ public enum Backend: Sendable {
     case onDevice(OnDeviceClient)
     case claude(ClaudeClient)
     case openAI(OpenAIClient)
+    case decisions(DecisionsClient)
     /// Answers from outside the tool, such as from Claude, brought in with
     /// `import-answers`; never asked from here.
     case external(String)
@@ -21,6 +22,7 @@ public enum Backend: Sendable {
         case .onDevice: "Apple’s on-device model"
         case .claude(let client): "Claude API \(client.model), effort \(client.effort)"
         case .openAI(let client): "OpenAI API \(client.model), effort \(client.effort)"
+        case .decisions(let client): "Decisions API \(client.model) via \(client.via)"
         case .external(let name): name
         }
     }
@@ -32,6 +34,7 @@ public enum Backend: Sendable {
         case .onDevice: "on-device"
         case .claude(let client): client.model
         case .openAI(let client): client.model
+        case .decisions(let client): client.model
         case .external(let name): name
         }
     }
@@ -46,6 +49,7 @@ public enum Backend: Sendable {
         case .onDevice: "on-device:\(ProcessInfo.processInfo.operatingSystemVersionString)"
         case .claude(let client): "claude:\(client.model):\(client.effort)"
         case .openAI(let client): "openai:\(client.model):\(client.effort)"
+        case .decisions(let client): "decisions:\(client.model)"
         case .external(let name): "external:\(name)"
         }
     }
@@ -60,6 +64,7 @@ public enum Backend: Sendable {
         case .onDevice(let client): try client.check()
         case .claude(let client): try client.check()
         case .openAI(let client): try client.check()
+        case .decisions(let client): try client.check()
         case .external: return
         }
     }
@@ -71,6 +76,7 @@ public enum Backend: Sendable {
         case .onDevice(let client): client.ask(prompt)
         case .claude(let client): client.ask(prompt)
         case .openAI(let client): client.ask(prompt)
+        case .decisions(let client): client.ask(prompt)
         case .external: nil
         }
     }
@@ -343,6 +349,125 @@ public struct OpenAIClient: Sendable {
                 Thread.sleep(forTimeInterval: min(wait, 60))
             default:
                 FileHandle.standardError.write(Data("\nOpenAI API \(response.statusCode): \(String(decoding: data, as: UTF8.self))\n".utf8))
+                return nil
+            }
+        }
+        return nil
+    }
+}
+
+/// OpenAI's Decisions API, a model that picks from fixed answers and gives each a
+/// probability instead of writing text. It's sent the Second Opinion prompt as the
+/// input and asked one choice question: Important, Neutral, or Spam. The answer is
+/// written back as answer lines, with the probabilities on a line of their own so a
+/// report can try other thresholds later.
+///
+/// Through Vercel's AI Gateway when `AI_GATEWAY_API_KEY` is set (model
+/// `openai/gpt-6-luna-decisions`), otherwise OpenAI directly with `OPENAI_API_KEY`
+/// (model `gpt-6-luna`). Through the gateway every request asks for zero data retention.
+public struct DecisionsClient: Sendable {
+    public let model: String
+    public let deadline: TimeInterval
+    private let endpoint: URL
+    private let key: String?
+    public let via: String
+
+    public init(model: String? = nil, deadline: TimeInterval = 120) {
+        let environment = ProcessInfo.processInfo.environment
+        if let gateway = environment["AI_GATEWAY_API_KEY"], !gateway.isEmpty {
+            key = gateway
+            endpoint = URL(string: "https://ai-gateway.vercel.sh/v1/decisions")!
+            via = "Vercel AI Gateway"
+            self.model = model ?? "openai/gpt-6-luna-decisions"
+        } else {
+            key = environment["OPENAI_API_KEY"].flatMap { $0.isEmpty ? nil : $0 }
+            endpoint = URL(string: "https://api.openai.com/v1/decisions")!
+            via = "OpenAI"
+            self.model = model ?? "gpt-6-luna"
+        }
+        self.deadline = deadline
+    }
+
+    public func check() throws {
+        guard key != nil else {
+            throw EvalError("No key: export AI_GATEWAY_API_KEY for Vercel's AI Gateway, or OPENAI_API_KEY for OpenAI.")
+        }
+    }
+
+    static let choices: [(value: String, description: String)] = [
+        ("Important", "Alert the person now."),
+        ("Neutral", "Keep it for the summary."),
+        ("Spam", "Silence it."),
+    ]
+
+    /// Through the gateway, zero retention is asked for on every request: the gateway
+    /// refuses a request it can't serve that way rather than sending it elsewhere.
+    static func body(model: String, prompt: String, zeroRetention: Bool) -> [String: Any] {
+        var body: [String: Any] = [
+            "model": model,
+            "input": prompt,
+            "questions": [[
+                "type": "choice",
+                "name": "category",
+                "instructions": "Following the instructions in the input, which category does this notification belong in?",
+                "choices": choices.map { ["value": $0.value, "description": $0.description] },
+            ]],
+        ]
+        if zeroRetention { body["providerOptions"] = ["gateway": ["zeroDataRetention": true]] }
+        return body
+    }
+
+    /// The answer lines for a Decisions reply, or a note for a refusal; nil if it
+    /// can't be read.
+    static func answer(from data: Data) -> String? {
+        guard let object = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+              let answer = (object["answers"] as? [[String: Any]])?.first else { return nil }
+        if answer["type"] as? String == "refusal" { return "[Decisions declined]" }
+        guard let choice = answer["choice"] as? String else { return nil }
+        let probabilities = (answer["probabilities"] as? [[String: Any]] ?? []).compactMap { entry -> (String, Double)? in
+            guard let value = entry["value"] as? String, let probability = (entry["probability"] as? NSNumber)?.doubleValue else { return nil }
+            return (value, probability)
+        }
+        var lines = ["Category: \(choice)"]
+        if let confidence = (answer["confidence"] as? NSNumber)?.doubleValue {
+            lines.append("Confidence: \(String(format: "%.3f", confidence))")
+        }
+        lines.append("Probabilities: " + probabilities.map { "\($0.0)=\(String(format: "%.4f", $0.1))" }.joined(separator: " "))
+        return lines.joined(separator: "\n")
+    }
+
+    public func ask(_ prompt: String) -> (answer: String, seconds: Double)? {
+        guard let key else { return nil }
+        var request = URLRequest(url: endpoint)
+        request.httpMethod = "POST"
+        request.timeoutInterval = deadline
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.setValue("Bearer \(key)", forHTTPHeaderField: "Authorization")
+        request.httpBody = try? JSONSerialization.data(withJSONObject: Self.body(model: model, prompt: prompt, zeroRetention: via == "Vercel AI Gateway"))
+
+        let start = Date()
+        for attempt in 0..<3 {
+            let box = ResultBox<(Data?, HTTPURLResponse?)>((nil, nil))
+            let done = DispatchSemaphore(value: 0)
+            URLSession.shared.dataTask(with: request) { data, response, _ in
+                box.value = (data, response as? HTTPURLResponse)
+                done.signal()
+            }.resume()
+            done.wait()
+            let (data, response) = box.value
+            guard let data, let response else { return nil }
+            switch response.statusCode {
+            case 200:
+                guard let answer = Self.answer(from: data) else {
+                    FileHandle.standardError.write(Data("\nDecisions reply not understood: \(String(decoding: data.prefix(500), as: UTF8.self))\n".utf8))
+                    return nil
+                }
+                return (answer, Date().timeIntervalSince(start))
+            case 429, 500..., 408:
+                let wait = response.value(forHTTPHeaderField: "retry-after").flatMap(Double.init) ?? Double(5 << attempt)
+                Thread.sleep(forTimeInterval: min(wait, 60))
+            default:
+                FileHandle.standardError.write(Data("\nDecisions API \(response.statusCode): \(String(decoding: data, as: UTF8.self))\n".utf8))
                 return nil
             }
         }
