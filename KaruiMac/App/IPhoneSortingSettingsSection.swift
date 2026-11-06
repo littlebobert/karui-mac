@@ -27,6 +27,7 @@ struct IPhoneSortingSettingsSection: View {
                 row("Always alert for saved contacts", onOff(policy.alertSavedContacts))
                 row("Alert for senders you’ve written to", onOff(policy.alertKnownCorrespondents))
                 row("Always alert for one-time codes", onOff(policy.alertOneTimeCodes))
+                row("Always alert for event reminders", onOff(policy.alertEventReminders))
                 row("Important Conversations", list(policy.importantConversations.map(\.name)))
                 row("Learned", L10n.format("%lld fixes", Int64(learnedCount)))
                 row("Private Cloud Sorting", secondOpinion)

@@ -572,6 +572,8 @@ public struct TriagePolicy: Codable, Equatable, Sendable {
     public var neutralDigestMinuteOfDay: Int
     /// Messages carrying a verification code are Important.
     public var alertOneTimeCodes: Bool
+    /// Reminders for the person's own events are Important (`EventReminderDetector`).
+    public var alertEventReminders: Bool
     /// Wake Me: an emergency from a chosen person rings an alarm that breaks through
     /// silent mode and Focus.
     public var wakeMeEnabled: Bool
@@ -668,6 +670,7 @@ public struct TriagePolicy: Codable, Equatable, Sendable {
         neutralDigestEnabled: false,
         neutralDigestMinuteOfDay: TriagePolicy.defaultNeutralDigestMinuteOfDay,
         alertOneTimeCodes: true,
+        alertEventReminders: true,
         wakeMeEnabled: false,
         wakeMeIdentityIDs: [],
         wakeMeKeywords: "emergency, 911, hospital, ambulance, accident, call me now, wake up",
@@ -767,6 +770,7 @@ public struct TriagePolicy: Codable, Equatable, Sendable {
         neutralDigestEnabled: Bool = false,
         neutralDigestMinuteOfDay: Int = TriagePolicy.defaultNeutralDigestMinuteOfDay,
         alertOneTimeCodes: Bool = true,
+        alertEventReminders: Bool = true,
         wakeMeEnabled: Bool = false,
         wakeMeIdentityIDs: [UUID] = [],
         wakeMeKeywords: String = "",
@@ -798,6 +802,7 @@ public struct TriagePolicy: Codable, Equatable, Sendable {
         self.neutralDigestEnabled = neutralDigestEnabled
         self.neutralDigestMinuteOfDay = neutralDigestMinuteOfDay
         self.alertOneTimeCodes = alertOneTimeCodes
+        self.alertEventReminders = alertEventReminders
         self.wakeMeEnabled = wakeMeEnabled
         self.wakeMeIdentityIDs = wakeMeIdentityIDs
         self.wakeMeKeywords = wakeMeKeywords
@@ -1197,6 +1202,7 @@ public struct TriagePolicy: Codable, Equatable, Sendable {
         case neutralDigestEnabled
         case neutralDigestMinuteOfDay
         case alertOneTimeCodes
+        case alertEventReminders
         case wakeMeEnabled
         case wakeMeIdentityIDs
         case wakeMeKeywords
@@ -1255,6 +1261,7 @@ public struct TriagePolicy: Codable, Equatable, Sendable {
         neutralDigestMinuteOfDay = try container.decodeIfPresent(Int.self, forKey: .neutralDigestMinuteOfDay)
             ?? TriagePolicy.defaultNeutralDigestMinuteOfDay
         alertOneTimeCodes = try container.decodeIfPresent(Bool.self, forKey: .alertOneTimeCodes) ?? true
+        alertEventReminders = try container.decodeIfPresent(Bool.self, forKey: .alertEventReminders) ?? true
         wakeMeEnabled = try container.decodeIfPresent(Bool.self, forKey: .wakeMeEnabled) ?? false
         wakeMeIdentityIDs = try container.decodeIfPresent([UUID].self, forKey: .wakeMeIdentityIDs) ?? []
         wakeMeKeywords = try container.decodeIfPresent(String.self, forKey: .wakeMeKeywords)
@@ -1311,6 +1318,7 @@ public struct TriagePolicy: Codable, Equatable, Sendable {
         try container.encode(neutralDigestEnabled, forKey: .neutralDigestEnabled)
         try container.encode(neutralDigestMinuteOfDay, forKey: .neutralDigestMinuteOfDay)
         try container.encode(alertOneTimeCodes, forKey: .alertOneTimeCodes)
+        try container.encode(alertEventReminders, forKey: .alertEventReminders)
         try container.encode(wakeMeEnabled, forKey: .wakeMeEnabled)
         try container.encode(wakeMeIdentityIDs, forKey: .wakeMeIdentityIDs)
         try container.encode(wakeMeKeywords, forKey: .wakeMeKeywords)

@@ -41,6 +41,7 @@ public enum QuietApps {
             return true
         }
         if OneTimeCodeDetector.code(in: notification) != nil { return true }
+        if policy.alertEventReminders, EventReminderDetector.eventName(in: notification) != nil { return true }
         let text = [notification.title, notification.body, notification.translatedText]
             .compactMap { $0 }
             .joined(separator: "\n")

@@ -141,8 +141,8 @@ public enum ConversationCooldown {
         people(in: recipients).count >= 2
     }
 
-    /// A VIP writing to you directly, codes, urgent terms, @mentions, time-sensitive
-    /// notifications, and a third message from one person always alert.
+    /// A VIP writing to you directly, codes, event reminders, urgent terms, @mentions,
+    /// time-sensitive notifications, and a third message from one person always alert.
     public static func isExempt(
         _ notification: NotificationInput,
         policy: TriagePolicy,
@@ -153,6 +153,7 @@ public enum ConversationCooldown {
         if isFromVIP, !isGroup(recipients: recipients) { return true }
         if isRepeated || notification.isTimeSensitive == true { return true }
         if OneTimeCodeDetector.code(in: notification) != nil { return true }
+        if policy.alertEventReminders, EventReminderDetector.eventName(in: notification) != nil { return true }
         let text = [notification.title, notification.body, notification.translatedText]
             .compactMap { $0 }
             .joined(separator: "\n")

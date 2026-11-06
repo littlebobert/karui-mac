@@ -126,6 +126,7 @@
 "Always alert for saved contacts" = "連絡先に登録された人は必ず通知";
 "Alert for senders you’ve written to" = "書いたことのある相手は通知";
 "Always alert for one-time codes" = "ワンタイムコードは常に通知";
+"Always alert for event reminders" = "予定のリマインダーは常に通知";
 "Important Conversations" = "重要な会話";
 "Learned" = "学んだこと";
 "%lld fixes" = "修正 %lld件";
@@ -175,6 +176,8 @@
 "Notifications that @mention you are always Important." = "あなたを@メンションした通知は常に重要です。";
 "One-time codes are always Important." = "ワンタイムコードは常に重要として扱います。";
 "One-time code %@." = "ワンタイムコード %@ です。";
+"Reminders for your own events are always Important." = "自分の予定のリマインダーは常に重要として扱います。";
+"Reminder for your event “%@”." = "予定「%@」のリマインダーです。";
 "From a quiet app; only VIPs, codes, and urgent messages alert you." = "静かなアプリからの通知です。VIP・認証コード・緊急のメッセージだけが通知されます。";
 "Addressed to %@, not you." = "%@宛てで、あなた宛てではありません。";
 "Similar to a notification from %1$@ you marked %2$@ on %3$@." = "%3$@に%2$@にした%1$@の通知に似ています。";

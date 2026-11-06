@@ -347,7 +347,8 @@ public struct FoundationModelClassifier: NotificationClassifying {
         if let importantResult = importantContactResult(notification, policy: policy)
             ?? ImportantConversations.result(for: notification, policy: policy)
             ?? userMentionResult(notification, policy: policy)
-            ?? oneTimeCodeResult(notification, policy: policy) {
+            ?? oneTimeCodeResult(notification, policy: policy)
+            ?? eventReminderResult(notification, policy: policy) {
             return importantResult
         }
 #if targetEnvironment(simulator)
@@ -611,6 +612,23 @@ public struct FoundationModelClassifier: NotificationClassifying {
             reason: KaruiLocalization.formatted("One-time code %@.", code),
             engine: .deterministicRules,
             engineDetail: KaruiLocalization.string("One-time codes are always Important.")
+        )
+    }
+
+    private func eventReminderResult(
+        _ notification: NotificationInput,
+        policy: TriagePolicy
+    ) -> TriageResult? {
+        guard policy.alertEventReminders,
+              let name = EventReminderDetector.eventName(in: notification) else {
+            return nil
+        }
+        return TriageResult(
+            category: .notifyNow,
+            confidence: 1,
+            reason: KaruiLocalization.formatted("Reminder for your event “%@”.", name),
+            engine: .deterministicRules,
+            engineDetail: KaruiLocalization.string("Reminders for your own events are always Important.")
         )
     }
 
