@@ -517,22 +517,28 @@ final class Inbox {
     /// The iPhone got the notification itself only after answering that, and sorted
     /// it again under its own fingerprint (a Vercel email, 2026-11-09): its own
     /// verdict, the one its alert and History go by, takes over.
+    ///
+    /// Runs for every row against every verdict on each fetch, so the cheap tests come
+    /// first and the fingerprint is made last, for the few rows still in question:
+    /// made first, it held the main thread for minutes (0.10.9).
     static func canJoin(_ item: Item, _ verdict: VerdictRecord) -> Bool {
         guard item.id.hasPrefix("notification-") else { return false }
-        let onlyItsSortAnswer = item.verdict.map {
-            $0.fingerprint == item.fingerprint && item.fingerprint == ownFingerprint(item)
-                && verdict.fingerprint != item.fingerprint
-        } ?? true
-        return onlyItsSortAnswer
-            && looselyMatches(item, app: verdict.app, title: verdict.title, subtitle: verdict.subtitle, body: verdict.body, at: verdict.triagedAt)
+        if let answer = item.verdict {
+            guard answer.fingerprint == item.fingerprint, verdict.fingerprint != item.fingerprint else { return false }
+        }
+        guard looselyMatches(item, app: verdict.app, title: verdict.title, subtitle: verdict.subtitle, body: verdict.body, at: verdict.triagedAt) else {
+            return false
+        }
+        return item.verdict == nil || item.fingerprint == ownFingerprint(item)
     }
 
     /// The verdict is the iPhone's answer to this Mac's request to sort the item, which
     /// has since taken the iPhone's own fingerprint (`canJoin`).
     static func answeredItsSortRequest(_ item: Item, _ verdict: VerdictRecord) -> Bool {
         item.id.hasPrefix("notification-") && item.fingerprint != verdict.fingerprint
-            && ownFingerprint(item) == verdict.fingerprint
             && abs(item.deliveredAt.timeIntervalSince(verdict.triagedAt)) <= verdictMatchWindow
+            && item.app == appName(verdict.app)
+            && ownFingerprint(item) == verdict.fingerprint
     }
 
     static func looselyMatches(_ item: Item, app: String, title: String?, subtitle: String? = nil, body: String?, at date: Date) -> Bool {

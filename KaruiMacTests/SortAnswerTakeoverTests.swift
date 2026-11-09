@@ -76,6 +76,41 @@ final class SortAnswerTakeoverTests: XCTestCase {
         XCTAssertEqual(inbox.items.first?.verdict?.category, "notifyNow")
     }
 
+    /// Every row against every verdict, on each fetch: a month of rows, 300 with sort
+    /// answers, and a day's verdicts from the iPhone. About a second in a Debug build
+    /// (0.10.8 took the same); with the fingerprint made first, 0.10.9 held the main
+    /// thread for minutes.
+    func testAFullInboxAppliesQuickly() {
+        let inbox = inbox()
+        var answers: [VerdictRecord] = []
+        for index in 0..<3_000 {
+            let record = NotificationRecord(
+                id: Int64(10_000 + index), bundleIdentifier: "com.readdle.SparkDesktop",
+                deliveredAt: now.addingTimeInterval(-Double(index) * 600),
+                title: "Sender \(index % 40)", subtitle: "Subject \(index)", body: "Text of email number \(index), long enough to matter.",
+                identifier: nil, userInfo: [:]
+            )
+            inbox.add(record, as: .spark)
+            if index < 300 {
+                answers.append(VerdictRecord(
+                    fingerprint: Inbox.fingerprint(for: record, as: .spark), app: "Spark", category: "summary",
+                    interest: 2, reason: "", triagedAt: record.deliveredAt ?? now, isUnread: true
+                ))
+            }
+        }
+        let phone = (0..<300).map { index in
+            VerdictRecord(
+                fingerprint: "phone-\(index)", app: "Spark", category: "notifyNow", interest: 3, reason: "",
+                triagedAt: now.addingTimeInterval(-Double(index) * 300), isUnread: true,
+                title: "Someone \(index)", body: "Another email \(index)", subtitle: "Other \(index)"
+            )
+        }
+        inbox.apply(answers)
+        let start = Date()
+        inbox.apply(answers + phone)
+        XCTAssertLessThan(Date().timeIntervalSince(start), 3)
+    }
+
     /// A row already joined to one iPhone notification isn't taken by another.
     func testAJoinedRowIsntTakenAgain() {
         let inbox = inbox()
