@@ -26,8 +26,10 @@ struct MacVerdict: Codable, Equatable, Sendable {
 
 /// Sorts each notification as it arrives, with the iPhone's settings and Apple's
 /// on-device model on this Mac, so the inbox has a category at once and the iPhone
-/// needn't sort what only the Mac received. Then, when the iPhone's Second Opinion
-/// setting calls for it, asks Private Cloud Compute through the person's Shortcut.
+/// needn't sort what only the Mac received. Then, while Karui Cloud Sorting is on on
+/// the iPhone, asks Karui Cloud about what a model sorted; and when that didn't answer
+/// and the iPhone's Second Opinion setting calls for it, asks Private Cloud Compute
+/// through the person's Shortcut.
 /// One at a time: the model answers one request at a time anyway.
 @MainActor
 final class MacSorter {
@@ -63,10 +65,16 @@ final class MacSorter {
         queue = Task { [weak self] in
             await previous?.value
             var result = await FoundationModelClassifier(environment: .mac).classify(notification, policy: policy)
+            // As on the iPhone: answered by Karui Cloud, Private Cloud Compute isn't asked.
+            if let invite = self?.settings.karuiCloudInvite, let cloud = await MacKaruiCloud.sort(
+                notification, classifierResult: result, policy: policy, invite: invite, environment: .mac
+            ) {
+                result = cloud
+            }
             if self?.backoff.takeEndedPause(at: Date()) == true {
                 SafeDiagnosticLog.shared.record("second opinion: pause over, asking again; PCC quota: \(PrivateCloudComputeQuota.describe())")
             }
-            if MacSecondOpinion.shouldAsk(about: result, policy: policy),
+            if result.engine != .karuiCloud, MacSecondOpinion.shouldAsk(about: result, policy: policy),
                self?.backoff.isPaused(at: Date()) == false,
                await self?.isShortcutInstalled(shortcutName) == true {
                 if let cloud = await MacSecondOpinion.ask(about: notification, policy: policy, shortcutName: shortcutName, environment: .mac) {

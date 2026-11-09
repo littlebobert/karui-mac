@@ -136,6 +136,12 @@ struct SettingsView: View {
                 Text(sortingStatus)
                     .foregroundStyle(.secondary)
             }
+            if coordinator.sortingSettings.karuiCloudInvite != nil {
+                Section(L10n.string("Karui Cloud")) {
+                    Text(L10n.string("Karui Cloud Sorting is on in Karui on your iPhone, so this Mac uses it too: OpenAI’s decision model chooses the category of what Apple’s on-device model sorted here, with the same prompt your iPhone sends. When it doesn’t answer, Private Cloud Sorting is used as before. Turn it off in Karui on your iPhone."))
+                        .foregroundStyle(.secondary)
+                }
+            }
             Section(L10n.string("Private Cloud Sorting")) {
                 TextField(L10n.string("Private Cloud Sorting Shortcut"), text: $settings.secondOpinionShortcutName)
                 LabeledContent(L10n.string("Shortcut")) {

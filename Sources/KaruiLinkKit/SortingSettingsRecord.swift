@@ -13,6 +13,9 @@ public enum SortingSettingsRecordSchema {
     public static let corrections = "corrections"
     /// How close a notification must be to a learned fix to be lowered.
     public static let correctionThreshold = "correctionThreshold"
+    /// The iPhone's Karui Cloud invite, while Karui Cloud Sorting is on there, so the
+    /// Mac sorts with Karui Cloud too. Absent when it's off. Encrypted.
+    public static let karuiCloudInvite = "karuiCloudInvite"
     public static let updatedAt = "updatedAt"
     /// The iPhone app's version, so the Mac can tell settings from a newer Karui.
     public static let appVersion = "appVersion"

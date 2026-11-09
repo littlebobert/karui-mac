@@ -16,6 +16,9 @@ final class SortingSettingsStore {
     private(set) var policy: TriagePolicy?
     /// When the iPhone last changed them.
     private(set) var updatedAt: Date?
+    /// The iPhone's Karui Cloud invite, while Karui Cloud Sorting is on there. Kept in
+    /// memory only: Karui Cloud needs the network, and so does fetching this again.
+    private(set) var karuiCloudInvite: String?
     /// iCloud has answered at least once, so a missing policy means the iPhone sent none.
     private(set) var hasChecked = false
     @ObservationIgnored private let database: CKDatabase?
@@ -63,6 +66,14 @@ final class SortingSettingsStore {
             SafeDiagnosticLog.shared.record("sorting settings: unreadable")
             return
         }
+        // Before the check for a change: after a relaunch the policy comes from disk,
+        // the invite only from here.
+        let invite = (record.encryptedValues[SortingSettingsRecordSchema.karuiCloudInvite] as? String)
+            .flatMap { $0.isEmpty ? nil : $0 }
+        if (invite != nil) != (karuiCloudInvite != nil) {
+            SafeDiagnosticLog.shared.record("sorting settings: Karui Cloud \(invite != nil ? "on" : "off")")
+        }
+        karuiCloudInvite = invite
         let updatedAt = record[SortingSettingsRecordSchema.updatedAt] as? Date
         guard updatedAt != self.updatedAt || self.policy == nil else { return }
         self.policy = policy
@@ -81,6 +92,7 @@ final class SortingSettingsStore {
     private func clear() {
         policy = nil
         updatedAt = nil
+        karuiCloudInvite = nil
         try? FileManager.default.removeItem(at: MacSortingFiles.policy)
         try? FileManager.default.removeItem(at: MacSortingFiles.corrections)
     }

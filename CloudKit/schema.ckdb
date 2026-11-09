@@ -141,6 +141,7 @@ DEFINE SCHEMA
         appVersion          STRING,
         correctionThreshold DOUBLE,
         corrections         ENCRYPTED STRING,
+        karuiCloudInvite    ENCRYPTED STRING,
         policy              ENCRYPTED STRING,
         updatedAt           TIMESTAMP,
         GRANT WRITE TO "_creator",

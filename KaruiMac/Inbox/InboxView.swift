@@ -590,7 +590,7 @@ extension Inbox.Item {
         case .privateCloudCompute:
             L10n.string(onThisMac ? "Sorted on this Mac by Private Cloud Compute" : "Sorted by Private Cloud Compute")
         case .karuiCloud:
-            L10n.string("Sorted by Karui Cloud")
+            L10n.string(onThisMac ? "Sorted on this Mac by Karui Cloud" : "Sorted by Karui Cloud")
         case .deterministicRules:
             L10n.string(onThisMac ? "Sorted on this Mac by Karui’s rules" : "Sorted by Karui’s rules")
         case .person:
