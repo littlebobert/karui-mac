@@ -505,6 +505,36 @@ final class Inbox {
         }
     }
 
+    /// The fingerprint this Mac made from the item's own text, which `fingerprint`
+    /// stops being once the item takes the iPhone's in a loose match.
+    static func ownFingerprint(_ item: Item) -> String {
+        NotificationFingerprint.make(app: item.app, title: item.title, subtitle: item.subtitle, body: item.body)
+    }
+
+    /// Whether the iPhone's verdict goes with this notification of the Mac's own, which
+    /// it matches loosely: one with no verdict yet, or one whose only verdict is the
+    /// iPhone's answer to this Mac's request to sort it, under the Mac's fingerprint.
+    /// The iPhone got the notification itself only after answering that, and sorted
+    /// it again under its own fingerprint (a Vercel email, 2026-11-09): its own
+    /// verdict, the one its alert and History go by, takes over.
+    static func canJoin(_ item: Item, _ verdict: VerdictRecord) -> Bool {
+        guard item.id.hasPrefix("notification-") else { return false }
+        let onlyItsSortAnswer = item.verdict.map {
+            $0.fingerprint == item.fingerprint && item.fingerprint == ownFingerprint(item)
+                && verdict.fingerprint != item.fingerprint
+        } ?? true
+        return onlyItsSortAnswer
+            && looselyMatches(item, app: verdict.app, title: verdict.title, subtitle: verdict.subtitle, body: verdict.body, at: verdict.triagedAt)
+    }
+
+    /// The verdict is the iPhone's answer to this Mac's request to sort the item, which
+    /// has since taken the iPhone's own fingerprint (`canJoin`).
+    static func answeredItsSortRequest(_ item: Item, _ verdict: VerdictRecord) -> Bool {
+        item.id.hasPrefix("notification-") && item.fingerprint != verdict.fingerprint
+            && ownFingerprint(item) == verdict.fingerprint
+            && abs(item.deliveredAt.timeIntervalSince(verdict.triagedAt)) <= verdictMatchWindow
+    }
+
     static func looselyMatches(_ item: Item, app: String, title: String?, subtitle: String? = nil, body: String?, at date: Date) -> Bool {
         guard item.app == appName(app), abs(item.deliveredAt.timeIntervalSince(date)) <= looseMatchWindow else { return false }
         return LooseMatch.sameNotification(
@@ -610,8 +640,7 @@ final class Inbox {
             // has the link (as Slack's thread replies were): the Mac's takes over.
             var carriedReadAt: Date?
             if !matching.isEmpty, matching.allSatisfy({ !items[$0].id.hasPrefix("notification-") }),
-               items.contains(where: { $0.verdict == nil && $0.id.hasPrefix("notification-")
-                                       && Self.looselyMatches($0, app: verdict.app, title: verdict.title, subtitle: verdict.subtitle, body: verdict.body, at: verdict.triagedAt) }) {
+               items.contains(where: { Self.canJoin($0, verdict) }) {
                 let duplicates = Set(matching.map { items[$0].id })
                 carriedReadAt = matching.compactMap { items[$0].readAt }.max()
                 items.removeAll { duplicates.contains($0.id) }
@@ -629,8 +658,7 @@ final class Inbox {
                     if let readAt = verdict.readAt, items[index].readAt == nil { items[index].readAt = readAt }
                     touched.insert(items[index].id)
                 }
-            } else if let index = items.firstIndex(where: { $0.verdict == nil && $0.id.hasPrefix("notification-")
-                                                       && Self.looselyMatches($0, app: verdict.app, title: verdict.title, subtitle: verdict.subtitle, body: verdict.body, at: verdict.triagedAt) }) {
+            } else if let index = items.firstIndex(where: { Self.canJoin($0, verdict) }) {
                 // The Mac's copy takes the iPhone's fingerprint, so what's done to it
                 // here reaches the iPhone's record.
                 items[index].fingerprint = verdict.fingerprint
@@ -640,6 +668,10 @@ final class Inbox {
                 if items[index].senderName == nil { items[index].senderName = verdict.sender }
                 touched.insert(items[index].id)
                 SafeDiagnosticLog.shared.record("verdicts: matched one loosely, by sender and text")
+            } else if items.contains(where: { Self.answeredItsSortRequest($0, verdict) }) {
+                // The iPhone's answer to this Mac's request to sort one of its own,
+                // which has since joined the iPhone's own copy: not another row.
+                continue
             } else if verdict.title != nil || verdict.body != nil {
                 // An earlier notification with the same text keeps its own row; this
                 // one's ID carries the time, so the two stay apart.

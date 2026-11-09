@@ -63,9 +63,16 @@ public enum LooseMatch {
         case (true, false): texts = (afterSubject(body, otherSubject), afterSubject(otherBody, otherSubject) ?? Substring(otherBody))
         case (true, true): texts = (Substring(body), Substring(otherBody))
         }
-        guard let text = texts.0.map(trimmingEllipsis), let otherText = texts.1.map(trimmingEllipsis) else { return false }
+        guard let text = texts.0.map(trimmingEllipsis).map(withoutSpaces),
+              let otherText = texts.1.map(trimmingEllipsis).map(withoutSpaces) else { return false }
         let length = min(text.count, otherText.count)
         return length >= sharedStartLength && text.prefix(length) == otherText.prefix(length)
+    }
+
+    /// Spaces don't count: an email's text can come with a space before a full stop on
+    /// one device ("Hello, name . Your commit") and none on the other.
+    private static func withoutSpaces(_ text: Substring) -> String {
+        String(text.filter { !$0.isWhitespace })
     }
 
     /// A preview cut short may end in "…".

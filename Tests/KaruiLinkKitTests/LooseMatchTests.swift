@@ -39,6 +39,22 @@ final class LooseMatchTests: XCTestCase {
         XCTAssertFalse(LooseMatch.sameNotification(app: "Spark", phone, otherSender))
     }
 
+    /// The same email with a space before a full stop on one device and not the
+    /// other (a Vercel email, 2026-11-09).
+    func testASparkEmailMatchesWhateverItsSpacing() {
+        let subject = "Blocked deployment to web.dotsu"
+        let phone = LooseMatch.Fields(
+            title: "Vercel", subtitle: subject,
+            body: subject + "\nDeployment blocked Hello, justingarcia-4063 . Your commit to web.dotsu on the Kotoba Technologies team was blocked."
+        )
+        let mac = LooseMatch.Fields(
+            title: "Vercel", subtitle: subject,
+            body: "Deployment blocked Hello, justingarcia-4063. Your commit to web.dotsu on the Kotoba Technologies team was blocked. You need contributing access to deploy."
+        )
+        XCTAssertTrue(LooseMatch.sameNotification(app: "Spark", phone, mac))
+        XCTAssertTrue(LooseMatch.sameNotification(app: "Spark", mac, phone))
+    }
+
     /// Two short texts from one sender that only start alike are two notifications.
     func testShortTextsThatOnlyStartAlikeDontMatch() {
         let hi = LooseMatch.Fields(title: "Mika", subtitle: nil, body: "Hi")

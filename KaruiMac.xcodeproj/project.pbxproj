@@ -19,6 +19,7 @@
 		256F450297662965424AE8A3 /* CompanionPresence.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7CDCA27785FCD626FF554343 /* CompanionPresence.swift */; };
 		26445B3E9165FAB91EBDFDBB /* KaruiLinkKit in Frameworks */ = {isa = PBXBuildFile; productRef = 1EEF910B98DBB071B7129E5A /* KaruiLinkKit */; };
 		29D7C805F698B12B4188AB8B /* DeepLinkSync.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1A75765EC9DF2745AF8F9FD /* DeepLinkSync.swift */; };
+		2B5C4F3958D7B1B7024FDFC8 /* SortAnswerTakeoverTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 64F745A5EB586E1391FD0E0D /* SortAnswerTakeoverTests.swift */; };
 		351CCFEAAFC9F7E04A808ADE /* KaruiMacApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 61B11DFC924A31F1D18275E7 /* KaruiMacApp.swift */; };
 		3AB0460E7B8E363EE8473FEC /* InstalledAppTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B4E4F4AD73C858B7F477B797 /* InstalledAppTests.swift */; };
 		41DDECE3C0F720A32A5B6505 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = C424AFD49EBE5C89997B8D7C /* Assets.xcassets */; };
@@ -138,6 +139,7 @@
 		61B11DFC924A31F1D18275E7 /* KaruiMacApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KaruiMacApp.swift; sourceTree = "<group>"; };
 		640B79B0B8031650B8824CEB /* Inbox.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Inbox.swift; sourceTree = "<group>"; };
 		648758F78A60BBF6F2614F61 /* karui-icon-sketch.mp4 */ = {isa = PBXFileReference; path = "karui-icon-sketch.mp4"; sourceTree = "<group>"; };
+		64F745A5EB586E1391FD0E0D /* SortAnswerTakeoverTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SortAnswerTakeoverTests.swift; sourceTree = "<group>"; };
 		67CFD0E7402CC1B21A0E1966 /* SetupNudge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SetupNudge.swift; sourceTree = "<group>"; };
 		6CA9E859EEC0683C3C84FEEB /* AppIconSource.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = AppIconSource.png; sourceTree = "<group>"; };
 		6E0F2603A038F4EABE382CD4 /* CloudKitEntitlement.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CloudKitEntitlement.swift; sourceTree = "<group>"; };
@@ -224,6 +226,7 @@
 				A5CECAAFFCA70EBB8466C441 /* SlackDirectMessageTests.swift */,
 				4C44EC3DE17DE1FCA7463F4E /* SlackLinkTests.swift */,
 				6E10A41222910A7BEB420C2D /* SlackThreadReplyTests.swift */,
+				64F745A5EB586E1391FD0E0D /* SortAnswerTakeoverTests.swift */,
 				06DF904D4FAEA78D661169BC /* SparkHarvestTests.swift */,
 				1234CDFEE07EA21BAA319888 /* SparkLinkTests.swift */,
 				5CF3759F576A25317D7D39F0 /* StaleReadMarkTests.swift */,
@@ -573,6 +576,7 @@
 				79C06D32AAAADDFD18DF649F /* SlackDirectMessageTests.swift in Sources */,
 				C18F4894F38E02C8FB692626 /* SlackLinkTests.swift in Sources */,
 				5150A0F582BA8DD951CC9F7F /* SlackThreadReplyTests.swift in Sources */,
+				2B5C4F3958D7B1B7024FDFC8 /* SortAnswerTakeoverTests.swift in Sources */,
 				5E921D5093F415A0738BC953 /* SparkHarvestTests.swift in Sources */,
 				993CD23DDD32E5C0C303FEBC /* SparkLinkTests.swift in Sources */,
 				7CEBB1F6703D5C519195FEF8 /* StaleReadMarkTests.swift in Sources */,
