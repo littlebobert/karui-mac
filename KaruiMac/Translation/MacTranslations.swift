@@ -60,7 +60,7 @@ final class MacTranslations {
             subtitle: item.subtitle,
             body: item.body ?? "",
             // On the Mac the title is usually who it's from.
-            sender: item.senderName ?? item.title
+            sender: item.knownSenderName ?? item.title
         )
         return Task { await MacTranslator.translate(fields, policy: policy) }
     }

@@ -24,6 +24,17 @@ final class InboxVerdictTests: XCTestCase {
         XCTAssertNil(inbox.item(id: "b")?.sortedBy)
     }
 
+    /// Shortcuts says "No Name" when it can't match the sender to a contact (LINE
+    /// does this for everyone); the title has the person's name.
+    func testNoNameFallsBackToTheTitle() {
+        var item = Inbox.Item(id: "a", app: "LINE", fingerprint: "a", title: "Simon サイモン", subtitle: nil, body: "Hi", deliveredAt: Date())
+        item.senderName = "No Name"
+        XCTAssertEqual(item.sender, "Simon サイモン")
+        XCTAssertNil(item.knownSenderName)
+        item.senderName = "Simon"
+        XCTAssertEqual(item.sender, "Simon")
+    }
+
     /// Search finds what the iPhone's would: the tags that arrive with a later
     /// verdict, the sender, and the recipients.
     func testSearchCoversTagsSenderAndRecipients() {

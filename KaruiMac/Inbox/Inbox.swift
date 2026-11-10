@@ -75,10 +75,20 @@ final class Inbox {
             verdict == nil && Date().timeIntervalSince(deliveredAt) < Self.verdictWait
         }
 
+        /// The Shortcut's sender, unless it's the placeholder Shortcuts gives when it
+        /// can't match the sender to a contact ("No Name", for LINE and some mail):
+        /// the iPhone treats that as no sender too (`RepeatedSenderEscalation`).
+        var knownSenderName: String? {
+            guard let named = senderName?.trimmingCharacters(in: .whitespacesAndNewlines), !named.isEmpty,
+                  !Self.placeholderSenders.contains(named.folding(options: [.caseInsensitive, .diacriticInsensitive], locale: nil))
+            else { return nil }
+            return named
+        }
+        static let placeholderSenders: Set<String> = ["no name"]
+
         /// Who it's from, for grouping: the title in mail and messaging apps.
         var sender: String {
-            let named = senderName?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
-            return named.isEmpty ? (title?.trimmingCharacters(in: .whitespacesAndNewlines) ?? "") : named
+            knownSenderName ?? title?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
         }
 
         /// The thread, the way Karui for iPhone's History groups it: an email thread
