@@ -153,9 +153,9 @@
 		75ACA25EA222D40857A4FB20 /* MacSecondOpinion.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MacSecondOpinion.swift; sourceTree = "<group>"; };
 		7848431CC361ECFD458A049D /* MacKaruiCloudTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MacKaruiCloudTests.swift; sourceTree = "<group>"; };
 		78C8C1A1CD1C7D35804D78DE /* MacBanners.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MacBanners.swift; sourceTree = "<group>"; };
+		7C291DB86FBAE44252DBF29D /* karui-mac */ = {isa = PBXFileReference; lastKnownFileType = folder; name = "karui-mac"; path = .; sourceTree = SOURCE_ROOT; };
 		7CDCA27785FCD626FF554343 /* CompanionPresence.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CompanionPresence.swift; sourceTree = "<group>"; };
 		7D3E94E96614E7F87652D0F6 /* SlackBotPostTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SlackBotPostTests.swift; sourceTree = "<group>"; };
-		7DA56AEE728A3204E76C3F5F /* mac-translation */ = {isa = PBXFileReference; lastKnownFileType = folder; name = "mac-translation"; path = .; sourceTree = SOURCE_ROOT; };
 		84FE6D61A57CB963CB4C5CCC /* MacSortingEnvironment.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MacSortingEnvironment.swift; sourceTree = "<group>"; };
 		8971A5A194FC9644337F7A93 /* KaruiMacTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = KaruiMacTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		8EEE7B71408AB0ECDF0A133A /* MacTranslator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MacTranslator.swift; sourceTree = "<group>"; };
@@ -258,7 +258,7 @@
 		277C14CCB635AAA2E2CB7D80 /* Packages */ = {
 			isa = PBXGroup;
 			children = (
-				7DA56AEE728A3204E76C3F5F /* mac-translation */,
+				7C291DB86FBAE44252DBF29D /* karui-mac */,
 			);
 			name = Packages;
 			sourceTree = "<group>";
@@ -698,7 +698,7 @@
 				CODE_SIGN_INJECT_BASE_ENTITLEMENTS = NO;
 				CODE_SIGN_STYLE = Manual;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 75;
+				CURRENT_PROJECT_VERSION = 76;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				DEVELOPMENT_TEAM = XDWKSAH7W3;
 				ENABLE_HARDENED_RUNTIME = YES;
@@ -720,7 +720,7 @@
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				MACOSX_DEPLOYMENT_TARGET = 15.0;
-				MARKETING_VERSION = 0.11.0;
+				MARKETING_VERSION = 0.11.1;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = NO;
@@ -770,7 +770,7 @@
 				CODE_SIGN_INJECT_BASE_ENTITLEMENTS = NO;
 				CODE_SIGN_STYLE = Manual;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 75;
+				CURRENT_PROJECT_VERSION = 76;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_TEAM = XDWKSAH7W3;
 				ENABLE_HARDENED_RUNTIME = YES;
@@ -786,7 +786,7 @@
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				MACOSX_DEPLOYMENT_TARGET = 15.0;
-				MARKETING_VERSION = 0.11.0;
+				MARKETING_VERSION = 0.11.1;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = NO;
