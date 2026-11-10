@@ -157,6 +157,10 @@ struct SettingsView: View {
                 Text(L10n.string("When Private Cloud Sorting is on in Karui on your iPhone, this Mac asks Apple’s Private Cloud Compute through this Shortcut, with the same prompt your iPhone sends. The Shortcut takes text and returns what Use Model, set to Private Cloud Compute, answers."))
                     .foregroundStyle(.secondary)
             }
+            Section(L10n.string("Translation")) {
+                Text(L10n.string("When Translate notifications is on in Karui on your iPhone, this Mac translates notifications in languages you don’t read into its own language, here on this Mac with Apple’s Translation. For the fastest translations, download the languages in System Settings → General → Language & Region → Translation Languages."))
+                    .foregroundStyle(.secondary)
+            }
             if let policy = coordinator.sortingSettings.policy {
                 IPhoneSortingSettingsSection(policy: policy, updatedAt: coordinator.sortingSettings.updatedAt)
             }

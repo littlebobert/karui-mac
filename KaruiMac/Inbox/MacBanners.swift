@@ -39,8 +39,8 @@ final class MacBanners: NSObject, UNUserNotificationCenterDelegate {
     func post(_ item: Inbox.Item) {
         let content = UNMutableNotificationContent()
         content.title = item.sender.isEmpty ? item.app : item.sender
-        content.subtitle = [item.app, item.subtitle].compactMap { $0 }.filter { !$0.isEmpty }.joined(separator: " · ")
-        content.body = item.body ?? ""
+        content.subtitle = [item.app, item.shownSubtitle].compactMap { $0 }.filter { !$0.isEmpty }.joined(separator: " · ")
+        content.body = item.shownBody ?? ""
         content.sound = .default
         content.threadIdentifier = item.conversation.key
         content.userInfo = [Self.itemIDKey: item.id, Self.fingerprintKey: item.fingerprint]

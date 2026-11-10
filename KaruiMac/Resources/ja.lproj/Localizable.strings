@@ -231,3 +231,9 @@
 "Karui Cloud" = "Karui Cloud";
 "Karui Cloud: %d%% likely %@." = "Karui Cloud：%2$@の可能性%1$d%%。";
 "Karui Cloud Sorting is on in Karui on your iPhone, so this Mac uses it too: OpenAI’s decision model chooses the category of what Apple’s on-device model sorted here, with the same prompt your iPhone sends. When it doesn’t answer, Private Cloud Sorting is used as before. Turn it off in Karui on your iPhone." = "iPhoneのKaruiでKarui Cloud分類がオンになっているため、このMacでも使われます。Appleのオンデバイスモデルがここで仕分けた通知のカテゴリを、iPhoneと同じ内容でOpenAIの判定用モデルが決めます。応答がないときは、これまでどおりPrivate Cloud分類が使われます。オフにするにはiPhoneのKaruiで設定してください。";
+"Translation" = "翻訳";
+"Translate notifications" = "通知を翻訳";
+"Translated from %@ on this Mac" = "このMacで%@から翻訳";
+"Show Original" = "原文を表示";
+"Show Translation" = "翻訳を表示";
+"When Translate notifications is on in Karui on your iPhone, this Mac translates notifications in languages you don’t read into its own language, here on this Mac with Apple’s Translation. For the fastest translations, download the languages in System Settings → General → Language & Region → Translation Languages." = "iPhoneのKaruiで「通知を翻訳」がオンのとき、このMacは、読まない言語の通知をAppleの翻訳機能でこのMac上でMacの言語に翻訳します。いちばん速く翻訳するには、システム設定 →「一般」→「言語と地域」→「翻訳言語」で言語をダウンロードしてください。";

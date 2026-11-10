@@ -1,5 +1,6 @@
 import Foundation
 import KaruiLinkKit
+import KaruiSorting
 import Observation
 
 /// The day's notifications from the apps the Mac watches, as Notification Center
@@ -32,6 +33,8 @@ final class Inbox {
         /// Sorted on this Mac as it arrived (`MacSorter`), shown until the iPhone's
         /// verdict arrives.
         var macVerdict: MacVerdict?
+        /// Translated on this Mac, in a language the person doesn't read (`MacTranslator`).
+        var translation: NotificationTranslation?
 
         init(id: String, app: String, fingerprint: String, title: String?, subtitle: String?, body: String?, deliveredAt: Date) {
             self.id = id
@@ -46,9 +49,14 @@ final class Inbox {
         var category: String? { chosenCategory ?? verdict?.category ?? macVerdict?.category }
         /// The category as a column sorts it: Important, Neutral, Spam, then none.
         var categoryRank: Int { Inbox.categories.firstIndex(of: category ?? "") ?? Inbox.categories.count }
+        /// What's shown: the translation when there is one. Names and channels stay as
+        /// they were unless they were translated too.
+        var shownTitle: String? { translation?.title ?? title }
+        var shownSubtitle: String? { translation.map { $0.subtitle } ?? subtitle }
+        var shownBody: String? { translation?.body ?? body }
         /// The subtitle and body on one line, for a compact row; the sender has its own column.
         var compactLine: String {
-            [subtitle, body]
+            [shownSubtitle, shownBody]
                 .compactMap { $0?.trimmingCharacters(in: .whitespacesAndNewlines) }
                 .filter { !$0.isEmpty }
                 .joined(separator: " · ")
@@ -117,7 +125,8 @@ final class Inbox {
         /// As the iPhone's search: the notification, who sent it and to whom, and
         /// Karui's reason and search tags.
         func matches(_ search: String) -> Bool {
-            let fields = [app, title, subtitle, body, senderName, recipients, verdict?.reason] + (verdict?.tags ?? [])
+            let fields = [app, title, subtitle, body, senderName, recipients, verdict?.reason,
+                          translation?.title, translation?.subtitle, translation?.body] + (verdict?.tags ?? [])
             let haystack = fields.compactMap { $0 }.joined(separator: "\n")
             return haystack.localizedCaseInsensitiveContains(search)
         }
@@ -845,6 +854,12 @@ final class Inbox {
     func restore(_ removed: [Item]) {
         for item in removed { insert(item) }
         store?.save(removed)
+    }
+
+    func setTranslation(_ translation: NotificationTranslation, id: String) {
+        guard let index = items.firstIndex(where: { $0.id == id }) else { return }
+        items[index].translation = translation
+        persist([id])
     }
 
     func setMacVerdict(_ verdict: MacVerdict, id: String) {

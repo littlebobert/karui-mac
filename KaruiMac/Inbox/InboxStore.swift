@@ -1,5 +1,6 @@
 import Foundation
 import KaruiLinkKit
+import KaruiSorting
 import SwiftData
 
 /// One inbox item on disk: the notification as Notification Center had it (or as
@@ -32,6 +33,8 @@ final class InboxEntry {
     var verdictTags: String?
     /// The Mac's own verdict (`MacVerdict`), as JSON.
     var macVerdictData: Data?
+    /// Its translation on this Mac (`NotificationTranslation`), as JSON.
+    var translationData: Data?
 
     init(item: Inbox.Item) {
         id = item.id
@@ -57,6 +60,7 @@ final class InboxEntry {
         verdictEngine = item.verdict?.engine
         verdictTags = item.verdict?.tags.map(VerdictRecordSchema.tagsValue)
         macVerdictData = item.macVerdict.flatMap { try? JSONEncoder().encode($0) }
+        translationData = item.translation.flatMap { try? JSONEncoder().encode($0) }
     }
 
     func update(from item: Inbox.Item) {
@@ -77,6 +81,7 @@ final class InboxEntry {
         verdictEngine = item.verdict?.engine
         verdictTags = item.verdict?.tags.map(VerdictRecordSchema.tagsValue)
         macVerdictData = item.macVerdict.flatMap { try? JSONEncoder().encode($0) }
+        translationData = item.translation.flatMap { try? JSONEncoder().encode($0) }
     }
 
     var item: Inbox.Item {
@@ -95,6 +100,7 @@ final class InboxEntry {
         item.readAt = readAt
         item.chosenCategory = chosenCategory
         item.macVerdict = macVerdictData.flatMap { try? JSONDecoder().decode(MacVerdict.self, from: $0) }
+        item.translation = translationData.flatMap { try? JSONDecoder().decode(NotificationTranslation.self, from: $0) }
         if let verdictCategory, let verdictTriagedAt {
             item.verdict = VerdictRecord(
                 fingerprint: fingerprint, app: app, category: verdictCategory, interest: verdictInterest,

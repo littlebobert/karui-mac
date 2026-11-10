@@ -58,9 +58,11 @@ final class MacSorter {
     func sort(itemID: String, in inbox: Inbox, shortcutName: String, sorted: @escaping @MainActor (String) -> Void = { _ in }) {
         guard #available(macOS 26.0, *), let policy = settings.policy,
               let item = inbox.item(id: itemID), item.macVerdict == nil else { return }
-        let notification = NotificationInput.fromMac(
+        var notification = NotificationInput.fromMac(
             app: item.app, title: item.title, subtitle: item.subtitle, body: item.body, receivedAt: item.deliveredAt
         )
+        // The on-device model reads it as the iPhone's does: the original, then this.
+        notification.translation = item.translation
         let previous = queue
         queue = Task { [weak self] in
             await previous?.value

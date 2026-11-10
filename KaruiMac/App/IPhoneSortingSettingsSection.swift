@@ -31,6 +31,7 @@ struct IPhoneSortingSettingsSection: View {
                 row("Important Conversations", list(policy.importantConversations.map(\.name)))
                 row("Learned", L10n.format("%lld fixes", Int64(learnedCount)))
                 row("Private Cloud Sorting", secondOpinion)
+                row("Translate notifications", onOff(policy.translateNotifications))
             }
         } header: {
             Text(L10n.string("Your iPhone’s sorting settings"))

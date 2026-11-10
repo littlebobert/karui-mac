@@ -34,6 +34,8 @@ final class AppCoordinator {
             Task { @MainActor in
                 guard let self else { return }
                 let added = self.inbox.apply(verdicts)
+                // Only the iPhone got these; it doesn't send its translations.
+                for id in added { self.translations.translate(id, in: self.inbox) }
                 self.linkFromVerdicts(verdicts)
                 self.noteVerdictsArrived(verdicts)
                 self.bannerIfAtMac(added)
@@ -52,6 +54,7 @@ final class AppCoordinator {
     private let banners = MacBanners()
     let setupNudge = SetupNudge()
     private lazy var sorter = MacSorter(settings: sortingSettings)
+    private lazy var translations = MacTranslations(settings: sortingSettings)
     /// When the newest verdict from the iPhone was sorted. Recent ones show it sends
     /// its History, which is how its answers to sort requests come back.
     private var newestVerdictAt: Date?
@@ -145,6 +148,7 @@ final class AppCoordinator {
             if syncStatus.status.isAvailable {
                 await MainActor.run {
                     self.sortingSettings.start()
+                    self.translateRecent()
                     NSApp.registerForRemoteNotifications()
                     let settings = self.settings
                     self.presenceReporter.isEnabled = { settings.reportsUse }
@@ -383,6 +387,10 @@ final class AppCoordinator {
     }
 
     var canSortHere: Bool { sorter.canSort }
+
+    private func translateRecent() {
+        translations.translateRecent(in: inbox)
+    }
 
     // MARK: Sorting on the iPhone
 
@@ -705,6 +713,8 @@ final class AppCoordinator {
             while !Task.isCancelled {
                 try? await Task.sleep(for: Self.sortRequestInterval)
                 await self?.askIPhoneToSort()
+                // Picks up translation turned on, on the iPhone, and what came in meanwhile.
+                await MainActor.run { self?.translateRecent() }
             }
         }
         watchTask = Task {
@@ -717,8 +727,12 @@ final class AppCoordinator {
                     // Shown with or without a link; the verdict is the iPhone's to send.
                     if let app = KnownApp(macBundleIdentifier: record.bundleIdentifier) {
                         let isNew = inbox.add(record, as: app)
-                        // New ones only: a launch's backfill would keep the model busy for minutes.
-                        if case .appeared = event, isNew { self.sortHere(Inbox.id(for: record)) }
+                        // New ones only: a launch's backfill would keep the model busy for
+                        // minutes. Translated first, so the model reads the translation too.
+                        if case .appeared = event, isNew {
+                            let id = Inbox.id(for: record)
+                            self.translations.translate(id, in: self.inbox) { self.sortHere(id) }
+                        }
                     }
                     // Kept from before a relaunch: the link is on iCloud already, so
                     // only the read-watch is picked up again, when it's still unread.

@@ -563,6 +563,7 @@ private struct ItemDetail: View {
 
     private var content: some View {
         NotificationContent(coordinator: coordinator, item: item)
+            .id(item.id)
     }
 }
 
@@ -606,6 +607,12 @@ extension Inbox.Item {
 private struct NotificationContent: View {
     let coordinator: AppCoordinator
     let item: Inbox.Item
+    /// Translated on this Mac, the original is a click away.
+    @State private var showsOriginal = false
+
+    private var title: String? { showsOriginal ? item.title : item.shownTitle }
+    private var subtitle: String? { showsOriginal ? item.subtitle : item.shownSubtitle }
+    private var text: String? { showsOriginal ? item.body : item.shownBody }
 
     var body: some View {
         ScrollView {
@@ -617,14 +624,26 @@ private struct NotificationContent: View {
                     Text(item.deliveredAt, format: .dateTime.month(.abbreviated).day().hour().minute())
                         .foregroundStyle(.secondary)
                 }
-                if let title = item.title, !title.isEmpty {
+                if let title, !title.isEmpty {
                     Text(title).font(.title3.weight(.semibold))
                 }
-                if let subtitle = item.subtitle, !subtitle.isEmpty {
+                if let subtitle, !subtitle.isEmpty {
                     Text(subtitle).font(.headline)
                 }
-                if let body = item.body, !body.isEmpty {
-                    Text(body)
+                if let text, !text.isEmpty {
+                    Text(text)
+                }
+                if let translation = item.translation {
+                    HStack(spacing: 6) {
+                        Image(systemName: "translate").accessibilityHidden(true)
+                        Text(L10n.format("Translated from %@ on this Mac", TranslationLanguages.displayName(for: translation.sourceLanguage)))
+                        Button(showsOriginal ? L10n.string("Show Translation") : L10n.string("Show Original")) {
+                            showsOriginal.toggle()
+                        }
+                        .buttonStyle(.link)
+                    }
+                    .font(.callout)
+                    .foregroundStyle(.secondary)
                 }
                 if let reason = item.verdict?.reason ?? item.macVerdict?.reason, !reason.isEmpty {
                     Divider()
@@ -665,6 +684,7 @@ private struct PreviewPane: View {
         Group {
             if inbox.selection.count == 1, let id = inbox.selection.first, let item = inbox.item(id: id) {
                 NotificationContent(coordinator: coordinator, item: item)
+                    .id(item.id)
             } else {
                 Text(inbox.selection.count > 1 ? L10n.format("%d selected", inbox.selection.count) : L10n.string("No Notification Selected"))
                     .foregroundStyle(.secondary)
@@ -958,13 +978,13 @@ private struct InboxRow: View {
                     AppNameLink(app: item.app).font(.caption)
                     VerdictBadge(verdict: item.verdict, chosen: item.chosenCategory, mac: item.macVerdict, isWaiting: item.isWaitingForVerdict)
                 }
-                if let title = item.title, !title.isEmpty {
+                if let title = item.shownTitle, !title.isEmpty {
                     Text(title).fontWeight(.semibold)
                 }
-                if let subtitle = item.subtitle, !subtitle.isEmpty {
+                if let subtitle = item.shownSubtitle, !subtitle.isEmpty {
                     Text(subtitle)
                 }
-                if let body = item.body, !body.isEmpty {
+                if let body = item.shownBody, !body.isEmpty {
                     Text(body).foregroundStyle(.secondary).lineLimit(2)
                 }
                 if let reason = item.verdict?.reason ?? item.macVerdict?.reason, !reason.isEmpty {
