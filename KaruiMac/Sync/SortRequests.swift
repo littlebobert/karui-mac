@@ -61,7 +61,7 @@ actor SortRequests {
     @discardableResult
     func send(_ requests: [Request], now: Date = Date()) async -> Int {
         guard let database, !requests.isEmpty else { return 0 }
-        let records = requests.map { request -> CKRecord in
+        let records = Self.unique(requests).map { request -> CKRecord in
             let record = CKRecord(
                 recordType: VerdictRecordSchema.recordType,
                 recordID: CKRecord.ID(recordName: VerdictRecordSchema.recordName(fingerprint: request.fingerprint))
@@ -117,6 +117,15 @@ actor SortRequests {
                 + (failures.isEmpty ? "" : ", failed: \(failures.prefix(2).joined(separator: " / "))")
         )
         return sent
+    }
+
+    /// One request per fingerprint, the first kept. Two inbox rows can share one (the
+    /// same notification harvested twice), and CloudKit refuses a whole batch that
+    /// saves a record twice ("You can't save the same record twice"), so every pass
+    /// failed until the pair aged out of the reach.
+    static func unique(_ requests: [Request]) -> [Request] {
+        var seen = Set<String>()
+        return requests.filter { seen.insert($0.fingerprint).inserted }
     }
 
     private func requestedDates(now: Date) -> [String: TimeInterval] {

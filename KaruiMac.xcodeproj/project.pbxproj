@@ -15,6 +15,7 @@
 		0E8ACEBE68E76745938B38FE /* AppSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 53FC48A0DD6C2ECF2AF9D224 /* AppSettings.swift */; };
 		10CAE366D1D1CFAE81007222 /* CorrespondentSources.swift in Sources */ = {isa = PBXBuildFile; fileRef = A557411D5121D7AA92246BF3 /* CorrespondentSources.swift */; };
 		12AE2ADF169EEC27C715B492 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = AFB92E764E41E683274F5389 /* AppDelegate.swift */; };
+		12D8F0DC431BCF9639C2C9B3 /* SortRequestDuplicateTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 73B8142E2F0F2B2BE520A367 /* SortRequestDuplicateTests.swift */; };
 		133F9D8A73E4F90FCA00D6D1 /* AppLauncher.swift in Sources */ = {isa = PBXBuildFile; fileRef = 04C7D2944D42D6C87AC633F7 /* AppLauncher.swift */; };
 		23020A8966F305767CA6C564 /* DemoMode.swift in Sources */ = {isa = PBXBuildFile; fileRef = 23A1E5BDB996F7E881DA0021 /* DemoMode.swift */; };
 		23AECE4A05A3D44584BEE2D3 /* GradingSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9EB31EDB83CEFAEFEA31A984 /* GradingSession.swift */; };
@@ -150,6 +151,7 @@
 		6CA9E859EEC0683C3C84FEEB /* AppIconSource.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = AppIconSource.png; sourceTree = "<group>"; };
 		6E0F2603A038F4EABE382CD4 /* CloudKitEntitlement.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CloudKitEntitlement.swift; sourceTree = "<group>"; };
 		6E10A41222910A7BEB420C2D /* SlackThreadReplyTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SlackThreadReplyTests.swift; sourceTree = "<group>"; };
+		73B8142E2F0F2B2BE520A367 /* SortRequestDuplicateTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SortRequestDuplicateTests.swift; sourceTree = "<group>"; };
 		75ACA25EA222D40857A4FB20 /* MacSecondOpinion.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MacSecondOpinion.swift; sourceTree = "<group>"; };
 		7848431CC361ECFD458A049D /* MacKaruiCloudTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MacKaruiCloudTests.swift; sourceTree = "<group>"; };
 		78C8C1A1CD1C7D35804D78DE /* MacBanners.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MacBanners.swift; sourceTree = "<group>"; };
@@ -239,6 +241,7 @@
 				4C44EC3DE17DE1FCA7463F4E /* SlackLinkTests.swift */,
 				6E10A41222910A7BEB420C2D /* SlackThreadReplyTests.swift */,
 				64F745A5EB586E1391FD0E0D /* SortAnswerTakeoverTests.swift */,
+				73B8142E2F0F2B2BE520A367 /* SortRequestDuplicateTests.swift */,
 				06DF904D4FAEA78D661169BC /* SparkHarvestTests.swift */,
 				1234CDFEE07EA21BAA319888 /* SparkLinkTests.swift */,
 				5CF3759F576A25317D7D39F0 /* StaleReadMarkTests.swift */,
@@ -605,6 +608,7 @@
 				C18F4894F38E02C8FB692626 /* SlackLinkTests.swift in Sources */,
 				5150A0F582BA8DD951CC9F7F /* SlackThreadReplyTests.swift in Sources */,
 				2B5C4F3958D7B1B7024FDFC8 /* SortAnswerTakeoverTests.swift in Sources */,
+				12D8F0DC431BCF9639C2C9B3 /* SortRequestDuplicateTests.swift in Sources */,
 				5E921D5093F415A0738BC953 /* SparkHarvestTests.swift in Sources */,
 				993CD23DDD32E5C0C303FEBC /* SparkLinkTests.swift in Sources */,
 				7CEBB1F6703D5C519195FEF8 /* StaleReadMarkTests.swift in Sources */,
