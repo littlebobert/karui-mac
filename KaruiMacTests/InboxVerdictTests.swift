@@ -135,4 +135,44 @@ final class InboxVerdictTests: XCTestCase {
         XCTAssertTrue(inbox.takeSelectionTrim(), "the filter's trim, so b isn't read by it")
         XCTAssertFalse(inbox.takeSelectionTrim())
     }
+
+    /// Lookups by ID, the selection, and the unread count are cached; each change to
+    /// the items, a day's verdicts sent again among them, must leave them right.
+    func testLookupsFollowChangesToTheItems() {
+        let suite = "InboxVerdictTests.\(UUID().uuidString)"
+        let inbox = Inbox(defaults: UserDefaults(suiteName: suite)!, store: nil)
+        defer { UserDefaults().removePersistentDomain(forName: suite) }
+        let now = Date()
+        var day: [VerdictRecord] = []
+        for (offset, name) in ["a", "b", "c"].enumerated() {
+            var record = verdict(name, body: "Message \(name)")
+            record.triagedAt = now.addingTimeInterval(TimeInterval(-60 * offset))
+            day.append(record)
+        }
+        inbox.apply(day)
+        XCTAssertEqual(inbox.items.map(\.id), ["a", "b", "c"])
+        XCTAssertEqual(inbox.unreadCount, 3)
+
+        inbox.selection = ["c", "a"]
+        XCTAssertEqual(inbox.selectedItems.map(\.id), ["a", "c"])
+        XCTAssertTrue(inbox.allHaveCategory("notifyNow", ids: inbox.selection))
+
+        inbox.markRead(ids: ["a"])
+        XCTAssertEqual(inbox.unreadCount, 2)
+        inbox.setCategory("summary", ids: ["a"])
+        XCTAssertFalse(inbox.allHaveCategory("notifyNow", ids: inbox.selection))
+        XCTAssertEqual(inbox.item(id: "a")?.category, "summary")
+
+        // Sent again, as the iPhone does: no new rows, and what was done here stays.
+        inbox.apply(day)
+        XCTAssertEqual(inbox.items.map(\.id), ["a", "b", "c"])
+        XCTAssertEqual(inbox.unreadCount, 2)
+
+        var deleted = day[1]
+        deleted.deletedAt = now
+        inbox.apply([deleted])
+        XCTAssertNil(inbox.item(id: "b"))
+        XCTAssertEqual(inbox.item(id: "c")?.body, "Message c")
+        XCTAssertEqual(inbox.selectedItems.map(\.id), ["a", "c"])
+    }
 }

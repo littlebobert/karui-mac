@@ -365,11 +365,33 @@ final class Inbox {
     @ObservationIgnored private var filteredCache: [Item]?
     @ObservationIgnored private var sortedCache: (key: String, items: [Item])?
     @ObservationIgnored private var cacheVersion = 0
+    /// Each item's position by ID, and the unread Important count: the menus and the
+    /// menu bar item read them on every change, which with thousands of items made
+    /// a sync landing beside a read stall the app for seconds.
+    @ObservationIgnored private var positionCache: [String: Int]?
+    @ObservationIgnored private var unreadCountCache: Int?
 
     private func invalidateCaches() {
         filteredCache = nil
         sortedCache = nil
+        positionCache = nil
+        unreadCountCache = nil
         cacheVersion &+= 1
+    }
+
+    /// Where the item with this ID is in `items`. Reads `items`, so a view asking
+    /// still depends on it.
+    private func position(of id: String) -> Int? {
+        let items = items
+        if positionCache == nil {
+            var positions: [String: Int] = [:]
+            positions.reserveCapacity(items.count)
+            for (index, item) in items.enumerated() where positions[item.id] == nil {
+                positions[item.id] = index
+            }
+            positionCache = positions
+        }
+        return positionCache?[id]
     }
 
     /// Reads every input the caches are built from, so a view that gets a cached
@@ -437,12 +459,20 @@ final class Inbox {
         }
     }
 
-    var selectedItems: [Item] { items.filter { selection.contains($0.id) } }
+    /// In the order of `items`.
+    var selectedItems: [Item] { items(ids: selection) }
 
     /// Whether every one of these items already has the category: nothing to mark.
     func allHaveCategory(_ category: String, ids: Set<String>) -> Bool {
-        let chosen = items.filter { ids.contains($0.id) }
+        let chosen = items(ids: ids)
         return !chosen.isEmpty && chosen.allSatisfy { $0.category == category }
+    }
+
+    /// The items with these IDs, in the order of `items`, looked up rather than
+    /// filtered out of all of them.
+    private func items(ids: Set<String>) -> [Item] {
+        let positions = ids.compactMap { position(of: $0) }.sorted()
+        return positions.map { items[$0] }
     }
 
     private func grouped(_ items: [Item], by key: (Item) -> (key: String, name: String)) -> [Group] {
@@ -473,10 +503,16 @@ final class Inbox {
         return trimmed.isEmpty ? L10n.string("Unknown") : trimmed
     }
 
-    func item(id: String) -> Item? { items.first { $0.id == id } }
+    func item(id: String) -> Item? { position(of: id).map { items[$0] } }
 
     /// Unread Important across everything held, whatever the filters show.
-    var unreadCount: Int { items.filter(\.needsAttention).count }
+    var unreadCount: Int {
+        let items = items
+        if let unreadCountCache { return unreadCountCache }
+        let count = items.reduce(0) { $1.needsAttention ? $0 + 1 : $0 }
+        unreadCountCache = count
+        return count
+    }
 
     /// Everything at once, for the demo; nothing is written to disk.
     func replaceItems(_ newItems: [Item]) {
@@ -517,11 +553,22 @@ final class Inbox {
     /// belongs to today's notification, not the one from three days ago.
     static let verdictMatchWindow: TimeInterval = 60 * 60
 
-    private func indices(matching verdict: VerdictRecord) -> [Int] {
-        items.indices.filter {
+    /// `byFingerprint`, from `positionsByFingerprint()`, saves looking through every
+    /// item for each verdict: the iPhone sends a day's worth at once.
+    private func indices(matching verdict: VerdictRecord, in byFingerprint: [String: [Int]]? = nil) -> [Int] {
+        let candidates = byFingerprint.map { $0[verdict.fingerprint] ?? [] } ?? Array(items.indices)
+        return candidates.filter {
             items[$0].fingerprint == verdict.fingerprint
                 && abs(items[$0].deliveredAt.timeIntervalSince(verdict.triagedAt)) <= Self.verdictMatchWindow
         }
+    }
+
+    private func positionsByFingerprint() -> [String: [Int]] {
+        var positions: [String: [Int]] = [:]
+        for (index, item) in items.enumerated() {
+            positions[item.fingerprint, default: []].append(index)
+        }
+        return positions
     }
 
     /// The fingerprint this Mac made from the item's own text, which `fingerprint`
@@ -653,14 +700,19 @@ final class Inbox {
     func apply(_ verdicts: [VerdictRecord]) -> [String] {
         var touched = Set<String>()
         var added: [String] = []
+        // Rebuilt only after a row comes, goes, or changes its fingerprint.
+        var byFingerprint: [String: [Int]]?
         for verdict in verdicts {
+            if byFingerprint == nil { byFingerprint = positionsByFingerprint() }
             if verdict.deletedAt != nil {
-                let gone = Set(indices(matching: verdict).map { items[$0].id })
+                let gone = Set(indices(matching: verdict, in: byFingerprint).map { items[$0].id })
+                guard !gone.isEmpty else { continue }
+                byFingerprint = nil
                 items.removeAll { gone.contains($0.id) }
                 store?.delete(ids: gone)
                 continue
             }
-            var matching = indices(matching: verdict)
+            var matching = indices(matching: verdict, in: byFingerprint)
             // An earlier pass kept the iPhone's copy apart from the Mac's own, which
             // has the link (as Slack's thread replies were): the Mac's takes over.
             var carriedReadAt: Date?
@@ -668,6 +720,7 @@ final class Inbox {
                items.contains(where: { Self.canJoin($0, verdict) }) {
                 let duplicates = Set(matching.map { items[$0].id })
                 carriedReadAt = matching.compactMap { items[$0].readAt }.max()
+                byFingerprint = nil
                 items.removeAll { duplicates.contains($0.id) }
                 store?.delete(ids: duplicates)
                 selection.subtract(duplicates)
@@ -686,6 +739,7 @@ final class Inbox {
             } else if let index = items.firstIndex(where: { Self.canJoin($0, verdict) }) {
                 // The Mac's copy takes the iPhone's fingerprint, so what's done to it
                 // here reaches the iPhone's record.
+                byFingerprint = nil
                 items[index].fingerprint = verdict.fingerprint
                 items[index].verdict = verdict
                 if items[index].readAt == nil { items[index].readAt = verdict.readAt ?? carriedReadAt }
@@ -700,7 +754,8 @@ final class Inbox {
             } else if verdict.title != nil || verdict.body != nil {
                 // An earlier notification with the same text keeps its own row; this
                 // one's ID carries the time, so the two stay apart.
-                let isRepeat = items.contains { $0.fingerprint == verdict.fingerprint }
+                let isRepeat = byFingerprint.map { !($0[verdict.fingerprint] ?? []).isEmpty }
+                    ?? items.contains { $0.fingerprint == verdict.fingerprint }
                 var item = Item(
                     id: isRepeat ? "\(verdict.fingerprint)@\(Int(verdict.triagedAt.timeIntervalSince1970))" : verdict.fingerprint,
                     app: Self.appName(verdict.app),
@@ -714,6 +769,7 @@ final class Inbox {
                 item.senderName = verdict.sender
                 item.verdict = verdict
                 item.readAt = verdict.readAt
+                byFingerprint = nil
                 insert(item)
                 touched.insert(item.id)
                 added.append(item.id)
