@@ -16,9 +16,10 @@ import KaruiLinkKit
 @MainActor
 final class MacPresenceReporter {
     /// No input for this long counts as away. Three minutes kept the iPhone quiet that
-    /// long after the person had walked off without locking; reading for a minute
-    /// without touching anything only lets held alerts reach the iPhone, quietly.
-    static let idleThreshold: TimeInterval = 60
+    /// long after the person had walked off without locking; one minute took reading or
+    /// watching for leaving, 15 times in a morning, 7 of them back within 2 minutes,
+    /// and each let the iPhone alert as usual.
+    static let idleThreshold: TimeInterval = 120
     private let database: CKDatabase?
     private let recordName: String
     private var timer: Timer?
