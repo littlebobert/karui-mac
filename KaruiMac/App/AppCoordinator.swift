@@ -110,18 +110,25 @@ final class AppCoordinator {
         // conversation found by the sender. With nowhere more exact, it's shown here.
         banners.open = { [weak self] id, fingerprint in
             guard let self else { return }
+            bannerClickedAt = Date()
             let item = inbox.item(id: id) ?? fingerprint.flatMap { value in inbox.items.first { $0.fingerprint == value } }
             guard let item else {
                 showInbox()
                 return
             }
-            open(item) { [weak self] item in
-                self?.showInbox()
-                self?.inbox.reveal(item.id)
-            }
             // Opening it reads it, as a double-click does: with the preview, selecting
             // it reads it too, but open in full or in its app nothing else would.
             markRead([item.id])
+            // macOS brings Karui forward for the click on its own time: a link opened
+            // before that is covered by Karui again, so it waits until Karui is in front.
+            Task { @MainActor [weak self] in
+                let waited = await Self.untilActive()
+                SafeDiagnosticLog.shared.record("banners: opening a click, Karui \(waited ? "came forward" : "still in back")")
+                self?.open(item) { [weak self] item in
+                    self?.showInbox()
+                    self?.inbox.reveal(item.id)
+                }
+            }
         }
         banners.start()
         // Read in its own app, or its notification cleared here: Karui's banner for it
@@ -204,6 +211,31 @@ final class AppCoordinator {
         NSApp.setActivationPolicy(.regular)
         NSApp.activate()
         inboxWindow.present()
+    }
+
+    /// When a banner was last clicked: the reopen macOS may send for that click
+    /// mustn't bring the inbox over the app the click went to.
+    private var bannerClickedAt: Date?
+
+    /// The Dock icon clicked, or the app opened again while it runs: the inbox shows,
+    /// unless this is the reopen for a banner's click, which went where it goes.
+    func handleReopen() {
+        if let clicked = bannerClickedAt, Date().timeIntervalSince(clicked) < 2 {
+            SafeDiagnosticLog.shared.record("banners: reopen for a click, inbox left as it is")
+            return
+        }
+        showInbox()
+    }
+
+    /// Waits, up to a second, for Karui to be the active app, and a moment more for
+    /// the activation to settle. False when it never came forward.
+    private static func untilActive() async -> Bool {
+        for _ in 0..<20 where !NSApp.isActive {
+            try? await Task.sleep(for: .milliseconds(50))
+        }
+        guard NSApp.isActive else { return false }
+        try? await Task.sleep(for: .milliseconds(100))
+        return true
     }
 
     /// "Karui", or the name of what the inbox has open after it.
