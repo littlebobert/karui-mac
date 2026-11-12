@@ -106,15 +106,21 @@ final class AppCoordinator {
             return
         }
         SafeDiagnosticLog.shared.record("app: start")
-        // A banner opens its notification here, as Mail's does, not in its app.
+        // A banner goes where a double-click in the inbox does: its link, or a Messages
+        // conversation found by the sender. With nowhere more exact, it's shown here.
         banners.open = { [weak self] id, fingerprint in
             guard let self else { return }
-            showInbox()
             let item = inbox.item(id: id) ?? fingerprint.flatMap { value in inbox.items.first { $0.fingerprint == value } }
-            guard let item else { return }
-            inbox.reveal(item.id)
+            guard let item else {
+                showInbox()
+                return
+            }
+            open(item) { [weak self] item in
+                self?.showInbox()
+                self?.inbox.reveal(item.id)
+            }
             // Opening it reads it, as a double-click does: with the preview, selecting
-            // it reads it too, but open in full nothing else would.
+            // it reads it too, but open in full or in its app nothing else would.
             markRead([item.id])
         }
         banners.start()

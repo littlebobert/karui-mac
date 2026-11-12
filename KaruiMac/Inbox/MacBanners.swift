@@ -4,7 +4,7 @@ import UserNotifications
 
 /// This Mac's own banners for Important notifications only the iPhone received,
 /// while the person is using the Mac and Karui on the iPhone alerts quietly
-/// (`MacPresenceReporter`). A click opens the notification in the inbox.
+/// (`MacPresenceReporter`). A click opens it as a double-click in the inbox does.
 @MainActor
 final class MacBanners: NSObject, UNUserNotificationCenterDelegate {
     /// How long a verdict waits before its banner, in case this Mac's own copy of
