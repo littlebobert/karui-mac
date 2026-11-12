@@ -106,4 +106,26 @@ final class SlackBotPostTests: XCTestCase {
         XCTAssertEqual(inbox.items.first { $0.id == "notification-304" }?.deliveredAt, now)
         XCTAssertEqual(Set(inbox.items.map(\.deliveredAt)), [first, second, now])
     }
+
+    /// The selected notification's ID goes to a new one: the selection stays with the
+    /// notification that was selected, and the new one arrives unselected and unread.
+    /// Before, the selection kept the ID, so the new notification sat selected but
+    /// unread, since nobody had selected it.
+    func testTheSelectionStaysWithANotificationWhoseIDIsReused() {
+        let inbox = inbox()
+        inbox.add(macRecord(id: 304, build: 206, at: yesterday), as: .slack)
+        inbox.selection = ["notification-304"]
+        _ = inbox.takeSelectionTrim()
+        inbox.openItemID = "notification-304"
+        inbox.markRead(ids: ["notification-304"])
+
+        inbox.add(macRecord(id: 304, build: 207, at: now), as: .slack)
+        let earlier = inbox.items.first { $0.deliveredAt == yesterday }
+        XCTAssertNotEqual(earlier?.id, "notification-304")
+        XCTAssertEqual(inbox.selection, Set([earlier?.id].compactMap { $0 }))
+        XCTAssertEqual(inbox.openItemID, earlier?.id)
+        XCTAssertTrue(inbox.takeSelectionTrim(), "following the row isn't the person selecting")
+        XCTAssertEqual(inbox.item(id: "notification-304")?.isUnread, true)
+        XCTAssertEqual(earlier?.isUnread, false)
+    }
 }

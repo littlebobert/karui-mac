@@ -201,9 +201,24 @@ final class Inbox {
     var showsOnlyOpenable: Bool { didSet { defaults.set(showsOnlyOpenable, forKey: "inbox.showsOnlyOpenable"); invalidateCaches() } }
     var search = "" { didSet { invalidateCaches() } }
     var selection: Set<String> = []
-    /// Set while the filter trims the selection, so the trim isn't taken for the
-    /// person selecting: one notification left selected that way isn't read.
+    /// Set while the filter trims the selection, or the selection follows a row to a
+    /// new ID, so the change isn't taken for the person selecting: one notification
+    /// left selected that way isn't read.
     private var isTrimmingSelection = false
+
+    /// What pointed at a row by its ID points at it under its new one: the selection,
+    /// the item open in full, the one a banner revealed, and those kept visible.
+    /// Otherwise they'd point at the new notification that took the old ID, which then
+    /// sat selected without having been selected, and so unread.
+    private func follow(_ id: String, to newID: String) {
+        if selection.contains(id) {
+            isTrimmingSelection = true
+            selection = Set(selection.map { $0 == id ? newID : $0 })
+        }
+        if openItemID == id { openItemID = newID }
+        if revealedID == id { revealedID = newID }
+        if keptVisibleIDs.contains(id) { keptVisibleIDs = Set(keptVisibleIDs.map { $0 == id ? newID : $0 }) }
+    }
 
     private func dropHiddenFromSelection() {
         guard !selection.isEmpty else { return }
@@ -213,7 +228,8 @@ final class Inbox {
         selection = shown
     }
 
-    /// Whether the last selection change was the filter's trim, which it then forgets.
+    /// Whether the last selection change was the filter's trim or a row's new ID, which
+    /// it then forgets.
     func takeSelectionTrim() -> Bool {
         defer { isTrimmingSelection = false }
         return isTrimmingSelection
@@ -642,6 +658,7 @@ final class Inbox {
             items[index] = rekeyed
             store?.delete(ids: [id])
             store?.save([rekeyed])
+            follow(id, to: rekeyed.id)
             SafeDiagnosticLog.shared.record("inbox: record id reused, kept the earlier notification")
         }
         // The iPhone's verdict may have arrived first and stand in for this

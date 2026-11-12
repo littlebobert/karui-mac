@@ -61,7 +61,8 @@ struct InboxView: View {
         // doesn't, so Select All stays a way to act on many without reading them.
         .onChange(of: coordinator.inbox.selection) { _, selection in
             coordinator.inbox.keepVisible(selection)
-            // The filter trimming what's selected isn't the person selecting.
+            // The filter trimming what's selected, or the selection following a row
+            // to a new ID, isn't the person selecting.
             if coordinator.inbox.takeSelectionTrim() { return }
             if selection.count == 1, let id = selection.first {
                 coordinator.markRead([id])
