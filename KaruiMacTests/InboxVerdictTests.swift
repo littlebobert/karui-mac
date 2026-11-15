@@ -24,6 +24,32 @@ final class InboxVerdictTests: XCTestCase {
         XCTAssertNil(inbox.item(id: "b")?.sortedBy)
     }
 
+    /// The rules' Neutral goes as read; Private Cloud Sorting's answer, seconds later,
+    /// makes it Important and unread. That isn't a read one coming back unread: it
+    /// shows unread here, so marking it read reaches the iPhone's alert.
+    func testANeutralVerdictMadeImportantShowsUnread() {
+        let suite = "InboxVerdictTests.\(UUID().uuidString)"
+        let inbox = Inbox(defaults: UserDefaults(suiteName: suite)!, store: nil)
+        defer { UserDefaults().removePersistentDomain(forName: suite) }
+        var byRules = verdict("a")
+        byRules.category = "summary"
+        byRules.isUnread = false
+        inbox.apply([byRules])
+        XCTAssertEqual(inbox.item(id: "a")?.isUnread, false)
+
+        var byCloud = verdict("a")
+        byCloud.engine = "Private Cloud Compute"
+        inbox.apply([byCloud])
+        XCTAssertEqual(inbox.item(id: "a")?.category, "notifyNow")
+        XCTAssertEqual(inbox.item(id: "a")?.isUnread, true)
+        XCTAssertEqual(inbox.item(id: "a")?.needsAttention, true)
+
+        // Read here since, it stays read whatever a later verdict says.
+        inbox.markRead(ids: ["a"])
+        inbox.apply([byCloud])
+        XCTAssertEqual(inbox.item(id: "a")?.isUnread, false)
+    }
+
     /// Shortcuts says "No Name" when it can't match the sender to a contact (LINE
     /// does this for everyone); the title has the person's name.
     func testNoNameFallsBackToTheTitle() {

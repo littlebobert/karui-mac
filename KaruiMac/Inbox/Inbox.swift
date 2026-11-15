@@ -702,8 +702,13 @@ final class Inbox {
     /// an iPad write the same record, the last one wins, and a device that was off
     /// while the person read things sends them unread when it comes back. Marking one
     /// unread again on the iPhone doesn't reach the Mac, which is the smaller loss.
+    ///
+    /// Only what was Important can have been read: Neutral and Spam go as read from
+    /// the start. One of those made Important since, as when Private Cloud Sorting
+    /// answers seconds after the rules' verdict went, is unread for the first time.
+    /// Kept read, it had nothing to mark read here, and the iPhone's alert stayed.
     static func keepingRead(_ verdict: VerdictRecord, over previous: VerdictRecord?) -> VerdictRecord {
-        guard verdict.isUnread, previous?.isUnread == false else { return verdict }
+        guard verdict.isUnread, let previous, !previous.isUnread, previous.category == "notifyNow" else { return verdict }
         var kept = verdict
         kept.isUnread = false
         return kept
