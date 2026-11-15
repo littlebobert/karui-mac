@@ -61,7 +61,16 @@ final class Inbox {
                 .filter { !$0.isEmpty }
                 .joined(separator: " · ")
         }
-        var isUnread: Bool { readAt == nil && verdict?.isUnread ?? true }
+        /// Until read here, what the iPhone's verdict says. With no verdict from the
+        /// iPhone, as for a notification it never got, only what's Important here is
+        /// unread, as on the iPhone, where Neutral and Spam go as read from the start:
+        /// counted unread, they sat under the Unread filter with no dot, looking read.
+        /// Not yet sorted anywhere, it's unread.
+        var isUnread: Bool {
+            guard readAt == nil else { return false }
+            if let verdict { return verdict.isUnread }
+            return category.map { $0 == "notifyNow" } ?? true
+        }
         /// Unread and Important: what gets the dot, the counts, and the Dock badge.
         /// Neutral and Spam are read or not, but never wait for the person.
         var needsAttention: Bool { isUnread && category == "notifyNow" }
@@ -567,7 +576,7 @@ final class Inbox {
     /// the iPhone sorted it. The fingerprint is the app, sender, and text, so "Hi"
     /// from the same person on two days is one fingerprint; the verdict sorted today
     /// belongs to today's notification, not the one from three days ago.
-    static let verdictMatchWindow: TimeInterval = 60 * 60
+    nonisolated static let verdictMatchWindow: TimeInterval = 60 * 60
 
     /// `byFingerprint`, from `positionsByFingerprint()`, saves looking through every
     /// item for each verdict: the iPhone sends a day's worth at once.
@@ -733,6 +742,18 @@ final class Inbox {
                 items.removeAll { gone.contains($0.id) }
                 store?.delete(ids: gone)
                 continue
+            }
+            // Read on another Mac: the mark is on the one record the fingerprint names,
+            // which may be of an earlier day's notification with the same text, as a
+            // calendar alert's is on each day the iPhone didn't get it. Every one of
+            // that text here from before the mark is read, not only the record's own:
+            // otherwise today's stayed unread here for good.
+            if let readAt = verdict.readAt {
+                for index in byFingerprint?[verdict.fingerprint] ?? []
+                where items[index].readAt == nil && items[index].deliveredAt <= readAt {
+                    items[index].readAt = readAt
+                    touched.insert(items[index].id)
+                }
             }
             var matching = indices(matching: verdict, in: byFingerprint)
             // An earlier pass kept the iPhone's copy apart from the Mac's own, which
@@ -983,6 +1004,26 @@ final class Inbox {
                 && age <= SortRequests.reach
                 && [item.title, item.subtitle, item.body].contains { !($0?.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ?? true) }
         }
+    }
+
+    /// What was read here, for the alerts the iPhone held while the person was at this
+    /// Mac (`HeldReleaseSender`), which cancels those: of the notifications from the
+    /// time it looks back over, the ones read, here or on the iPhone, with none of
+    /// the same text still unread. The fingerprint is the app and text, so last week's
+    /// calendar alert, read then, would otherwise cancel today's, still unread. One
+    /// this Mac sorted Neutral itself and nobody read isn't among them: should the
+    /// iPhone have held it as Important, its alert is the only one there is.
+    func fingerprintsReadHere(now: Date = Date(), within window: TimeInterval = HeldReleaseSender.lookback) -> Set<String> {
+        var read = Set<String>()
+        var unread = Set<String>()
+        for item in items where now.timeIntervalSince(item.deliveredAt) <= window {
+            if item.isUnread {
+                unread.insert(item.fingerprint)
+            } else if item.readAt != nil || item.verdict?.isUnread == false {
+                read.insert(item.fingerprint)
+            }
+        }
+        return read.subtracting(unread)
     }
 
     /// The fingerprints still waiting for the iPhone's verdict, among the day's items.

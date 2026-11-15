@@ -38,6 +38,7 @@
 		58B843671087828476A17A1A /* AppIconSource.png in Resources */ = {isa = PBXBuildFile; fileRef = 6CA9E859EEC0683C3C84FEEB /* AppIconSource.png */; };
 		5916F4769E5F40D48B463BFF /* Sparkle in Frameworks */ = {isa = PBXBuildFile; productRef = 782A9236982375E69B998D37 /* Sparkle */; };
 		59B02B06504F73D2E33FBDDB /* MacSorter.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF88AF701CB740F31C522CBC /* MacSorter.swift */; };
+		5AAA64C13330D029BA7B6A0A /* RepeatedNotificationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 45927B751C8797B05060174C /* RepeatedNotificationTests.swift */; };
 		5E921D5093F415A0738BC953 /* SparkHarvestTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 06DF904D4FAEA78D661169BC /* SparkHarvestTests.swift */; };
 		611EDB47A4CA5D72542A9168 /* Acknowledgements.txt in Resources */ = {isa = PBXBuildFile; fileRef = CDA83893DD1898A941803C76 /* Acknowledgements.txt */; };
 		66B2B6A1F6D956AA9B7D1EFA /* SetupNudge.swift in Sources */ = {isa = PBXBuildFile; fileRef = 67CFD0E7402CC1B21A0E1966 /* SetupNudge.swift */; };
@@ -129,6 +130,7 @@
 		2CD87E065773D23C77EB5CCD /* InfoPlist.strings */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = InfoPlist.strings; path = ja.lproj/InfoPlist.strings; sourceTree = "<group>"; };
 		32AAC47B5C7C54BBC67880D2 /* MacTranslationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MacTranslationTests.swift; sourceTree = "<group>"; };
 		3512D9C41E3A8B7DC5C9EE71 /* MacRepost.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MacRepost.swift; sourceTree = "<group>"; };
+		45927B751C8797B05060174C /* RepeatedNotificationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RepeatedNotificationTests.swift; sourceTree = "<group>"; };
 		462569B5AE26FA4CCA644A6A /* SortingSettingsStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SortingSettingsStore.swift; sourceTree = "<group>"; };
 		4B466F1F135069DD48A1473B /* AppCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppCoordinator.swift; sourceTree = "<group>"; };
 		4B9727746C8262B05FCF0C07 /* NotificationDatabaseWatcher.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationDatabaseWatcher.swift; sourceTree = "<group>"; };
@@ -233,6 +235,7 @@
 				32AAC47B5C7C54BBC67880D2 /* MacTranslationTests.swift */,
 				5986291BE197CA76F4D6CA8E /* MessagesLinkTests.swift */,
 				57E3E9CF0788DE8E74AA72D0 /* NotificationPayloadTests.swift */,
+				45927B751C8797B05060174C /* RepeatedNotificationTests.swift */,
 				E91FAECA5133A2FCFCD70647 /* RevealTests.swift */,
 				DCAC8A91CAFED37ADAB0ECAC /* SameLinkMergeTests.swift */,
 				BAAE434D79EA0F6EE8E8AA7A /* SecondOpinionBackoffTests.swift */,
@@ -600,6 +603,7 @@
 				D88C4A383817FB0F719BDAD3 /* MacTranslationTests.swift in Sources */,
 				71FCA40B8355B8319BD331C2 /* MessagesLinkTests.swift in Sources */,
 				D66550355B02294EBB91F582 /* NotificationPayloadTests.swift in Sources */,
+				5AAA64C13330D029BA7B6A0A /* RepeatedNotificationTests.swift in Sources */,
 				73F5812B811D777FF02E0A88 /* RevealTests.swift in Sources */,
 				A04E3D9777FAE4F849543560 /* SameLinkMergeTests.swift in Sources */,
 				C30BA3F00993F24DDF772A47 /* SecondOpinionBackoffTests.swift in Sources */,

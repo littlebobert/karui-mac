@@ -172,8 +172,7 @@ final class AppCoordinator {
                         Task { @MainActor in
                             // Read just now in an open conversation, the poll may not have seen it yet.
                             await self.readIPhoneOnlyMessages()
-                            let readHere = Set(self.inbox.items.filter { !$0.isUnread }.map(\.fingerprint))
-                            await heldRelease.send(readHere: readHere)
+                            await heldRelease.send(readHere: self.inbox.fingerprintsReadHere())
                         }
                     }
                     self.presenceReporter.start()
