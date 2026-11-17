@@ -114,7 +114,7 @@ done
 for command in curl gh git python3 ruby xcodebuild xcodegen xmllint; do
   command -v "$command" >/dev/null || { echo "error: missing required command: $command" >&2; exit 1; }
 done
-[[ "$CURRENT_VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || { echo "error: invalid current version: $CURRENT_VERSION" >&2; exit 1; }
+[[ "$CURRENT_VERSION" =~ ^[0-9]+\.[0-9]+(\.[0-9]+)?$ ]] || { echo "error: invalid current version: $CURRENT_VERSION" >&2; exit 1; }
 [[ "$CURRENT_BUILD" =~ ^[0-9]+$ ]] || { echo "error: invalid current build: $CURRENT_BUILD" >&2; exit 1; }
 
 # The iPhone app pins KaruiLinkKit to a release tag. What the two sides must agree
@@ -155,6 +155,8 @@ EOF
 fi
 
 IFS='.' read -r major minor patch <<<"$CURRENT_VERSION"
+# A two-part version, like 1.0, is x.y.0.
+patch="${patch:-0}"
 if [[ -n "$VERSION_ARG" ]]; then
   VERSION="$VERSION_ARG"
 elif [[ -n "$SCHEMA_ADDITIONS" ]]; then
@@ -162,7 +164,7 @@ elif [[ -n "$SCHEMA_ADDITIONS" ]]; then
 else
   VERSION="$major.$minor.$((10#$patch + 1))"
 fi
-[[ "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || { echo "error: invalid release version: $VERSION" >&2; exit 1; }
+[[ "$VERSION" =~ ^[0-9]+\.[0-9]+(\.[0-9]+)?$ ]] || { echo "error: invalid release version: $VERSION" >&2; exit 1; }
 # A release that adds to the schema takes a minor version: it needs the schema
 # deployed first and the iPhone re-pinned.
 if [[ -n "$SCHEMA_ADDITIONS" && "$VERSION" == "$major.$minor."* && "$ALLOW_PATCH" != true ]]; then

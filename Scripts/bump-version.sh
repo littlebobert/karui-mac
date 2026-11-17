@@ -6,8 +6,8 @@ PROJECT="$ROOT_DIR/project.yml"
 NEW_VERSION="${1#v}"
 NEW_BUILD="${2:-}"
 
-[[ "$NEW_VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || {
-  echo "usage: ./Scripts/bump-version.sh <semantic-version> [numeric-build]" >&2
+[[ "$NEW_VERSION" =~ ^[0-9]+\.[0-9]+(\.[0-9]+)?$ ]] || {
+  echo "usage: ./Scripts/bump-version.sh <version: x.y or x.y.z> [numeric-build]" >&2
   exit 1
 }
 CURRENT_BUILD="$(ruby -e 'puts File.read(ARGV[0])[/CURRENT_PROJECT_VERSION: "([0-9]+)"/, 1]' "$PROJECT")"
