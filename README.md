@@ -14,7 +14,7 @@ On launch it also catches up on the last day's notifications, so a relaunch or a
 
 ## Download
 
-[Download Karui for Mac 0.11.10 for Apple Silicon](https://github.com/littlebobert/karui-mac/releases/download/0.11.10/Karui-0.11.10-mac.zip)
+[Download Karui for Mac 1.0 for Apple Silicon](https://github.com/littlebobert/karui-mac/releases/download/1.0/Karui-1.0-mac.zip)
 
 ## Build and run
 
