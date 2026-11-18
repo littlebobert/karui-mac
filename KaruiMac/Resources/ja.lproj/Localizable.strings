@@ -93,8 +93,10 @@
 "Name" = "名前";
 "Count" = "件数";
 "Newest" = "最新";
-"Waiting for Notification Center" = "通知センターを待っています";
-"Notification Center’s database isn’t there right now; macOS makes a new one with the next notification, and Karui will pick it up. Full Disk Access is fine." = "通知センターのデータベースが今はありません。次の通知が届くとmacOSが新しく作り、Karuiはそれを読み始めます。フルディスクアクセスは問題ありません。";
+"Notification Center’s database is missing" = "通知センターのデータベースがありません";
+"macOS can delete it when the disk runs out of space, and makes a new one only when Notification Center restarts, or when you log out or restart your Mac. Restarting Notification Center clears the notifications it lists now. Full Disk Access is fine." = "ディスクの空きがなくなると、macOSがこのデータベースを削除することがあります。新しいデータベースは、通知センターが再起動したとき、またはログアウトやMacの再起動のときにだけ作られます。通知センターを再起動すると、今表示されている通知は消えます。フルディスクアクセスは問題ありません。";
+"Notification Center didn’t make a new database. Log out and back in, or restart your Mac." = "通知センターが新しいデータベースを作りませんでした。ログアウトしてもう一度ログインするか、Macを再起動してください。";
+"Restart Notification Center" = "通知センターを再起動";
 "Find" = "検索";
 "Karui for Mac" = "Mac版Karui";
 "Makes Karui for iPhone even smarter" = "iPhone版Karuiを、もっと賢く";

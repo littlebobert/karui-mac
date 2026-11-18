@@ -8,10 +8,19 @@ import Observation
 @Observable
 final class FullDiskAccess {
     private(set) var isGranted = false
-    /// Notification Center's database isn't there: macOS makes a new one with the
-    /// next notification (it went missing on a Mac that ran out of disk space). Not
-    /// a permissions problem, and the app keeps checking for it.
+    /// Notification Center's database isn't there, as after macOS deleted it on a Mac
+    /// that ran out of disk space. Not a permissions problem. Notification Center
+    /// doesn't notice: it keeps writing to the deleted file, and makes a new database
+    /// only when it restarts (`restartNotificationCenter`, logging out, or restarting
+    /// the Mac). The app keeps checking for it.
     private(set) var isDatabaseMissing = false
+    private(set) var notificationCenterRestart: NotificationCenterRestart = .idle
+
+    enum NotificationCenterRestart: Equatable {
+        case idle, restarting
+        /// Restarted, but no database came back: logging out or restarting is left.
+        case failed
+    }
     /// Whether System Settings was opened from here, after which a relaunch is offered:
     /// macOS doesn't always apply the change to a running app.
     private(set) var hasOpenedSystemSettings = false
@@ -41,6 +50,37 @@ final class FullDiskAccess {
             // Only for the side effect of appearing in the list.
             _ = Self.probe(Self.registrationProbe)
         }
+    }
+
+    /// Quits Notification Center's process, which launchd starts again at once with a
+    /// new database. What Notification Center lists goes with it, though it was lost
+    /// with the old database already. Waits up to `timeout` for the database.
+    func restartNotificationCenter(timeout: Duration = .seconds(15)) async {
+        guard notificationCenterRestart != .restarting else { return }
+        notificationCenterRestart = .restarting
+        let status = await Task.detached {
+            let process = Process()
+            process.executableURL = URL(filePath: "/usr/bin/killall")
+            process.arguments = ["usernoted"]
+            do {
+                try process.run()
+                process.waitUntilExit()
+                return process.terminationStatus
+            } catch {
+                return -1
+            }
+        }.value
+        SafeDiagnosticLog.shared.record("full disk access: restarted Notification Center, killall status \(status)")
+        let deadline = ContinuousClock.now + timeout
+        while ContinuousClock.now < deadline {
+            try? await Task.sleep(for: .seconds(1))
+            refresh()
+            if !isDatabaseMissing {
+                notificationCenterRestart = .idle
+                return
+            }
+        }
+        notificationCenterRestart = .failed
     }
 
     func openSystemSettings() {

@@ -731,6 +731,13 @@ final class AppCoordinator {
         }
     }
 
+    /// For the missing-database card: the watcher starts as soon as the new database
+    /// is there, not at the next 30-second check.
+    func restartNotificationCenter() async {
+        await fullDiskAccess.restartNotificationCenter()
+        startWatchingIfPossible()
+    }
+
     private func startWatchingIfPossible() {
         keepLookingForDatabase()
         guard fullDiskAccess.isGranted, watcher == nil else { return }

@@ -9,7 +9,9 @@ struct InboxView: View {
         VStack(alignment: .leading, spacing: 0) {
             if !coordinator.fullDiskAccess.isGranted && !DemoMode.isActive {
                 if coordinator.fullDiskAccess.isDatabaseMissing {
-                    MissingDatabaseCard()
+                    MissingDatabaseCard(fullDiskAccess: coordinator.fullDiskAccess) {
+                        Task { await coordinator.restartNotificationCenter() }
+                    }
                         .padding([.horizontal, .top], 16)
                 } else {
                     FullDiskAccessCard(fullDiskAccess: coordinator.fullDiskAccess)
@@ -447,13 +449,29 @@ private struct BarButton: View {
 }
 
 /// Notification Center's database is gone, as it can be after the disk ran full.
+/// macOS makes a new one only when Notification Center restarts.
 private struct MissingDatabaseCard: View {
+    let fullDiskAccess: FullDiskAccess
+    let restart: () -> Void
+
     var body: some View {
         GroupBox {
             VStack(alignment: .leading, spacing: 8) {
-                Text(L10n.string("Waiting for Notification Center"))
+                Text(L10n.string("Notification Center’s database is missing"))
                     .font(.headline)
-                Text(L10n.string("Notification Center’s database isn’t there right now; macOS makes a new one with the next notification, and Karui will pick it up. Full Disk Access is fine."))
+                Text(L10n.string("macOS can delete it when the disk runs out of space, and makes a new one only when Notification Center restarts, or when you log out or restart your Mac. Restarting Notification Center clears the notifications it lists now. Full Disk Access is fine."))
+                if fullDiskAccess.notificationCenterRestart == .failed {
+                    Text(L10n.string("Notification Center didn’t make a new database. Log out and back in, or restart your Mac."))
+                        .foregroundStyle(.secondary)
+                }
+                HStack {
+                    Button(L10n.string("Restart Notification Center"), action: restart)
+                        .disabled(fullDiskAccess.notificationCenterRestart == .restarting)
+                    if fullDiskAccess.notificationCenterRestart == .restarting {
+                        ProgressView()
+                            .controlSize(.small)
+                    }
+                }
             }
             .frame(maxWidth: .infinity, alignment: .leading)
             .padding(4)
