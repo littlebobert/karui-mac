@@ -180,7 +180,11 @@ RELEASE_ZIP="$RELEASE_DIR/Karui-$VERSION-mac.zip"
 NOTES_FILE="$RELEASE_DIR/release-notes-$VERSION.md"
 NOTES_TRANSLATIONS_FILE="$RELEASE_DIR/release-notes-$VERSION-translations.json"
 TRANSLATION_RESPONSE_FILE="$RELEASE_DIR/release-notes-$VERSION-translation-response.json"
+RELEASE_DMG="$RELEASE_DIR/Karui-$VERSION-mac.dmg"
+# Sparkle updates from the zip, as every release before the disk image did; the
+# website and README link the disk image, which people install from by hand.
 DOWNLOAD_URL="https://github.com/$REPO/releases/download/$TAG/Karui-$VERSION-mac.zip"
+DMG_DOWNLOAD_URL="https://github.com/$REPO/releases/download/$TAG/Karui-$VERSION-mac.dmg"
 KARUI_MAC_BRANCH="$(git -C "$ROOT_DIR" branch --show-current)"
 WEBSITE_BRANCH="$(git -C "$WEBSITE_DIR" branch --show-current)"
 
@@ -411,14 +415,14 @@ fi
 
 "$ROOT_DIR/Scripts/bump-version.sh" "$VERSION" "$BUILD"
 
-python3 - "$ROOT_DIR/README.md" "$VERSION" "$DOWNLOAD_URL" <<'PY'
+python3 - "$ROOT_DIR/README.md" "$VERSION" "$DMG_DOWNLOAD_URL" <<'PY'
 from pathlib import Path
 import re, sys
 readme_path = Path(sys.argv[1])
 version = sys.argv[2]
 download_url = sys.argv[3]
 readme = readme_path.read_text()
-pattern = re.compile(r'\[Download Karui for Mac [^]]+ for Apple Silicon\]\(https://github\.com/[^)]+/releases/download/[^/]+/Karui-[^)]+-mac\.zip\)')
+pattern = re.compile(r'\[Download Karui for Mac [^]]+ for Apple Silicon\]\(https://github\.com/[^)]+/releases/download/[^/]+/Karui-[^)]+-mac\.(?:zip|dmg)\)')
 replacement = f'[Download Karui for Mac {version} for Apple Silicon]({download_url})'
 readme, count = pattern.subn(replacement, readme, count=1)
 if count == 0:
@@ -432,7 +436,7 @@ elif count != 1:
 readme_path.write_text(readme)
 PY
 
-python3 - "$LANDING_PAGE" "$VERSION" "$DOWNLOAD_URL" "$NOTES_TRANSLATIONS_FILE" <<'PY'
+python3 - "$LANDING_PAGE" "$VERSION" "$DMG_DOWNLOAD_URL" "$NOTES_TRANSLATIONS_FILE" <<'PY'
 from pathlib import Path
 import datetime, html, json, re, sys
 page_path = Path(sys.argv[1])
@@ -497,12 +501,14 @@ fi
 APP="$ROOT_DIR/.build/ReleaseDerivedData/Build/Products/Release/Karui.app"
 [[ "$(/usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' "$APP/Contents/Info.plist")" == "$VERSION" ]] || { echo "error: built version mismatch" >&2; exit 1; }
 [[ "$(/usr/libexec/PlistBuddy -c 'Print :CFBundleVersion' "$APP/Contents/Info.plist")" == "$BUILD" ]] || { echo "error: built build-number mismatch" >&2; exit 1; }
-[[ -f "$RELEASE_ZIP" && -f "$RELEASE_ZIP.sha256" ]] || { echo "error: release artifact missing" >&2; exit 1; }
+[[ -f "$RELEASE_ZIP" && -f "$RELEASE_ZIP.sha256" && -f "$RELEASE_DMG" && -f "$RELEASE_DMG.sha256" ]] || { echo "error: release artifact missing" >&2; exit 1; }
 
 SPARKLE_GENERATE_APPCAST="${SPARKLE_GENERATE_APPCAST:-$ROOT_DIR/.build/ReleaseDerivedData/SourcePackages/artifacts/sparkle/Sparkle/bin/generate_appcast}"
 APPCAST_WORK="$ROOT_DIR/.build/appcast"
 rm -rf "$APPCAST_WORK"
 mkdir -p "$APPCAST_WORK"
+# Only the zip goes in: generate_appcast lists every archive in the folder, and
+# Sparkle must keep installing from the zip.
 cp "$RELEASE_ZIP" "$APPCAST_WORK/"
 cp "$NOTES_FILE" "$APPCAST_WORK/Karui-$VERSION-mac.md"
 [[ -f "$APPCAST_PATH" ]] && cp "$APPCAST_PATH" "$APPCAST_WORK/appcast.xml"
@@ -515,13 +521,17 @@ cp "$NOTES_FILE" "$APPCAST_WORK/Karui-$VERSION-mac.md"
   --versions "$BUILD" \
   -o "$APPCAST_WORK/appcast.xml" \
   "$APPCAST_WORK"
+grep -Fq "url=\"$DOWNLOAD_URL\"" "$APPCAST_WORK/appcast.xml" || { echo "error: the appcast's $BUILD entry doesn't point at the zip" >&2; exit 1; }
+if grep -Fq ".dmg\"" "$APPCAST_WORK/appcast.xml"; then
+  echo "error: the appcast points at a disk image; Sparkle updates must come from the zip" >&2; exit 1
+fi
 cp "$APPCAST_WORK/appcast.xml" "$APPCAST_PATH"
 
 rm -f "$NOTES_FILE" "$NOTES_TRANSLATIONS_FILE" "$TRANSLATION_RESPONSE_FILE"
 git -C "$ROOT_DIR" add -A
 git -C "$ROOT_DIR" commit -m "Release Karui for Mac $VERSION"
 git -C "$ROOT_DIR" push origin "$KARUI_MAC_BRANCH"
-gh release create "$TAG" "$RELEASE_ZIP" "$RELEASE_ZIP.sha256" \
+gh release create "$TAG" "$RELEASE_ZIP" "$RELEASE_ZIP.sha256" "$RELEASE_DMG" "$RELEASE_DMG.sha256" \
   --repo "$REPO" --target "$KARUI_MAC_BRANCH" --title "Karui for Mac $VERSION" --notes-file "$APPCAST_WORK/Karui-$VERSION-mac.md"
 
 LANDING_RELATIVE="${LANDING_PAGE#"$WEBSITE_DIR"/}"
@@ -540,13 +550,20 @@ ACTUAL="$(shasum -a 256 "$VERIFY_DIR/Karui-$VERSION-mac.zip" | cut -d' ' -f1)"
 codesign --verify --deep --strict --verbose=2 "$VERIFY_DIR/extracted/Karui.app"
 xcrun stapler validate "$VERIFY_DIR/extracted/Karui.app"
 spctl --assess --type execute --verbose=4 "$VERIFY_DIR/extracted/Karui.app"
+curl -fL "$DMG_DOWNLOAD_URL" -o "$VERIFY_DIR/Karui-$VERSION-mac.dmg"
+EXPECTED="$(cut -d' ' -f1 "$RELEASE_DMG.sha256")"
+ACTUAL="$(shasum -a 256 "$VERIFY_DIR/Karui-$VERSION-mac.dmg" | cut -d' ' -f1)"
+[[ "$EXPECTED" == "$ACTUAL" ]] || { echo "error: public disk image checksum mismatch" >&2; exit 1; }
+# A quarantined copy, as a browser download would be.
+xattr -w com.apple.quarantine "0081;$(printf '%x' "$(date +%s)");Safari;" "$VERIFY_DIR/Karui-$VERSION-mac.dmg"
+"$ROOT_DIR/Scripts/verify-dmg.sh" "$VERIFY_DIR/Karui-$VERSION-mac.dmg" "$VERSION"
 
 for attempt in {1..24}; do
   if curl -fL "$PUBLIC_APPCAST_URL" -o "$VERIFY_DIR/appcast.xml" 2>/dev/null && \
      curl -fL "$PUBLIC_LANDING_URL" -o "$VERIFY_DIR/landing.html" 2>/dev/null && \
      xmllint --noout "$VERIFY_DIR/appcast.xml" && \
      grep -Fq "<sparkle:version>$BUILD</sparkle:version>" "$VERIFY_DIR/appcast.xml" && \
-     grep -Fq "$DOWNLOAD_URL" "$VERIFY_DIR/landing.html"; then
+     grep -Fq "$DMG_DOWNLOAD_URL" "$VERIFY_DIR/landing.html"; then
     echo "Published and verified Karui for Mac $VERSION ($BUILD)"
     echo "https://github.com/$REPO/releases/tag/$TAG"
     kit_change_notice

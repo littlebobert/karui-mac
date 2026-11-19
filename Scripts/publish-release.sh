@@ -21,6 +21,7 @@ VERSION="$(ruby -e 'puts File.read(ARGV[0])[/MARKETING_VERSION: "([^"]+)"/, 1]' 
 BUILD="$(ruby -e 'puts File.read(ARGV[0])[/CURRENT_PROJECT_VERSION: "([0-9]+)"/, 1]' "$ROOT_DIR/project.yml")"
 TAG="${RELEASE_TAG:-$VERSION}"
 RELEASE_ZIP="$ROOT_DIR/.build/releases/Karui-$VERSION-mac.zip"
+RELEASE_DMG="$ROOT_DIR/.build/releases/Karui-$VERSION-mac.dmg"
 NOTES_FILE="${NOTES_FILE:-$ROOT_DIR/.build/releases/release-notes-$VERSION.md}"
 APPCAST_WORK="$ROOT_DIR/.build/appcast"
 
@@ -32,7 +33,7 @@ for command in gh git xcrun; do command -v "$command" >/dev/null || { echo "erro
 gh auth status >/dev/null
 gh release view "$TAG" --repo "$REPO" >/dev/null 2>&1 && { echo "error: release $TAG already exists" >&2; exit 1; }
 
-[[ -f "$RELEASE_ZIP" ]] || "$ROOT_DIR/Scripts/notarize-release.sh" >/dev/null
+[[ -f "$RELEASE_ZIP" && -f "$RELEASE_DMG" ]] || "$ROOT_DIR/Scripts/notarize-release.sh" >/dev/null
 
 mkdir -p "$APPCAST_WORK"
 rm -f "$APPCAST_WORK"/*
@@ -51,7 +52,7 @@ cp "$NOTES_FILE" "$APPCAST_WORK/Karui-$VERSION-mac.md"
   "$APPCAST_WORK"
 
 cp "$APPCAST_WORK/appcast.xml" "$APPCAST_PATH"
-gh release create "$TAG" "$RELEASE_ZIP" "$RELEASE_ZIP.sha256" \
+gh release create "$TAG" "$RELEASE_ZIP" "$RELEASE_ZIP.sha256" "$RELEASE_DMG" "$RELEASE_DMG.sha256" \
   --repo "$REPO" \
   --title "Karui for Mac $VERSION" \
   --notes-file "$NOTES_FILE"
