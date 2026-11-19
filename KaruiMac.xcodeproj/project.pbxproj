@@ -70,6 +70,7 @@
 		B36C02CF03B1CE1739258C8D /* MessagesHarvester.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9789D39272AA5E1B1CC4C22B /* MessagesHarvester.swift */; };
 		B683E35184D1A6B6FAD22A3C /* MenuBarMenu.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1E81C403E1EA25EF28338C97 /* MenuBarMenu.swift */; };
 		B84537441B5C3DF21B4C53E0 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 2CD87E065773D23C77EB5CCD /* InfoPlist.strings */; };
+		B8D28C65AD631D98A026F37B /* VerdictLinkRetryTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7319265975EC26422A322C9 /* VerdictLinkRetryTests.swift */; };
 		BB21062D85E162C062CA9759 /* AboutWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57C6E865203C37F84966819F /* AboutWindowController.swift */; };
 		BDBAFEDDEDA7A80FE70A3F05 /* MacBanners.swift in Sources */ = {isa = PBXBuildFile; fileRef = 78C8C1A1CD1C7D35804D78DE /* MacBanners.swift */; };
 		BDE1F47D809D94B97D3ADDFC /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01B64433CF565459941ABCA4 /* SettingsView.swift */; };
@@ -187,6 +188,7 @@
 		C5527BD18D2A94BD3B5C586C /* MacTranslations.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MacTranslations.swift; sourceTree = "<group>"; };
 		CDA83893DD1898A941803C76 /* Acknowledgements.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = Acknowledgements.txt; sourceTree = "<group>"; };
 		D5909E5B90E7DBD843A5021C /* MacFocusFilesTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MacFocusFilesTests.swift; sourceTree = "<group>"; };
+		D7319265975EC26422A322C9 /* VerdictLinkRetryTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VerdictLinkRetryTests.swift; sourceTree = "<group>"; };
 		D93392F8F852EAF234D01396 /* GradingSessionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GradingSessionTests.swift; sourceTree = "<group>"; };
 		DA731233B4D5A5ECA4611FD6 /* IPhoneSortingSettingsSection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IPhoneSortingSettingsSection.swift; sourceTree = "<group>"; };
 		DCAC8A91CAFED37ADAB0ECAC /* SameLinkMergeTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SameLinkMergeTests.swift; sourceTree = "<group>"; };
@@ -248,6 +250,7 @@
 				06DF904D4FAEA78D661169BC /* SparkHarvestTests.swift */,
 				1234CDFEE07EA21BAA319888 /* SparkLinkTests.swift */,
 				5CF3759F576A25317D7D39F0 /* StaleReadMarkTests.swift */,
+				D7319265975EC26422A322C9 /* VerdictLinkRetryTests.swift */,
 			);
 			path = KaruiMacTests;
 			sourceTree = "<group>";
@@ -616,6 +619,7 @@
 				5E921D5093F415A0738BC953 /* SparkHarvestTests.swift in Sources */,
 				993CD23DDD32E5C0C303FEBC /* SparkLinkTests.swift in Sources */,
 				7CEBB1F6703D5C519195FEF8 /* StaleReadMarkTests.swift in Sources */,
+				B8D28C65AD631D98A026F37B /* VerdictLinkRetryTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

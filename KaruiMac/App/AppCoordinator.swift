@@ -24,8 +24,9 @@ final class AppCoordinator {
     private let readWatcher = ReadWatcher()
     /// For links made from the iPhone's verdicts.
     private let sparkFromVerdicts = SparkHarvester()
-    /// The verdicts already looked up in Spark since launch, by fingerprint.
-    private var verdictLinkAttempts = Set<String>()
+    /// The verdicts looked up in Spark since launch, by fingerprint: how many times,
+    /// and when last. A miss is looked up again later (see `linkFromVerdicts`).
+    private var verdictLinkAttempts: [String: VerdictLinkAttempt] = [:]
     /// An app may announce an item before it has saved it, so a miss is tried again.
     private static let harvestRetryDelays: [Duration] = [.seconds(10), .seconds(60)]
     private lazy var verdicts = VerdictStore(
@@ -506,20 +507,45 @@ final class AppCoordinator {
         }
     }
 
+    struct VerdictLinkAttempt: Equatable {
+        var count: Int
+        var lastAt: Date
+    }
+
+    /// How long after a miss the same email is looked up again, and how many times
+    /// in all. Spark here may not have the email yet when the iPhone's verdict comes:
+    /// a Mac asleep gets the verdicts in a dark wake, before Spark has fetched any
+    /// mail, and an awake Mac's Spark can trail the iPhone by a minute. Verdicts come
+    /// again with every pass and every push, so a miss is retried with the next one
+    /// after this long.
+    static let verdictLinkRetryInterval: TimeInterval = 2 * 60
+    static let verdictLinkMaxAttempts = 12
+
+    /// Whether to look up this verdict's email now: never tried, or missed and due again.
+    static func shouldLookUp(_ attempt: VerdictLinkAttempt?, now: Date) -> Bool {
+        guard let attempt else { return true }
+        return attempt.count < verdictLinkMaxAttempts
+            && now.timeIntervalSince(attempt.lastAt) >= verdictLinkRetryInterval
+    }
+
     /// Spark links for the emails the iPhone notified about that have none: ones
     /// this Mac didn't announce, or whose harvest here missed. Spark here has every
-    /// email, so the iPhone's subject and time find it. Once per email a launch, for
-    /// the day a link lasts. Then any link left under the Mac's fingerprint after a
-    /// loose match goes again under the iPhone's.
+    /// email, so the iPhone's subject and time find it. A miss is looked up again
+    /// with later verdicts, a few minutes apart, for the day a link lasts. Then any
+    /// link left under the Mac's fingerprint after a loose match goes again under
+    /// the iPhone's.
     private func linkFromVerdicts(_ verdicts: [VerdictRecord], now: Date = Date()) {
         var wanted: [VerdictRecord] = []
+        var retries = 0
         for verdict in verdicts where verdict.deletedAt == nil
             && Inbox.appName(verdict.app) == KnownApp.spark.rawValue
             && now.timeIntervalSince(verdict.triagedAt) < DeepLinkRecord.lifetime
             && verdict.subtitle?.isEmpty == false
-            && !verdictLinkAttempts.contains(verdict.fingerprint)
+            && Self.shouldLookUp(verdictLinkAttempts[verdict.fingerprint], now: now)
             && !inbox.items.contains(where: { $0.fingerprint == verdict.fingerprint && $0.link != nil }) {
-            verdictLinkAttempts.insert(verdict.fingerprint)
+            let previous = verdictLinkAttempts[verdict.fingerprint]
+            if previous != nil { retries += 1 }
+            verdictLinkAttempts[verdict.fingerprint] = VerdictLinkAttempt(count: (previous?.count ?? 0) + 1, lastAt: now)
             wanted.append(verdict)
         }
         relinkMismatched()
@@ -540,7 +566,10 @@ final class AppCoordinator {
                     await self.readWatcher.track(harvested)
                 }
             }
-            SafeDiagnosticLog.shared.record("harvest: Spark from the iPhone's verdicts, \(found) of \(wanted.count) found")
+            // Retries that find nothing again aren't news.
+            guard found > 0 || retries < wanted.count else { return }
+            let again = retries == 0 ? "" : " (\(retries) looked up again)"
+            SafeDiagnosticLog.shared.record("harvest: Spark from the iPhone's verdicts, \(found) of \(wanted.count) found\(again)")
         }
     }
 

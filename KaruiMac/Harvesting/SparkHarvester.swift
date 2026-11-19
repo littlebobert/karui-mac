@@ -41,7 +41,8 @@ struct SparkHarvester: NotificationHarvester {
     /// The link for an email the iPhone notified about, named by the iPhone's
     /// fingerprint so its lookup finds it.
     func harvest(fingerprint: String, subject: String, near date: Date) -> HarvestedLink? {
-        guard !subject.isEmpty, let email = email(subject: subject, near: date) else { return nil }
+        // The caller logs the lookups as a batch; misses here are retried, so not one by one.
+        guard !subject.isEmpty, let email = email(subject: subject, near: date, logsMiss: false) else { return nil }
         return HarvestedLink(
             link: DeepLinkRecord(
                 fingerprint: fingerprint, app: KnownApp.spark.rawValue, url: email.url,
@@ -55,7 +56,7 @@ struct SparkHarvester: NotificationHarvester {
     /// The email with this subject that arrived nearest the time, within the window.
     /// The range on `receivedDate` lets SQLite use Spark's index on it rather than
     /// read every email.
-    func email(subject: String, near date: Date) -> Email? {
+    func email(subject: String, near date: Date, logsMiss: Bool = true) -> Email? {
         let time = date.timeIntervalSince1970
         do {
             let database = try SQLiteDatabase.opening(databaseURL)
@@ -68,7 +69,7 @@ struct SparkHarvester: NotificationHarvester {
                 """, [.text(subject), .real(time - Self.lookBack), .real(time + Self.lookAhead), .real(time)])
             guard let row = rows.first, let messageID = row[0].text, let accountInfo = row[2].text,
                   let received = row[4].real else {
-                SafeDiagnosticLog.shared.record("spark: no email matched the notification")
+                if logsMiss { SafeDiagnosticLog.shared.record("spark: no email matched the notification") }
                 return nil
             }
             guard let address = SparkLink.accountAddress(fromAccountInfo: Data(accountInfo.utf8)),
