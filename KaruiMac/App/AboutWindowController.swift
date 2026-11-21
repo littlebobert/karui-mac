@@ -208,7 +208,7 @@ enum BugReport {
             NSPasteboard.general.setString(DiagnosticReport.text(), forType: .string)
             return L10n.string("Could not open Mail. The report was copied instead.")
         }
-        service.recipients = ["justin.garcia@gmail.com"]
+        service.recipients = ["justin@onemorething.tokyo"]
         service.subject = "Karui for Mac Bug Report"
         service.perform(withItems: [
             L10n.string("Please describe what happened and what you expected.") + "\n\n" + DiagnosticReport.text()
