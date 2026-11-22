@@ -162,6 +162,7 @@
 		75ACA25EA222D40857A4FB20 /* MacSecondOpinion.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MacSecondOpinion.swift; sourceTree = "<group>"; };
 		7848431CC361ECFD458A049D /* MacKaruiCloudTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MacKaruiCloudTests.swift; sourceTree = "<group>"; };
 		78C8C1A1CD1C7D35804D78DE /* MacBanners.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MacBanners.swift; sourceTree = "<group>"; };
+		7C291DB86FBAE44252DBF29D /* karui-mac */ = {isa = PBXFileReference; lastKnownFileType = folder; name = "karui-mac"; path = .; sourceTree = SOURCE_ROOT; };
 		7CDCA27785FCD626FF554343 /* CompanionPresence.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CompanionPresence.swift; sourceTree = "<group>"; };
 		7D3E94E96614E7F87652D0F6 /* SlackBotPostTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SlackBotPostTests.swift; sourceTree = "<group>"; };
 		84FE6D61A57CB963CB4C5CCC /* MacSortingEnvironment.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MacSortingEnvironment.swift; sourceTree = "<group>"; };
@@ -180,7 +181,6 @@
 		A8B537E522479859BEF6FA8A /* MacFocusFilter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MacFocusFilter.swift; sourceTree = "<group>"; };
 		AFB92E764E41E683274F5389 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		B4E4F4AD73C858B7F477B797 /* InstalledAppTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InstalledAppTests.swift; sourceTree = "<group>"; };
-		B584734CF79D25C6D2EAA882 /* karui-mac-replies */ = {isa = PBXFileReference; lastKnownFileType = folder; name = "karui-mac-replies"; path = .; sourceTree = SOURCE_ROOT; };
 		B7677F16AEA0B585F6963745 /* ReadWatcher.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReadWatcher.swift; sourceTree = "<group>"; };
 		B8640EA18112E9AC366300AA /* Harvester.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Harvester.swift; sourceTree = "<group>"; };
 		B925C34CA7033ED768164254 /* VerdictStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VerdictStore.swift; sourceTree = "<group>"; };
@@ -274,7 +274,7 @@
 		277C14CCB635AAA2E2CB7D80 /* Packages */ = {
 			isa = PBXGroup;
 			children = (
-				B584734CF79D25C6D2EAA882 /* karui-mac-replies */,
+				7C291DB86FBAE44252DBF29D /* karui-mac */,
 			);
 			name = Packages;
 			sourceTree = "<group>";
