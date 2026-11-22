@@ -48,6 +48,8 @@ final class AppCoordinator {
     /// When Sync Now last asked the iPhone, so verdicts arriving soon after count as its answer.
     private var syncRequestedAt: Date?
     private let sortRequests = SortRequests()
+    /// The iPhone's open deadline reminders, and the person's replies to them.
+    private let reminderWatches = ReminderWatches()
     let sortingSettings = SortingSettingsStore()
     private let subscriptions = MacSubscriptions()
     private let presenceReporter = MacPresenceReporter()
@@ -781,11 +783,13 @@ final class AppCoordinator {
         let sync = sync
         let readWatcher = readWatcher
         let verdicts = verdicts
+        let reminderWatches = reminderWatches
         Task { await verdicts.start() }
         sortRequestTask = Task { [weak self] in
             while !Task.isCancelled {
                 try? await Task.sleep(for: Self.sortRequestInterval)
                 await self?.askIPhoneToSort()
+                await reminderWatches.check()
                 // Picks up translation turned on, on the iPhone, and what came in meanwhile.
                 await MainActor.run { self?.translateRecent() }
             }
