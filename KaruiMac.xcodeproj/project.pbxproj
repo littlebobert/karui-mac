@@ -24,6 +24,7 @@
 		26445B3E9165FAB91EBDFDBB /* KaruiLinkKit in Frameworks */ = {isa = PBXBuildFile; productRef = 1EEF910B98DBB071B7129E5A /* KaruiLinkKit */; };
 		29D7C805F698B12B4188AB8B /* DeepLinkSync.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1A75765EC9DF2745AF8F9FD /* DeepLinkSync.swift */; };
 		2B5C4F3958D7B1B7024FDFC8 /* SortAnswerTakeoverTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 64F745A5EB586E1391FD0E0D /* SortAnswerTakeoverTests.swift */; };
+		32CF0DB6574A1C124BF2AFC0 /* OtherMacLinkTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B6E277A35F2E45B98D480B7C /* OtherMacLinkTests.swift */; };
 		351CCFEAAFC9F7E04A808ADE /* KaruiMacApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 61B11DFC924A31F1D18275E7 /* KaruiMacApp.swift */; };
 		3AB0460E7B8E363EE8473FEC /* InstalledAppTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B4E4F4AD73C858B7F477B797 /* InstalledAppTests.swift */; };
 		41DDECE3C0F720A32A5B6505 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = C424AFD49EBE5C89997B8D7C /* Assets.xcassets */; };
@@ -181,6 +182,7 @@
 		A8B537E522479859BEF6FA8A /* MacFocusFilter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MacFocusFilter.swift; sourceTree = "<group>"; };
 		AFB92E764E41E683274F5389 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		B4E4F4AD73C858B7F477B797 /* InstalledAppTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InstalledAppTests.swift; sourceTree = "<group>"; };
+		B6E277A35F2E45B98D480B7C /* OtherMacLinkTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OtherMacLinkTests.swift; sourceTree = "<group>"; };
 		B7677F16AEA0B585F6963745 /* ReadWatcher.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReadWatcher.swift; sourceTree = "<group>"; };
 		B8640EA18112E9AC366300AA /* Harvester.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Harvester.swift; sourceTree = "<group>"; };
 		B925C34CA7033ED768164254 /* VerdictStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VerdictStore.swift; sourceTree = "<group>"; };
@@ -243,6 +245,7 @@
 				32AAC47B5C7C54BBC67880D2 /* MacTranslationTests.swift */,
 				5986291BE197CA76F4D6CA8E /* MessagesLinkTests.swift */,
 				57E3E9CF0788DE8E74AA72D0 /* NotificationPayloadTests.swift */,
+				B6E277A35F2E45B98D480B7C /* OtherMacLinkTests.swift */,
 				45927B751C8797B05060174C /* RepeatedNotificationTests.swift */,
 				E91FAECA5133A2FCFCD70647 /* RevealTests.swift */,
 				DCAC8A91CAFED37ADAB0ECAC /* SameLinkMergeTests.swift */,
@@ -625,6 +628,7 @@
 				D88C4A383817FB0F719BDAD3 /* MacTranslationTests.swift in Sources */,
 				71FCA40B8355B8319BD331C2 /* MessagesLinkTests.swift in Sources */,
 				D66550355B02294EBB91F582 /* NotificationPayloadTests.swift in Sources */,
+				32CF0DB6574A1C124BF2AFC0 /* OtherMacLinkTests.swift in Sources */,
 				5AAA64C13330D029BA7B6A0A /* RepeatedNotificationTests.swift in Sources */,
 				73F5812B811D777FF02E0A88 /* RevealTests.swift in Sources */,
 				A04E3D9777FAE4F849543560 /* SameLinkMergeTests.swift in Sources */,

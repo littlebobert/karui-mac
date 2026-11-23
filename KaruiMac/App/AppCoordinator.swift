@@ -610,8 +610,10 @@ final class AppCoordinator {
         if selected.count == 1, let item = selected.first { open(item) }
     }
 
-    /// Opens the item where it has somewhere to open, or shows it in full. A
-    /// Messages notification without a link still tries its conversation, by the
+    /// Opens the item where it has somewhere to open, or shows it in full. One of
+    /// Messages, Spark, or Slack without a link here takes another Mac's from iCloud
+    /// when there is one. A Messages notification still without a link tries its
+    /// conversation, by the
     /// sender, the way the iPhone does. With the preview pane showing it already,
     /// one with nowhere more exact opens its app instead.
     func open(_ item: Inbox.Item) {
@@ -626,14 +628,27 @@ final class AppCoordinator {
 
     private func open(_ item: Inbox.Item, otherwise fallback: @escaping @MainActor (Inbox.Item) -> Void) {
         if let link = item.link {
-            NSWorkspace.shared.open(item.app == KnownApp.slack.rawValue ? SlackLink.macURL(for: link.url) : link.url)
+            openLink(link, app: item.app)
             return
         }
-        guard item.app == KnownApp.messages.rawValue, !DemoMode.isActive else {
+        guard KnownApp(rawValue: item.app) != nil, !DemoMode.isActive else {
             fallback(item)
             return
         }
+        let sync = sync
         Task { @MainActor in
+            // Another Mac's link: one that was on when this one wasn't, or whose app
+            // had the email or message first.
+            if let link = await sync.fetchLink(fingerprint: item.fingerprint, deliveredNear: item.deliveredAt),
+               Inbox.linkFits(link.url, app: item.app) {
+                self.inbox.setLink(link)
+                self.openLink(link, app: item.app)
+                return
+            }
+            guard item.app == KnownApp.messages.rawValue else {
+                fallback(item)
+                return
+            }
             if let url = await MessagesConversationFinder().url(sender: item.sender, subtitle: item.subtitle) {
                 SafeDiagnosticLog.shared.record("messages: conversation found by the sender")
                 NSWorkspace.shared.open(url)
@@ -641,6 +656,10 @@ final class AppCoordinator {
                 fallback(item)
             }
         }
+    }
+
+    private func openLink(_ link: DeepLinkRecord, app: String) {
+        NSWorkspace.shared.open(app == KnownApp.slack.rawValue ? SlackLink.macURL(for: link.url) : link.url)
     }
 
     private func openWithoutLink(_ item: Inbox.Item) {

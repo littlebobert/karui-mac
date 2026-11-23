@@ -1,6 +1,7 @@
 import CloudKit
 import Foundation
 import KaruiLinkKit
+import KaruiSorting
 
 /// Sends each link to the iPhone through the person's own iCloud: one record per
 /// notification in the private database of Karui's container, named by the
@@ -129,6 +130,71 @@ actor DeepLinkSync {
             guard let serverRecord = error.serverRecord else { throw error }
             try await save(serverRecord, readAt: date, in: database, retryingOnConflict: false)
         }
+    }
+
+    /// How long opening waits for iCloud before it settles for the app.
+    static let fetchDeadline: Duration = .seconds(4)
+    /// How far apart a link's time and the item's may be, as the iPhone checks: a
+    /// fingerprint is made of the text, so an earlier notification with the same
+    /// words has a record of its own time.
+    static let deliveryTolerance: TimeInterval = 15 * 60
+
+    /// The link another Mac sent for a notification this one has no link for: one
+    /// only the iPhone brought here, or one whose email or message this Mac's app
+    /// hadn't fetched yet. An always-on Mac harvests what a laptop asleep or away
+    /// never saw. Nil when there's none, it's another notification's with the same
+    /// text, or iCloud doesn't answer in time.
+    func fetchLink(fingerprint: String, deliveredNear date: Date) async -> DeepLinkRecord? {
+        if !status.isAvailable {
+            await refreshStatus()
+        }
+        guard status.isAvailable, let database else { return nil }
+        let id = CKRecord.ID(recordName: fingerprint)
+        let fetched = await ModelDeadline.value(within: Self.fetchDeadline) { () -> Result<DeepLinkRecord?, any Error> in
+            do {
+                return .success(Self.link(from: try await database.record(for: id), fingerprint: fingerprint))
+            } catch {
+                return .failure(error)
+            }
+        }
+        switch fetched {
+        case nil:
+            SafeDiagnosticLog.shared.record("open: no answer from iCloud in time")
+            return nil
+        case .failure(let error as CKError) where error.code == .unknownItem:
+            SafeDiagnosticLog.shared.record("open: no link from another Mac")
+            return nil
+        case .failure(let error):
+            SafeDiagnosticLog.shared.record("open: link lookup failed: \(error.localizedDescription)")
+            return nil
+        case .success(let link):
+            guard let link, Self.isSameDelivery(link, as: date) else {
+                SafeDiagnosticLog.shared.record("open: another Mac's link is for another notification")
+                return nil
+            }
+            SafeDiagnosticLog.shared.record("open: \(link.app) link from another Mac")
+            return link
+        }
+    }
+
+    static func isSameDelivery(_ link: DeepLinkRecord, as date: Date) -> Bool {
+        abs(link.deliveredAt.timeIntervalSince(date)) <= deliveryTolerance
+    }
+
+    /// A record as another Mac (or this one) wrote it; nil when it lacks the URL or time.
+    static func link(from record: CKRecord, fingerprint: String) -> DeepLinkRecord? {
+        guard let urlString = record.encryptedValues[DeepLinkRecordSchema.url] as? String,
+              let url = URL(string: urlString),
+              let deliveredAt = record[DeepLinkRecordSchema.deliveredAt] as? Date else { return nil }
+        return DeepLinkRecord(
+            fingerprint: fingerprint,
+            app: record[DeepLinkRecordSchema.app] as? String ?? "",
+            url: url,
+            opensExactContent: (record[DeepLinkRecordSchema.opensExactContent] as? Int ?? 0) != 0,
+            deliveredAt: deliveredAt,
+            expiresAt: record[DeepLinkRecordSchema.expiresAt] as? Date,
+            readAt: record[DeepLinkRecordSchema.readAt] as? Date
+        )
     }
 
     /// Deletes the records whose day is up. Run at launch and now and then.
