@@ -162,7 +162,7 @@ struct SettingsView: View {
                     .foregroundStyle(.secondary)
             }
             if let policy = coordinator.sortingSettings.policy {
-                IPhoneSortingSettingsSection(policy: policy, updatedAt: coordinator.sortingSettings.updatedAt)
+                IPhoneSortingSettingsSection(policy: policy, updatedAt: coordinator.sortingSettings.updatedAt, emojiHiding: coordinator.sortingSettings.emojiHiding)
             }
         }
         .formStyle(.grouped)

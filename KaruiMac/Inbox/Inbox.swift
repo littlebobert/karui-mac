@@ -71,6 +71,15 @@ final class Inbox {
             if let verdict { return verdict.isUnread }
             return category.map { $0 == "notifyNow" } ?? true
         }
+        /// Text as a list shows it under the iPhone's Hide Emoji: without emoji where
+        /// the choice covers this category. One not yet sorted counts as Important,
+        /// so only Everything takes them off. The full view shows it as it came.
+        func listed(_ text: String?, hidingEmoji mode: EmojiHiding.Mode) -> String? {
+            guard let text, mode != .off else { return text }
+            let category = category.flatMap(TriageCategory.init(rawValue:)) ?? .notifyNow
+            return EmojiHiding.shown(text, category: category, mode: mode)
+        }
+
         /// Unread and Important: what gets the dot, the counts, and the Dock badge.
         /// Neutral and Spam are read or not, but never wait for the person.
         var needsAttention: Bool { isUnread && category == "notifyNow" }
@@ -174,6 +183,13 @@ final class Inbox {
         /// Unread Important ones, as everywhere a count is shown.
         var unreadCount: Int { items.filter(\.needsAttention).count }
         var newestAt: Date { items.map(\.deliveredAt).max() ?? .distantPast }
+
+        /// The name under the iPhone's Hide Emoji, as History names its groups: a
+        /// group with anything Important in it keeps its emoji under Only Neutral and Spam.
+        func shownTitle(hidingEmoji mode: EmojiHiding.Mode) -> String {
+            let hasImportant = items.contains { $0.category.map { $0 == "notifyNow" } ?? true }
+            return EmojiHiding.shown(title, category: hasImportant ? .notifyNow : .summary, mode: mode)
+        }
 
         static func == (lhs: Group, rhs: Group) -> Bool { lhs.id == rhs.id }
         func hash(into hasher: inout Hasher) { hasher.combine(id) }

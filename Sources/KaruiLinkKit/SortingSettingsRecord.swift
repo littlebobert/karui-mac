@@ -16,6 +16,10 @@ public enum SortingSettingsRecordSchema {
     /// The iPhone's Karui Cloud invite, while Karui Cloud Sorting is on there, so the
     /// Mac sorts with Karui Cloud too. Absent when it's off. Encrypted.
     public static let karuiCloudInvite = "karuiCloudInvite"
+    /// The iPhone's Hide Emoji choice (`EmojiHiding.Mode`'s raw value: off, quiet,
+    /// all), so the Mac's inbox lists show notifications the same way. Absent from
+    /// an iPhone too old to send it.
+    public static let hideEmoji = "hideEmoji"
     public static let updatedAt = "updatedAt"
     /// The iPhone app's version, so the Mac can tell settings from a newer Karui.
     public static let appVersion = "appVersion"

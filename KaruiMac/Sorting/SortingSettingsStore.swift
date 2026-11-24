@@ -19,6 +19,9 @@ final class SortingSettingsStore {
     /// The iPhone's Karui Cloud invite, while Karui Cloud Sorting is on there. Kept in
     /// memory only: Karui Cloud needs the network, and so does fetching this again.
     private(set) var karuiCloudInvite: String?
+    /// The iPhone's Hide Emoji, which the inbox's lists follow. Kept here between
+    /// launches, as the policy is.
+    private(set) var emojiHiding: EmojiHiding.Mode
     /// iCloud has answered at least once, so a missing policy means the iPhone sent none.
     private(set) var hasChecked = false
     @ObservationIgnored private let database: CKDatabase?
@@ -29,6 +32,7 @@ final class SortingSettingsStore {
             ? CKContainer(identifier: DeepLinkSync.containerIdentifier) : nil
     ) {
         database = container?.privateCloudDatabase
+        emojiHiding = UserDefaults.standard.string(forKey: Self.emojiHidingKey).flatMap(EmojiHiding.Mode.init(rawValue:)) ?? .off
         if let data = try? Data(contentsOf: MacSortingFiles.policy) {
             policy = try? JSONDecoder().decode(TriagePolicy.self, from: data)
         }
@@ -74,6 +78,11 @@ final class SortingSettingsStore {
             SafeDiagnosticLog.shared.record("sorting settings: Karui Cloud \(invite != nil ? "on" : "off")")
         }
         karuiCloudInvite = invite
+        // Its own check too: an iPhone too old to send it leaves it as it is.
+        if let raw = record[SortingSettingsRecordSchema.hideEmoji] as? String,
+           let mode = EmojiHiding.Mode(rawValue: raw) {
+            setEmojiHiding(mode)
+        }
         let updatedAt = record[SortingSettingsRecordSchema.updatedAt] as? Date
         guard updatedAt != self.updatedAt || self.policy == nil else { return }
         self.policy = policy
@@ -89,7 +98,17 @@ final class SortingSettingsStore {
         SafeDiagnosticLog.shared.record("sorting settings: updated, \(corrections.count) corrections")
     }
 
+    static let emojiHidingKey = "karui.mac.hideEmoji"
+
+    private func setEmojiHiding(_ mode: EmojiHiding.Mode) {
+        guard mode != emojiHiding else { return }
+        emojiHiding = mode
+        UserDefaults.standard.set(mode.rawValue, forKey: Self.emojiHidingKey)
+        SafeDiagnosticLog.shared.record("sorting settings: Hide Emoji \(mode.rawValue)")
+    }
+
     private func clear() {
+        setEmojiHiding(.off)
         policy = nil
         updatedAt = nil
         karuiCloudInvite = nil

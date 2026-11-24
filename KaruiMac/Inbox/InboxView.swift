@@ -101,7 +101,7 @@ struct InboxView: View {
             return "Karui: " + (item.title.flatMap { $0.isEmpty ? nil : $0 } ?? item.app)
         }
         if let openGroupID = inbox.openGroupID, let group = inbox.group(id: openGroupID) {
-            return "Karui: " + group.title
+            return "Karui: " + group.shownTitle(hidingEmoji: coordinator.sortingSettings.emojiHiding)
         }
         return "Karui"
     }
@@ -547,7 +547,7 @@ private struct InboxList: View {
             } else if inbox.grouping == .none {
                 ItemsList(coordinator: coordinator)
             } else {
-                GroupsList(inbox: inbox, openGroupID: $inbox.openGroupID)
+                GroupsList(inbox: inbox, hidingEmoji: coordinator.sortingSettings.emojiHiding, openGroupID: $inbox.openGroupID)
             }
         }
         // A new grouping starts at its own list, from the top.
@@ -782,6 +782,8 @@ private struct EmptyNote: View {
 /// A double-click opens the group.
 private struct GroupsList: View {
     let inbox: Inbox
+    /// The iPhone's Hide Emoji, for the groups' names.
+    let hidingEmoji: EmojiHiding.Mode
     @Binding var openGroupID: String?
     @State private var selection: Set<String> = []
     @FocusState private var isFocused: Bool
@@ -800,7 +802,7 @@ private struct GroupsList: View {
             .customizationID("unread-dot")
             .disabledCustomizationBehavior(.resize)
             TableColumn(L10n.string("Name"), value: \.title) { group in
-                Text(group.title).fontWeight(group.unreadCount > 0 ? .semibold : .regular).lineLimit(1).truncationMode(.tail)
+                Text(group.shownTitle(hidingEmoji: hidingEmoji)).fontWeight(group.unreadCount > 0 ? .semibold : .regular).lineLimit(1).truncationMode(.tail)
             }
             .width(min: 120, ideal: 240)
             .customizationID("name")
@@ -857,6 +859,7 @@ private struct ItemsList: View {
     var body: some View {
         @Bindable var inbox = coordinator.inbox
         let sorted = inbox.sortedVisibleItems
+        let hidingEmoji = coordinator.sortingSettings.emojiHiding
         ScrollViewReader { proxy in
             Group {
                 if inbox.isCompact {
@@ -880,12 +883,12 @@ private struct ItemsList: View {
                         .width(min: 70, ideal: 96, max: 160)
                         .customizationID("app")
                         TableColumn(L10n.string("Sender"), value: \.sender) { item in
-                            Text(item.sender).lineLimit(1).truncationMode(.tail)
+                            Text(item.listed(item.sender, hidingEmoji: hidingEmoji) ?? "").lineLimit(1).truncationMode(.tail)
                         }
                         .width(min: 90, ideal: 150, max: 170)
                         .customizationID("sender")
                         TableColumn(L10n.string("Notification"), value: \.compactLine) { item in
-                            Text(item.compactLine).lineLimit(1).truncationMode(.tail)
+                            Text(item.listed(item.compactLine, hidingEmoji: hidingEmoji) ?? "").lineLimit(1).truncationMode(.tail)
                         }
                         .customizationID("notification")
                         TableColumn(L10n.string("Time"), value: \.deliveredAt) { item in
@@ -986,6 +989,8 @@ private struct InboxRow: View {
     let coordinator: AppCoordinator
     let item: Inbox.Item
 
+    private var hidingEmoji: EmojiHiding.Mode { coordinator.sortingSettings.emojiHiding }
+
     var body: some View {
         HStack(alignment: .top, spacing: 10) {
             Circle()
@@ -997,13 +1002,13 @@ private struct InboxRow: View {
                     AppNameLink(app: item.app).font(.caption)
                     VerdictBadge(verdict: item.verdict, chosen: item.chosenCategory, mac: item.macVerdict, isWaiting: item.isWaitingForVerdict)
                 }
-                if let title = item.shownTitle, !title.isEmpty {
+                if let title = item.listed(item.shownTitle, hidingEmoji: hidingEmoji), !title.isEmpty {
                     Text(title).fontWeight(.semibold)
                 }
-                if let subtitle = item.shownSubtitle, !subtitle.isEmpty {
+                if let subtitle = item.listed(item.shownSubtitle, hidingEmoji: hidingEmoji), !subtitle.isEmpty {
                     Text(subtitle)
                 }
-                if let body = item.shownBody, !body.isEmpty {
+                if let body = item.listed(item.shownBody, hidingEmoji: hidingEmoji), !body.isEmpty {
                     Text(body).foregroundStyle(.secondary).lineLimit(2)
                 }
                 if let reason = item.verdict?.reason ?? item.macVerdict?.reason, !reason.isEmpty {
