@@ -235,6 +235,9 @@
 "Karui Cloud Sorting is on in Karui on your iPhone, so this Mac uses it too: OpenAI’s decision model chooses the category of what Apple’s on-device model sorted here, with the same prompt your iPhone sends. When it doesn’t answer, Private Cloud Sorting is used as before. Turn it off in Karui on your iPhone." = "iPhoneのKaruiでKarui Cloud分類がオンになっているため、このMacでも使われます。Appleのオンデバイスモデルがここで仕分けた通知のカテゴリを、iPhoneと同じ内容でOpenAIの判定用モデルが決めます。応答がないときは、これまでどおりPrivate Cloud分類が使われます。オフにするにはiPhoneのKaruiで設定してください。";
 "Translation" = "翻訳";
 "Translate notifications" = "通知を翻訳";
+"Hide Emoji" = "絵文字を隠す";
+"Only Neutral and Spam" = "中立とスパムのみ";
+"Everything" = "すべて";
 "Translated from %@ on this Mac" = "このMacで%@から翻訳";
 "Show Original" = "原文を表示";
 "Show Translation" = "翻訳を表示";

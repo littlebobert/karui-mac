@@ -7,6 +7,7 @@ import SwiftUI
 struct IPhoneSortingSettingsSection: View {
     let policy: TriagePolicy
     let updatedAt: Date?
+    let emojiHiding: EmojiHiding.Mode
 
     var body: some View {
         Section {
@@ -32,6 +33,7 @@ struct IPhoneSortingSettingsSection: View {
                 row("Learned", L10n.format("%lld fixes", Int64(learnedCount)))
                 row("Private Cloud Sorting", secondOpinion)
                 row("Translate notifications", onOff(policy.translateNotifications))
+                row("Hide Emoji", hideEmoji)
             }
         } header: {
             Text(L10n.string("Your iPhone’s sorting settings"))
@@ -72,6 +74,14 @@ struct IPhoneSortingSettingsSection: View {
 
     private func time(_ minuteOfDay: Int) -> String {
         String(format: "%d:%02d", minuteOfDay / 60, minuteOfDay % 60)
+    }
+
+    private var hideEmoji: String {
+        switch emojiHiding {
+        case .off: L10n.string("Off")
+        case .quiet: L10n.string("Only Neutral and Spam")
+        case .all: L10n.string("Everything")
+        }
     }
 
     private var secondOpinion: String {
