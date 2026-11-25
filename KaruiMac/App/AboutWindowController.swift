@@ -144,8 +144,9 @@ private struct AboutView: View {
     }
 }
 
-/// The icon, animated: glass notifications drop into its dark glass tray and the last stays
-/// out (karui's Scripts/make-landing-animation.py --mac), in the icon's shape and size.
+/// The icon, animated: glass notifications drop into a frosted glass tray, the same clip
+/// as the header of the Karui pages (assets/karui-icon-sketch.mp4 on the site), in the
+/// icon's shape and size.
 /// The still stays underneath, and is all that shows with Reduce Motion on.
 private struct AnimatedAppIcon: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
