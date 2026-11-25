@@ -144,8 +144,9 @@ private struct AboutView: View {
     }
 }
 
-/// The home page's pencil sketch of the icon, in the icon's shape and size. The still
-/// stays underneath, and is all that shows with Reduce Motion on.
+/// The icon, animated: glass notifications drop into its dark glass tray and the last stays
+/// out (karui's Scripts/make-landing-animation.py --mac), in the icon's shape and size.
+/// The still stays underneath, and is all that shows with Reduce Motion on.
 private struct AnimatedAppIcon: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
