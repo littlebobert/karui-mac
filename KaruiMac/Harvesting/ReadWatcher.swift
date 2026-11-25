@@ -47,5 +47,14 @@ actor ReadWatcher {
         return read
     }
 
+    /// This one's link when its app now shows it read, as `poll` finds it; no longer
+    /// tracked. Nil when it's unread, or not tracked yet.
+    func checkNow(fingerprint: String, using harvesters: HarvesterRegistry) async -> HarvestedLink? {
+        guard let item = pending[fingerprint], let probe = item.harvested.readProbe,
+              await harvesters.isRead(probe) == true,
+              pending.removeValue(forKey: fingerprint) != nil else { return nil }
+        return item.harvested
+    }
+
     var count: Int { pending.count }
 }

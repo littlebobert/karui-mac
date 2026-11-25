@@ -12,6 +12,11 @@ enum MacRepost {
     /// Banners for notifications that arrived this recently: Karui catching up after
     /// a sleep isn't news.
     static let window: TimeInterval = 7 * 60
+    /// With its own app in front the person most likely sees it there, so its banner
+    /// waits this long for them to open it.
+    static let holdWhileInFront: Duration = .seconds(10)
+    /// How often a held banner looks for a read meanwhile.
+    static let readCheckInterval: Duration = .seconds(2)
 
     enum Action: Equatable {
         case post
@@ -30,6 +35,17 @@ enum MacRepost {
         let appIDs = KnownApp(rawValue: item.app)?.macBundleIdentifiers ?? []
         guard allowedApps.isDisjoint(with: appIDs) else { return .none }
         return .post
+    }
+
+    /// How long its banner waits for a read first: only while its own app is in front.
+    /// Otherwise it goes at once, as a one-time code should.
+    static func hold(for item: Inbox.Item, frontmostBundleID: String?) -> Duration {
+        // Notification Center keeps some apps' IDs lowercased ("com.readdle.sparkdesktop"
+        // for Spark's com.readdle.SparkDesktop), which is how Karui lists them.
+        guard let frontmostBundleID, let app = KnownApp(rawValue: item.app),
+              app.macBundleIdentifiers.contains(where: { $0.caseInsensitiveCompare(frontmostBundleID) == .orderedSame })
+        else { return .zero }
+        return holdWhileInFront
     }
 
     /// The Focus is one Karui uses when it lets Karui through: otherwise its banners

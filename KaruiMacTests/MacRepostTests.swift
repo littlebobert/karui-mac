@@ -59,4 +59,15 @@ final class MacRepostTests: XCTestCase {
         read.readAt = now
         XCTAssertEqual(MacRepost.action(for: read, isFiltering: false, isPosted: true, now: now), .withdraw)
     }
+
+    /// With its own app in front its banner waits for a read; otherwise, as for a
+    /// one-time code read off a website, it goes at once.
+    func testHoldsOnlyWhileItsAppIsInFront() {
+        let slack = item(mac: "notifyNow")
+        XCTAssertEqual(MacRepost.hold(for: slack, frontmostBundleID: "com.tinyspeck.slackmacgap"), MacRepost.holdWhileInFront)
+        XCTAssertEqual(MacRepost.hold(for: slack, frontmostBundleID: "com.apple.Safari"), .zero)
+        XCTAssertEqual(MacRepost.hold(for: slack, frontmostBundleID: nil), .zero)
+        let spark = Inbox.Item(id: "notification-13", app: "Spark", fingerprint: "code", title: "Acme", subtitle: "Your code", body: "482913", deliveredAt: now)
+        XCTAssertEqual(MacRepost.hold(for: spark, frontmostBundleID: "com.readdle.SparkDesktop"), MacRepost.holdWhileInFront)
+    }
 }

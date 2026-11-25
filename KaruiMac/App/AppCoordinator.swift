@@ -388,8 +388,9 @@ final class AppCoordinator {
                 }
                 switch MacRepost.action(for: item, isFiltering: isFiltering, allowedApps: focus?.allowedApps ?? [], isPosted: reposted.contains(id)) {
                 case .post:
+                    // Counted as posted while it waits, so it's never posted twice.
                     reposted.insert(id)
-                    banners.post(item)
+                    Task { [weak self] in await self?.repostUnlessRead(id) }
                 case .withdraw:
                     reposted.remove(id)
                     banners.remove(ids: [id])
@@ -401,6 +402,47 @@ final class AppCoordinator {
             // Past the window, a banner stays as it is.
             reposted = reposted.filter { inbox.item(id: $0).map { Date().timeIntervalSince($0.deliveredAt) < MacRepost.window * 4 } ?? false }
         }
+    }
+
+    /// Posts this Mac's own notification again as Karui's banner, unless it's read
+    /// first: checked right before posting, and while its own app is in front, for a
+    /// moment before that, in case the person opens it there.
+    private func repostUnlessRead(_ id: String) async {
+        guard let first = inbox.item(id: id) else { return }
+        let hold = MacRepost.hold(for: first, frontmostBundleID: NSWorkspace.shared.frontmostApplication?.bundleIdentifier)
+        if hold > .zero {
+            SafeDiagnosticLog.shared.record("banners: holding one from \(first.app), its app is in front")
+        }
+        let start = ContinuousClock.now
+        while true {
+            // Read or withdrawn meanwhile, or no longer Important.
+            guard reposted.contains(id), let item = inbox.item(id: id), item.isUnread, item.category == "notifyNow" else {
+                reposted.remove(id)
+                return
+            }
+            if await isReadNow(item) {
+                reposted.remove(id)
+                SafeDiagnosticLog.shared.record("banners: none for \(item.app), read before its banner")
+                return
+            }
+            if start.duration(to: .now) >= hold { break }
+            try? await Task.sleep(for: MacRepost.readCheckInterval)
+        }
+        guard reposted.contains(id), let item = inbox.item(id: id), item.isUnread else { return }
+        banners.post(item)
+    }
+
+    /// Whether it's read by now: here, in its app, or on the iPhone or another Mac. A
+    /// read in its app is reported as the read poll reports it.
+    private func isReadNow(_ item: Inbox.Item) async -> Bool {
+        if let harvested = await readWatcher.checkNow(fingerprint: item.fingerprint, using: harvesters) {
+            SafeDiagnosticLog.shared.record("read: \(harvested.link.app), in its app")
+            inbox.markRead(fingerprint: harvested.link.fingerprint)
+            await sync.markRead(fingerprint: harvested.link.fingerprint)
+            return true
+        }
+        if await verdicts.isRead(fingerprint: item.fingerprint) == true { return true }
+        return inbox.item(id: item.id)?.isUnread != true
     }
 
     // MARK: Sorting here
