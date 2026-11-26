@@ -49,9 +49,10 @@ public enum SecondOpinionPrompt {
         Notification:
         \(NotificationPromptFormatter.format(notification, isImportantApp: isImportantApp, userNames: policy.commaSeparatedValues(from: policy.userNames), isKnownCorrespondent: KnownCorrespondents.name(for: notification, policy: policy, match: correspondentMatch) != nil, now: now))\(extractsDeadline ? "\n" + DeadlineExtraction.datesPromptLine(receivedAt: received) : "")
 
-        Answer with exactly \(extractsDeadline ? "six" : "four") lines and nothing else:
+        Answer with exactly \(extractsDeadline ? "seven" : "five") lines and nothing else:
         Category: Important, Neutral, or Spam
         Confidence: a number from 0.0 through 1.0
+        Interest: a whole number from 1 through 5, rated as described above
         Reason: the reason, in at most 20 words
         Tags: three to five search tags of one to three words, specific to what the notification is about (not generic words like update or message, and preferably words not already in the notification: a synonym, its category, or its name in another language), comma separated, each in every one of these languages: \(SearchTags.languages(readLanguages: policy.readLanguages, locale: locale).joined(separator: ", "))\(extractsDeadline ? """
 
@@ -101,6 +102,9 @@ public enum SecondOpinionPrompt {
         public var dueDate: String?
         /// Search tags, when the answer had a Tags line. See `SearchTags`.
         public var tags: [String]?
+        /// The interest rating from 1 through 5, as the on-device model gives it, when
+        /// the answer had one: what the Neutral Summary ranks by.
+        public var interest: Int?
 
         public init(
             category: TriageCategory,
@@ -108,7 +112,8 @@ public enum SecondOpinionPrompt {
             reason: String,
             task: String? = nil,
             dueDate: String? = nil,
-            tags: [String]? = nil
+            tags: [String]? = nil,
+            interest: Int? = nil
         ) {
             self.category = category
             self.confidence = confidence
@@ -116,6 +121,7 @@ public enum SecondOpinionPrompt {
             self.task = task
             self.dueDate = dueDate
             self.tags = tags
+            self.interest = interest
         }
     }
 
@@ -151,11 +157,14 @@ public enum SecondOpinionPrompt {
         var task: String?
         var dueDate: String?
         var tags: [String]?
+        var interest: Int?
         for line in lines {
             if let value = labeledValue(in: line, labels: ["category", "カテゴリ", "分類", "카테고리", "분류", "kategorie"]) {
                 category = category ?? Self.category(in: value)
             } else if let value = labeledValue(in: line, labels: ["confidence", "確信度", "信頼度", "확신도", "신뢰도", "sicherheit", "konfidenz"]) {
                 confidence = confidence ?? Self.number(in: value)
+            } else if let value = labeledValue(in: line, labels: interestLabels) {
+                interest = interest ?? Self.interest(in: value)
             } else if let value = labeledValue(in: line, labels: ["reason", "理由", "이유", "grund", "begründung"]) {
                 reason = reason ?? value
             } else if let value = labeledValue(in: line, labels: ["tags", "tag", "タグ", "태그", "schlagwörter"]) {
@@ -175,6 +184,7 @@ public enum SecondOpinionPrompt {
                 && Self.category(in: $0) == nil && Self.number(in: $0) == nil
                 && labeledValue(in: $0, labels: ["task", "タスク", "할 일", "aufgabe"]) == nil
                 && labeledValue(in: $0, labels: ["tags", "tag", "タグ", "태그", "schlagwörter"]) == nil
+                && labeledValue(in: $0, labels: interestLabels) == nil
         } ?? ""
         let resolvedReason = String((reason ?? fallbackReason).prefix(200))
         return Answer(
@@ -183,7 +193,8 @@ public enum SecondOpinionPrompt {
             reason: resolvedReason,
             task: task,
             dueDate: dueDate,
-            tags: tags
+            tags: tags,
+            interest: interest
         )
     }
 
@@ -220,7 +231,9 @@ public enum SecondOpinionPrompt {
             reason: String((text("reason", "理由", "이유") ?? "").prefix(200)),
             task: text("task", "タスク"),
             dueDate: text("due", "duedate"),
-            tags: tagValues.flatMap { SearchTags.cleaned($0) }
+            tags: tagValues.flatMap { SearchTags.cleaned($0) },
+            interest: (fields["interest"] as? NSNumber).map { min(max($0.intValue, 1), 5) }
+                ?? text("interest").flatMap(Self.interest(in:))
         )
     }
 
@@ -267,6 +280,14 @@ public enum SecondOpinionPrompt {
             .1
         // "Not important" with no other category named is a Neutral verdict.
         return found ?? (wasNegated ? .summary : nil)
+    }
+
+    private static let interestLabels = ["interest", "関心度", "興味", "興味度", "관심도", "관심", "interesse"]
+
+    /// The first whole number in the value, kept to 1 through 5: "4", "4/5", "4 out of 5".
+    private static func interest(in text: String) -> Int? {
+        guard let digits = text.firstMatch(of: /\d+/), let value = Int(digits.output) else { return nil }
+        return min(max(value, 1), 5)
     }
 
     private static func number(in text: String) -> Double? {

@@ -41,4 +41,32 @@ final class SecondOpinionParseTests: XCTestCase {
         XCTAssertEqual(answer.category, .notifyNow)
         XCTAssertEqual(answer.reason, "Mom asks to call.")
     }
+
+    /// The interest line the Neutral Summary ranks by, kept to 1 through 5 and never
+    /// read as the reason or the confidence.
+    func testReadsTheInterestLine() throws {
+        let answer = try XCTUnwrap(SecondOpinionPrompt.parse(answer: """
+        Category: Neutral
+        Confidence: 0.8
+        Interest: 4/5
+        Reason: A shipping update for the user's own order.
+        Tags: delivery, 配達
+        """))
+        XCTAssertEqual(answer.interest, 4)
+        XCTAssertEqual(answer.confidence, 0.8, accuracy: 0.001)
+        XCTAssertEqual(answer.reason, "A shipping update for the user's own order.")
+        XCTAssertEqual(SecondOpinionPrompt.parse(answer: "Category: Neutral\nInterest: 9")?.interest, 5)
+        XCTAssertEqual(SecondOpinionPrompt.parse(answer: "カテゴリ: 普通\n関心度: 2")?.interest, 2)
+        XCTAssertNil(SecondOpinionPrompt.parse(answer: "Category: Neutral\nReason: Nothing to do.")?.interest)
+        XCTAssertEqual(SecondOpinionPrompt.parse(answer: #"{"category": "Spam", "interest": 1}"#)?.interest, 1)
+    }
+
+    func testThePromptAsksForInterest() {
+        let prompt = SecondOpinionPrompt.prompt(
+            for: NotificationInput(source: "Mail", title: "Order shipped", body: "Your order is on its way."),
+            policy: .standard,
+            correspondentMatch: { _ in nil }
+        )
+        XCTAssertTrue(prompt.contains("Interest: a whole number from 1 through 5"))
+    }
 }
