@@ -33,7 +33,7 @@ public enum AutoReplyMessage: String, Codable, CaseIterable, Identifiable, Senda
         case .meeting: "person.3.fill"
         case .asleep: "bed.double.fill"
         case .away: "airplane"
-        case .custom: "pencil"
+        case .custom: "pencil.circle.fill"
         }
     }
 
@@ -42,7 +42,7 @@ public enum AutoReplyMessage: String, Codable, CaseIterable, Identifiable, Senda
         switch self {
         case .busy: "I can’t reply right now. I’ll get back to you soon."
         case .driving: "I’m driving and will reply when I’m stopped."
-        case .meeting: "I’m in a meeting and will reply afterward."
+        case .meeting: "I’m in a meeting and will reply after."
         case .asleep: "I’m asleep and will reply in the morning."
         case .away: "I’m away and checking messages less often. I’ll reply when I can."
         case .custom: nil
