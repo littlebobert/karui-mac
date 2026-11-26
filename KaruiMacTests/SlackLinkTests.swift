@@ -10,6 +10,42 @@ final class SlackLinkTests: XCTestCase {
         XCTAssertNil(SlackLink.parseIdentifier("9d6392ed-68e1-4d35-bbf8-e7142cdf37b8"))
     }
 
+    /// Slack 4.53.292's identifiers name the channel, and a reply's thread.
+    func testNewerIdentifierCarriesTheChannelAndThread() {
+        XCTAssertEqual(
+            SlackLink.parseIdentifier("T0123ABCDEF|msg|C0ABCDEFGHI|1791879249.798639"),
+            SlackLink.MessageIdentifier(teamID: "T0123ABCDEF", timestamp: "1791879249.798639", channelID: "C0ABCDEFGHI")
+        )
+        XCTAssertEqual(
+            SlackLink.parseIdentifier("T0123ABCDEF|msg|D0ABCDEFGHI|1791879300.000200|1791879249.798639"),
+            SlackLink.MessageIdentifier(
+                teamID: "T0123ABCDEF", timestamp: "1791879300.000200", channelID: "D0ABCDEFGHI", thread: "1791879249.798639"
+            )
+        )
+        XCTAssertNil(SlackLink.parseIdentifier("T0123ABCDEF|rxn|C0ABCDEFGHI|1791879249.798639"))
+    }
+
+    /// With the channel and thread in the identifier, Slack's log isn't needed.
+    func testHarvestingANewerIdentifierLinksTheThreadWithoutTheLog() async throws {
+        let support = FileManager.default.temporaryDirectory.appending(path: "SlackLinkTests-\(UUID().uuidString)")
+        try FileManager.default.createDirectory(at: support.appending(path: "storage"), withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: support) }
+        try Data(#"""
+        {"workspaces":{"T0123ABCDEF":{"domain":"example","id":"T0123ABCDEF","name":"Example","url":"https://example.slack.com/"}}}
+        """#.utf8).write(to: support.appending(path: "storage/root-state.json"))
+        let record = NotificationRecord(
+            id: 1, bundleIdentifier: "com.tinyspeck.slackmacgap", deliveredAt: Date(timeIntervalSince1970: 1_791_879_300),
+            title: "Sam", subtitle: nil, body: "Sounds good",
+            identifier: "T0123ABCDEF|msg|C0ABCDEFGHI|1791879300.000200|1791879249.798639", userInfo: [:]
+        )
+        let harvested = await SlackHarvester(supportDirectory: support).harvest(record)
+        XCTAssertEqual(
+            harvested?.link.url.absoluteString,
+            "https://example.slack.com/archives/C0ABCDEFGHI/p1791879300000200?thread_ts=1791879249.798639"
+        )
+        XCTAssertEqual(harvested?.link.opensExactContent, true)
+    }
+
     func testPermalinkDropsTheDotFromTheTimestamp() {
         let url = SlackLink.permalink(
             workspace: URL(string: "https://example.slack.com/")!,

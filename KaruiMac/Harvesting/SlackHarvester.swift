@@ -1,9 +1,11 @@
 import Foundation
 import KaruiLinkKit
 
-/// Slack's notification identifier carries the team and the message's timestamp.
-/// The channel comes from Slack's log of the notifications it showed, and the
-/// workspace's address from its saved state; see Experiments/FINDINGS.md.
+/// Slack's notification identifier carries the team, the channel, the message's
+/// timestamp and, for a reply, its thread's. Slack before late November 2026 gave
+/// only the team and the timestamp, so then the channel and thread come from Slack's
+/// log of the notifications it showed. The workspace's address comes from Slack's
+/// saved state; see Experiments/FINDINGS.md.
 struct SlackHarvester: NotificationHarvester {
     let bundleIdentifiers = Set(KnownApp.slack.macBundleIdentifiers)
     var supportDirectory = FileManager.default.homeDirectoryForCurrentUser
@@ -14,13 +16,17 @@ struct SlackHarvester: NotificationHarvester {
             SafeDiagnosticLog.shared.record("slack: notification identifier not in the expected form")
             return nil
         }
-        let log = try? String(contentsOf: supportDirectory.appending(path: "logs/default/browser.log"), encoding: .utf8)
-        guard let log, let channelID = SlackLog.channel(forMessageTimestamp: message.timestamp, in: log) else {
+        let log = message.channelID == nil
+            ? try? String(contentsOf: supportDirectory.appending(path: "logs/default/browser.log"), encoding: .utf8)
+            : nil
+        guard let channelID = message.channelID ?? log.flatMap({ SlackLog.channel(forMessageTimestamp: message.timestamp, in: $0) }) else {
             SafeDiagnosticLog.shared.record("slack: channel not found in the log")
             return nil
         }
         let rootState = try? Data(contentsOf: supportDirectory.appending(path: "storage/root-state.json"))
-        let thread = SlackLog.thread(forMessageTimestamp: message.timestamp, in: log)
+        let thread = message.channelID != nil
+            ? message.thread
+            : log.flatMap { SlackLog.thread(forMessageTimestamp: message.timestamp, in: $0) }
         let probe = ReadProbe.slack(channelID: channelID, timestamp: message.timestamp)
         if let rootState, let workspace = SlackLink.workspaceURL(teamID: message.teamID, rootState: rootState),
            let url = SlackLink.permalink(workspace: workspace, channelID: channelID, timestamp: message.timestamp, thread: thread) {
@@ -48,11 +54,22 @@ enum SlackLink {
         let teamID: String
         /// Slack's `ts`, seconds and a six-digit sequence: `1791879249.798639`.
         let timestamp: String
+        /// Only in Slack's newer identifiers.
+        var channelID: String? = nil
+        /// A reply's thread, the `ts` of its first message; only in newer identifiers.
+        var thread: String? = nil
     }
 
-    /// `req.iden` is `<team ID>_<ts>`.
+    /// `req.iden` is `<team ID>|msg|<channel ID>|<ts>`, with `|<thread ts>` after a
+    /// reply's (Slack 4.53.292 on); before that it was `<team ID>_<ts>`.
     static func parseIdentifier(_ identifier: String) -> MessageIdentifier? {
-        guard let match = identifier.wholeMatch(of: /(T[A-Z0-9]+)_(\d+\.\d+)/) else { return nil }
+        if let match = identifier.wholeMatch(of: /([TE][A-Z0-9]+)\|msg\|([A-Z0-9]+)\|(\d+\.\d+)(?:\|(\d+\.\d+))?/) {
+            return MessageIdentifier(
+                teamID: String(match.1), timestamp: String(match.3),
+                channelID: String(match.2), thread: match.4.map(String.init)
+            )
+        }
+        guard let match = identifier.wholeMatch(of: /([TE][A-Z0-9]+)_(\d+\.\d+)/) else { return nil }
         return MessageIdentifier(teamID: String(match.1), timestamp: String(match.2))
     }
 
