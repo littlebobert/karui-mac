@@ -205,7 +205,8 @@ public enum CorrectionMemory {
         defaults: UserDefaults = .standard,
         fileURL: URL = defaultFileURL
     ) -> TriageResult {
-        guard result.category == .notifyNow, isEnabled(defaults: defaults),
+        // An expected item was asked for today; a fix learned earlier doesn't lower it.
+        guard result.category == .notifyNow, result.expectedItemID == nil, isEnabled(defaults: defaults),
               !QuietApps.isExempt(result, notification: notification, policy: policy),
               let match = match(
                 title: notification.title, body: notification.body, source: notification.source,

@@ -242,3 +242,4 @@
 "Show Original" = "原文を表示";
 "Show Translation" = "翻訳を表示";
 "When Translate notifications is on in Karui on your iPhone, this Mac translates notifications in languages you don’t read into its own language, here on this Mac with Apple’s Translation. For the fastest translations, download the languages in System Settings → General → Language & Region → Translation Languages." = "iPhoneのKaruiで「通知を翻訳」がオンのとき、このMacは、読まない言語の通知をAppleの翻訳機能でこのMac上でMacの言語に翻訳します。いちばん速く翻訳するには、システム設定 →「一般」→「言語と地域」→「翻訳言語」で言語をダウンロードしてください。";
+"Matches what you’re expecting: “%@”." = "待っている通知「%@」に一致しました。";

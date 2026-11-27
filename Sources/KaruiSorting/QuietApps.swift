@@ -10,7 +10,8 @@ public enum QuietApps {
         policy: TriagePolicy,
         locale: Locale = .current
     ) -> TriageResult {
-        guard result.category == .notifyNow,
+        // What the person said they're waiting for alerts from a quiet app too.
+        guard result.category == .notifyNow, result.expectedItemID == nil,
               policy.isQuietApp(notification.source),
               !isExempt(result, notification: notification, policy: policy) else {
             return result

@@ -29,6 +29,9 @@ public enum SecondOpinionPrompt {
         // too, as the on-device model is.
         let extractsDeadline = policy.deadlineRemindersEnabled
         let received = notification.receivedAt ?? now
+        // Only while the person is expecting something; otherwise the prompt is as it was.
+        let expectedSection = ExpectedItems.promptSection(for: policy, now: now)
+        let lineCount = 5 + (extractsDeadline ? 2 : 0) + (expectedSection == nil ? 0 : 1)
         return """
         \(TriageInstructions.text(reasonLanguageInstruction: TriageInstructions.reasonLanguageInstruction(locale: locale)))\(extractsDeadline ? "\n" + DeadlineExtraction.instructions : "")
 
@@ -43,14 +46,14 @@ public enum SecondOpinionPrompt {
             : "Calendar and travel: no special priority; judge these like any other notification.")
         \(policy.silencePromotions
             ? "Promotions: marketing, sales, and discount offers are Spam."
-            : "Promotions: the user wants to see marketing, sales, and discount offers, so they are Neutral unless they match a silence term.")
+            : "Promotions: the user wants to see marketing, sales, and discount offers, so they are Neutral unless they match a silence term.")\(expectedSection.map { "\n" + $0 } ?? "")
         The user's calendar is not provided. Do not connect the notification to any event.
 
         Notification:
         \(NotificationPromptFormatter.format(notification, isImportantApp: isImportantApp, userNames: policy.commaSeparatedValues(from: policy.userNames), isKnownCorrespondent: KnownCorrespondents.name(for: notification, policy: policy, match: correspondentMatch) != nil, now: now))\(extractsDeadline ? "\n" + DeadlineExtraction.datesPromptLine(receivedAt: received) : "")
 
-        Answer with exactly \(extractsDeadline ? "seven" : "five") lines and nothing else:
-        Category: Important, Neutral, or Spam
+        Answer with exactly \(lineCountWords[lineCount] ?? "\(lineCount)") lines and nothing else:
+        Category: Important, Neutral, or Spam\(expectedSection == nil ? "" : "\nExpected: the number of the expected item this notification clearly is, or None")
         Confidence: a number from 0.0 through 1.0
         Interest: a whole number from 1 through 5, rated as described above
         Reason: the reason, in at most 20 words
@@ -87,6 +90,8 @@ public enum SecondOpinionPrompt {
         """
     }
 
+    private static let lineCountWords = [5: "five", 6: "six", 7: "seven", 8: "eight"]
+
     private static func termsText(_ terms: String) -> String {
         let trimmed = terms.trimmingCharacters(in: .whitespacesAndNewlines)
         return trimmed.isEmpty ? "none" : trimmed
@@ -105,6 +110,9 @@ public enum SecondOpinionPrompt {
         /// The interest rating from 1 through 5, as the on-device model gives it, when
         /// the answer had one: what the Neutral Summary ranks by.
         public var interest: Int?
+        /// The number of the expected item the answer says the notification is
+        /// (`ExpectedItems`). Nil for none, or when the prompt listed none.
+        public var expected: Int?
 
         public init(
             category: TriageCategory,
@@ -113,7 +121,8 @@ public enum SecondOpinionPrompt {
             task: String? = nil,
             dueDate: String? = nil,
             tags: [String]? = nil,
-            interest: Int? = nil
+            interest: Int? = nil,
+            expected: Int? = nil
         ) {
             self.category = category
             self.confidence = confidence
@@ -122,6 +131,7 @@ public enum SecondOpinionPrompt {
             self.dueDate = dueDate
             self.tags = tags
             self.interest = interest
+            self.expected = expected
         }
     }
 
@@ -158,9 +168,12 @@ public enum SecondOpinionPrompt {
         var dueDate: String?
         var tags: [String]?
         var interest: Int?
+        var expected: Int?
         for line in lines {
             if let value = labeledValue(in: line, labels: ["category", "カテゴリ", "分類", "카테고리", "분류", "kategorie"]) {
                 category = category ?? Self.category(in: value)
+            } else if let value = labeledValue(in: line, labels: expectedLabels) {
+                expected = expected ?? Self.expected(in: value)
             } else if let value = labeledValue(in: line, labels: ["confidence", "確信度", "信頼度", "확신도", "신뢰도", "sicherheit", "konfidenz"]) {
                 confidence = confidence ?? Self.number(in: value)
             } else if let value = labeledValue(in: line, labels: interestLabels) {
@@ -185,6 +198,7 @@ public enum SecondOpinionPrompt {
                 && labeledValue(in: $0, labels: ["task", "タスク", "할 일", "aufgabe"]) == nil
                 && labeledValue(in: $0, labels: ["tags", "tag", "タグ", "태그", "schlagwörter"]) == nil
                 && labeledValue(in: $0, labels: interestLabels) == nil
+                && labeledValue(in: $0, labels: expectedLabels) == nil
         } ?? ""
         let resolvedReason = String((reason ?? fallbackReason).prefix(200))
         return Answer(
@@ -194,7 +208,8 @@ public enum SecondOpinionPrompt {
             task: task,
             dueDate: dueDate,
             tags: tags,
-            interest: interest
+            interest: interest,
+            expected: expected
         )
     }
 
@@ -233,7 +248,9 @@ public enum SecondOpinionPrompt {
             dueDate: text("due", "duedate"),
             tags: tagValues.flatMap { SearchTags.cleaned($0) },
             interest: (fields["interest"] as? NSNumber).map { min(max($0.intValue, 1), 5) }
-                ?? text("interest").flatMap(Self.interest(in:))
+                ?? text("interest").flatMap(Self.interest(in:)),
+            expected: (fields["expected"] as? NSNumber).map(\.intValue).flatMap { $0 > 0 ? $0 : nil }
+                ?? text("expected").flatMap(Self.expected(in:))
         )
     }
 
@@ -283,6 +300,14 @@ public enum SecondOpinionPrompt {
     }
 
     private static let interestLabels = ["interest", "関心度", "興味", "興味度", "관심도", "관심", "interesse"]
+
+    private static let expectedLabels = ["expected", "expecting", "期待", "予期", "예상", "erwartet"]
+
+    /// The item's number: "2", "2.", "Item 2". Nil for "None", "0", or no number.
+    private static func expected(in text: String) -> Int? {
+        guard let digits = text.firstMatch(of: /\d+/), let value = Int(digits.output), value > 0 else { return nil }
+        return value
+    }
 
     /// The first whole number in the value, kept to 1 through 5: "4", "4/5", "4 out of 5".
     private static func interest(in text: String) -> Int? {
