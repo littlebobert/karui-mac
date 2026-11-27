@@ -109,7 +109,9 @@ enum MacKaruiCloud {
         invite: String,
         environment: SortingEnvironment
     ) async -> TriageResult? {
-        guard shouldAsk(about: classifierResult, notification: notification, policy: policy) else { return nil }
+        // What the on-device model found the person is expecting stands, like a rule's verdict.
+        guard classifierResult.expectedItemID == nil,
+              shouldAsk(about: classifierResult, notification: notification, policy: policy) else { return nil }
         let prompt = SecondOpinionPrompt.prompt(for: notification, policy: policy, correspondentMatch: environment.correspondentMatch)
         switch await ask(prompt: prompt, invite: invite) {
         case .decided(let decision, let seconds):

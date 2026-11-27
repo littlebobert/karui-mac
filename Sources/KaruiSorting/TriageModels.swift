@@ -240,7 +240,8 @@ public enum OtherMentionDetector {
 /// says otherwise. Needs the user's names, or Karui can't know it isn't them.
 public enum AddressedElsewhereCheck {
     public static func applying(to result: TriageResult, for notification: NotificationInput, policy: TriagePolicy) -> TriageResult {
-        guard result.category == .notifyNow, notification.isTimeSensitive != true else { return result }
+        // An expected item alerts whoever it's addressed to.
+        guard result.category == .notifyNow, result.expectedItemID == nil, notification.isTimeSensitive != true else { return result }
         let userNames = policy.commaSeparatedValues(from: policy.userNames)
         guard !userNames.isEmpty else { return result }
         let mentions = OtherMentionDetector.mentions(in: notification, userNames: userNames)
@@ -363,6 +364,15 @@ public struct TriageResult: Sendable, Equatable {
     public var deadline: ExtractedDeadline?
     /// Search tags from the on-device model, kept on the History item. See `SearchTags`.
     public var tags: [String]?
+    /// The expected item a model said this notification is (`ExpectedItems`). Not
+    /// stored. The rules that lower an Important leave it alone, except a silenced
+    /// sender's.
+    public var expectedItemID: UUID?
+    /// That item, as the person wrote it, for the alert to say why it's alerting. The
+    /// item itself may be gone by then: one that ends on arrival ends as it's found.
+    public var expectedItemText: String?
+    /// The person asked for an alarm when that item arrives.
+    public var expectedItemRingsAlarm = false
 
     public init(
         category: TriageCategory,
@@ -634,6 +644,9 @@ public struct TriagePolicy: Codable, Equatable, Sendable {
     /// the prompt after making one of their messages Important in History. See
     /// `ImportantConversations`.
     public var importantConversations: [ImportantConversation] = []
+    /// What the person told Karui they're waiting for, each for a while. See
+    /// `ExpectedItems`.
+    public var expectedItems: [ExpectedItem] = []
     /// Search tags come with each sort (`SearchTags`); off, only the tagging pass
     /// writes them. On by default.
     public var tagsWhenSorting = true
@@ -1227,6 +1240,7 @@ public struct TriagePolicy: Codable, Equatable, Sendable {
         case savedContactExceptions
         case silencedSenders
         case importantConversations
+        case expectedItems
         case tagsWhenSorting
         case searchByMeaning
         /// Replaced by `secondOpinionMode`; read once so the setting carries over.
@@ -1296,6 +1310,7 @@ public struct TriagePolicy: Codable, Equatable, Sendable {
         savedContactExceptions = try container.decodeIfPresent([String].self, forKey: .savedContactExceptions) ?? []
         silencedSenders = try container.decodeIfPresent([SilencedSender].self, forKey: .silencedSenders) ?? []
         importantConversations = try container.decodeIfPresent([ImportantConversation].self, forKey: .importantConversations) ?? []
+        expectedItems = try container.decodeIfPresent([ExpectedItem].self, forKey: .expectedItems) ?? []
         tagsWhenSorting = try container.decodeIfPresent(Bool.self, forKey: .tagsWhenSorting) ?? true
         searchByMeaning = try container.decodeIfPresent(Bool.self, forKey: .searchByMeaning) ?? true
     }
@@ -1343,6 +1358,7 @@ public struct TriagePolicy: Codable, Equatable, Sendable {
         try container.encode(savedContactExceptions, forKey: .savedContactExceptions)
         try container.encode(silencedSenders, forKey: .silencedSenders)
         try container.encode(importantConversations, forKey: .importantConversations)
+        try container.encode(expectedItems, forKey: .expectedItems)
         try container.encode(tagsWhenSorting, forKey: .tagsWhenSorting)
         try container.encode(searchByMeaning, forKey: .searchByMeaning)
     }

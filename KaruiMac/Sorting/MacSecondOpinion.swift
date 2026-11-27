@@ -64,6 +64,7 @@ enum MacSecondOpinion {
         )
         result.tags = parsed.tags
         result.modelDuration = TimeInterval(elapsed.components.seconds)
+        result = ExpectedItems.applying(expected: parsed.expected, to: result, policy: policy)
         result = SavedContacts.applying(to: result, for: notification, policy: policy)
         result = KnownCorrespondents.applying(to: result, for: notification, policy: policy, match: environment.correspondentMatch)
         result = QuietApps.applying(to: result, for: notification, policy: policy)

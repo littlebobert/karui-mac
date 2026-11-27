@@ -324,6 +324,104 @@ private struct GeneratedTriageDecisionWithDeadlineTagged {
     let tags: [String]
 }
 
+/// The four decisions again, each saying which expected item the notification is
+/// (`ExpectedItems`). Asked for only while the person is expecting something, so the
+/// schema, and the background model budget, are otherwise as they were. `expected`
+/// comes right after the reason, so the category follows from it.
+@available(iOS 26.0, macOS 26.0, *)
+@Generable
+private struct GeneratedExpectingDecision {
+    @Guide(description: "What the notification is and what, if anything, it asks of the user and by when. Plain language, at most 20 words")
+    let reason: String
+
+    @Guide(description: "The number of the expected item this notification clearly is, or 0 when it is none of them", .range(0...5))
+    let expected: Int
+
+    @Guide(description: "The notification handling decision that follows from the reason")
+    let category: GeneratedTriageCategory
+
+    @Guide(description: "Confidence from 0.0 through 1.0", .range(0.0...1.0))
+    let confidence: Double
+
+    @Guide(description: "How much the user would want to read this later, from 1 through 5", .range(1...5))
+    let interest: Int
+}
+
+@available(iOS 26.0, macOS 26.0, *)
+@Generable
+private struct GeneratedExpectingDecisionTagged {
+    @Guide(description: "What the notification is and what, if anything, it asks of the user and by when. Plain language, at most 20 words")
+    let reason: String
+
+    @Guide(description: "The number of the expected item this notification clearly is, or 0 when it is none of them", .range(0...5))
+    let expected: Int
+
+    @Guide(description: "The notification handling decision that follows from the reason")
+    let category: GeneratedTriageCategory
+
+    @Guide(description: "Confidence from 0.0 through 1.0", .range(0.0...1.0))
+    let confidence: Double
+
+    @Guide(description: "How much the user would want to read this later, from 1 through 5", .range(1...5))
+    let interest: Int
+
+    @Guide(description: "Three to five search tags of one to three words, specific to what the notification is about, each in every language the instructions list")
+    let tags: [String]
+}
+
+@available(iOS 26.0, macOS 26.0, *)
+@Generable
+private struct GeneratedExpectingDecisionWithDeadline {
+    @Guide(description: "What the notification is and what, if anything, it asks of the user and by when. Plain language, at most 20 words")
+    let reason: String
+
+    @Guide(description: "The number of the expected item this notification clearly is, or 0 when it is none of them", .range(0...5))
+    let expected: Int
+
+    @Guide(description: "The notification handling decision that follows from the reason")
+    let category: GeneratedTriageCategory
+
+    @Guide(description: "Confidence from 0.0 through 1.0", .range(0.0...1.0))
+    let confidence: Double
+
+    @Guide(description: "How much the user would want to read this later, from 1 through 5", .range(1...5))
+    let interest: Int
+
+    @Guide(description: "What the user must do by a certain day, at most 8 words. Empty when nothing is asked of the user by a certain day")
+    let task: String
+
+    @Guide(description: "The day the task is due, as YYYY-MM-DD. Empty when there is no task")
+    let dueDate: String
+}
+
+@available(iOS 26.0, macOS 26.0, *)
+@Generable
+private struct GeneratedExpectingDecisionWithDeadlineTagged {
+    @Guide(description: "What the notification is and what, if anything, it asks of the user and by when. Plain language, at most 20 words")
+    let reason: String
+
+    @Guide(description: "The number of the expected item this notification clearly is, or 0 when it is none of them", .range(0...5))
+    let expected: Int
+
+    @Guide(description: "The notification handling decision that follows from the reason")
+    let category: GeneratedTriageCategory
+
+    @Guide(description: "Confidence from 0.0 through 1.0", .range(0.0...1.0))
+    let confidence: Double
+
+    @Guide(description: "How much the user would want to read this later, from 1 through 5", .range(1...5))
+    let interest: Int
+
+    @Guide(description: "What the user must do by a certain day, at most 8 words. Empty when nothing is asked of the user by a certain day")
+    let task: String
+
+    @Guide(description: "The day the task is due, as YYYY-MM-DD. Empty when there is no task")
+    let dueDate: String
+
+    @Guide(description: "Three to five search tags of one to three words, specific to what the notification is about, each in every language the instructions list")
+    let tags: [String]
+}
+
 /// A deadline on its own, for a notification the rules sorted without the model.
 @available(iOS 26.0, macOS 26.0, *)
 public struct FoundationModelClassifier: NotificationClassifying {
@@ -396,6 +494,8 @@ public struct FoundationModelClassifier: NotificationClassifying {
             in: policy.importantApps(activeAt: now)
         ) != nil
         let offHoursWorkApps = policy.offHoursWorkApps(at: now)
+        // Only while the person is expecting something; otherwise the prompt is as it was.
+        let expectedSection = ExpectedItems.promptSection(for: policy, now: now).map { "\n" + $0 } ?? ""
         let triagePrompt = """
         User policy:
         \(vipIdentityContext)
@@ -411,7 +511,7 @@ public struct FoundationModelClassifier: NotificationClassifying {
             : "Calendar and travel: no special priority; judge these like any other notification.")
         \(policy.silencePromotions
             ? "Promotions: marketing, sales, and discount offers are Spam."
-            : "Promotions: the user wants to see marketing, sales, and discount offers, so they are Neutral unless they match a silence term.")
+            : "Promotions: the user wants to see marketing, sales, and discount offers, so they are Neutral unless they match a silence term.")\(expectedSection)
 
         Upcoming calendar events this notification may refer to (private on-device context):
         \(calendarContext)
@@ -449,8 +549,18 @@ public struct FoundationModelClassifier: NotificationClassifying {
 
         let (appState, deviceState) = await environment.conditions()
         let start = ContinuousClock.now
+        let expectsItems = !policy.activeExpectedItems(at: now).isEmpty
         let outcome = await ModelDeadline.value(within: ModelDeadline.classification) {
             do {
+                if expectsItems {
+                    let (result, expected) = try await Self.expectingDecision(
+                        from: session, prompt: prompt, extractsDeadline: extractsDeadline,
+                        tagsWhenSorting: tagsWhenSorting, receivedAt: receivedAt
+                    )
+                    return Result<TriageResult, any Error>.success(
+                        ExpectedItems.applying(expected: expected, to: result, policy: policy, now: now, locale: locale)
+                    )
+                }
                 switch (extractsDeadline, tagsWhenSorting) {
                 case (true, true):
                     let decision = try await session.respond(to: prompt, generating: GeneratedTriageDecisionWithDeadlineTagged.self).content
@@ -530,6 +640,46 @@ public struct FoundationModelClassifier: NotificationClassifying {
               let error = error as? LanguageModelError,
               case .rateLimited(let limit) = error else { return nil }
         return limit.resetDate
+    }
+
+    /// The decision and the number of the expected item the model says it is, 0 for none.
+    private static func expectingDecision(
+        from session: LanguageModelSession,
+        prompt: String,
+        extractsDeadline: Bool,
+        tagsWhenSorting: Bool,
+        receivedAt: Date
+    ) async throws -> (TriageResult, Int) {
+        switch (extractsDeadline, tagsWhenSorting) {
+        case (true, true):
+            let decision = try await session.respond(to: prompt, generating: GeneratedExpectingDecisionWithDeadlineTagged.self).content
+            var result = modelResult(
+                category: decision.category, confidence: decision.confidence, reason: decision.reason,
+                interest: decision.interest, tags: decision.tags
+            )
+            result.deadline = DeadlineExtraction.deadline(task: decision.task, dueDate: decision.dueDate, receivedAt: receivedAt)
+            return (result, decision.expected)
+        case (true, false):
+            let decision = try await session.respond(to: prompt, generating: GeneratedExpectingDecisionWithDeadline.self).content
+            var result = modelResult(
+                category: decision.category, confidence: decision.confidence, reason: decision.reason,
+                interest: decision.interest, tags: nil
+            )
+            result.deadline = DeadlineExtraction.deadline(task: decision.task, dueDate: decision.dueDate, receivedAt: receivedAt)
+            return (result, decision.expected)
+        case (false, true):
+            let decision = try await session.respond(to: prompt, generating: GeneratedExpectingDecisionTagged.self).content
+            return (modelResult(
+                category: decision.category, confidence: decision.confidence, reason: decision.reason,
+                interest: decision.interest, tags: decision.tags
+            ), decision.expected)
+        case (false, false):
+            let decision = try await session.respond(to: prompt, generating: GeneratedExpectingDecision.self).content
+            return (modelResult(
+                category: decision.category, confidence: decision.confidence, reason: decision.reason,
+                interest: decision.interest, tags: nil
+            ), decision.expected)
+        }
     }
 
     private static func modelResult(
