@@ -942,12 +942,17 @@ final class Inbox {
         SafeDiagnosticLog.shared.record("verdicts: merged \(merged.count) copy into the Mac's own, by link")
     }
 
+    /// Every item of that text here by then is read. One that arrived well after the
+    /// mark isn't: the mark was made on an earlier notification with the same text.
     func markRead(fingerprint: String, at date: Date = Date()) {
         var touched = Set<String>()
-        for index in items.indices where items[index].fingerprint == fingerprint {
+        let latestDelivery = date.addingTimeInterval(DeepLinkSync.deliveryTolerance)
+        for index in items.indices
+        where items[index].fingerprint == fingerprint && items[index].deliveredAt <= latestDelivery {
             items[index].readAt = date
             touched.insert(items[index].id)
         }
+        guard !touched.isEmpty else { return }
         persist(touched)
         onRead(touched)
     }

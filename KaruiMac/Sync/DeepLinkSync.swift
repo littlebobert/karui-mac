@@ -57,7 +57,9 @@ actor DeepLinkSync {
 
     /// Sends the link; the record on iCloud, after. A link sent before (by this Mac
     /// before a relaunch, or by another Mac) is left as it is, read mark included,
-    /// and comes back so the caller can see whether it's already read.
+    /// and comes back so the caller can see whether it's already read. The record of
+    /// an earlier notification with the same text is another matter: this one takes
+    /// it over, unread (`isEarlierNotification`).
     @discardableResult
     func send(_ link: DeepLinkRecord) async -> DeepLinkRecord? {
         if !status.isAvailable {
@@ -71,31 +73,71 @@ actor DeepLinkSync {
             recordType: DeepLinkRecordSchema.recordType,
             recordID: CKRecord.ID(recordName: link.fingerprint)
         )
+        Self.fill(record, with: link)
+        do {
+            let results = try await database.modifyRecords(saving: [record], deleting: [], savePolicy: .ifServerRecordUnchanged)
+            var saved: CKRecord
+            var replacedEarlier = false
+            do {
+                saved = try results.saveResults[record.recordID]?.get() ?? record
+            } catch let error as CKError where error.code == .serverRecordChanged {
+                guard let serverRecord = error.serverRecord else { throw error }
+                if Self.isEarlierNotification(serverRecord, than: link) {
+                    saved = try await replace(serverRecord, with: link, in: database)
+                    replacedEarlier = true
+                } else {
+                    // Already there; the server's copy is the truth, read mark and all.
+                    saved = serverRecord
+                }
+            }
+            savedRecords[link.fingerprint] = saved
+            expiryStore.remember(recordName: link.fingerprint, expiresAt: link.expiresAt)
+            var sent = link
+            sent.readAt = saved[DeepLinkRecordSchema.readAt] as? Date
+            SafeDiagnosticLog.shared.record(
+                "sync: sent \(link.app) link\(replacedEarlier ? ", in place of an earlier one with the same text" : "")\(sent.readAt == nil ? "" : ", already read")"
+            )
+            return sent
+        } catch {
+            SafeDiagnosticLog.shared.record("sync: send failed: \(error.localizedDescription)")
+            return nil
+        }
+    }
+
+    /// The link's fields on a record. Whatever read mark the record had goes: it was
+    /// for the notification the record was about before.
+    static func fill(_ record: CKRecord, with link: DeepLinkRecord) {
         record[DeepLinkRecordSchema.fingerprint] = link.fingerprint
         record[DeepLinkRecordSchema.app] = link.app
         record.encryptedValues[DeepLinkRecordSchema.url] = link.url.absoluteString
         record[DeepLinkRecordSchema.opensExactContent] = link.opensExactContent ? 1 : 0
         record[DeepLinkRecordSchema.deliveredAt] = link.deliveredAt
         record[DeepLinkRecordSchema.expiresAt] = link.expiresAt
+        record[DeepLinkRecordSchema.readAt] = nil
+    }
+
+    /// Whether the record already on iCloud is for an earlier notification with the
+    /// same text, as a second "Verify your email" from one sender is: the fingerprint
+    /// is the app and the text, with no time in it, so both are one record. Taken as
+    /// this notification's, its read mark made the new one read on arrival: nothing
+    /// watched for it being read here, and the iPhone's alert stayed (2026-11-27).
+    /// The same notification reaching another Mac a little later is not that.
+    static func isEarlierNotification(_ serverRecord: CKRecord, than link: DeepLinkRecord) -> Bool {
+        guard let deliveredAt = serverRecord[DeepLinkRecordSchema.deliveredAt] as? Date else { return true }
+        return link.deliveredAt.timeIntervalSince(deliveredAt) > deliveryTolerance
+    }
+
+    /// The earlier notification's record becomes this one's: its link, its time, and
+    /// no read mark. Another Mac that did the same a moment before wins; its record
+    /// is this notification's too.
+    private func replace(_ serverRecord: CKRecord, with link: DeepLinkRecord, in database: CKDatabase) async throws -> CKRecord {
+        Self.fill(serverRecord, with: link)
+        let results = try await database.modifyRecords(saving: [serverRecord], deleting: [], savePolicy: .ifServerRecordUnchanged)
         do {
-            let results = try await database.modifyRecords(saving: [record], deleting: [], savePolicy: .ifServerRecordUnchanged)
-            let saved: CKRecord
-            do {
-                saved = try results.saveResults[record.recordID]?.get() ?? record
-            } catch let error as CKError where error.code == .serverRecordChanged {
-                // Already there; the server's copy is the truth, read mark and all.
-                guard let serverRecord = error.serverRecord else { throw error }
-                saved = serverRecord
-            }
-            savedRecords[link.fingerprint] = saved
-            expiryStore.remember(recordName: link.fingerprint, expiresAt: link.expiresAt)
-            var sent = link
-            sent.readAt = saved[DeepLinkRecordSchema.readAt] as? Date
-            SafeDiagnosticLog.shared.record("sync: sent \(link.app) link\(sent.readAt == nil ? "" : ", already read")")
-            return sent
-        } catch {
-            SafeDiagnosticLog.shared.record("sync: send failed: \(error.localizedDescription)")
-            return nil
+            return try results.saveResults[serverRecord.recordID]?.get() ?? serverRecord
+        } catch let error as CKError where error.code == .serverRecordChanged {
+            guard let newer = error.serverRecord else { throw error }
+            return newer
         }
     }
 

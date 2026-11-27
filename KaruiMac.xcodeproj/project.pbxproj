@@ -46,6 +46,7 @@
 		611EDB47A4CA5D72542A9168 /* Acknowledgements.txt in Resources */ = {isa = PBXBuildFile; fileRef = CDA83893DD1898A941803C76 /* Acknowledgements.txt */; };
 		66B2B6A1F6D956AA9B7D1EFA /* SetupNudge.swift in Sources */ = {isa = PBXBuildFile; fileRef = 67CFD0E7402CC1B21A0E1966 /* SetupNudge.swift */; };
 		6A22D362EE06F68C6D7B6737 /* LooseMatchReadTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A084182F88496A184687D07E /* LooseMatchReadTests.swift */; };
+		6A643B645BA9306C81DF759D /* RepeatedLinkTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 386034427C3144C595FAB30F /* RepeatedLinkTests.swift */; };
 		6F1F477087C760E2E8B83643 /* SlackHarvester.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0368E20A347FBE53765A797B /* SlackHarvester.swift */; };
 		70278699811976FBA5C4B192 /* MacKaruiCloudTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7848431CC361ECFD458A049D /* MacKaruiCloudTests.swift */; };
 		71995B62B28464F1978F0F94 /* VerdictStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = B925C34CA7033ED768164254 /* VerdictStore.swift */; };
@@ -137,6 +138,7 @@
 		2CD87E065773D23C77EB5CCD /* InfoPlist.strings */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = InfoPlist.strings; path = ja.lproj/InfoPlist.strings; sourceTree = "<group>"; };
 		32AAC47B5C7C54BBC67880D2 /* MacTranslationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MacTranslationTests.swift; sourceTree = "<group>"; };
 		3512D9C41E3A8B7DC5C9EE71 /* MacRepost.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MacRepost.swift; sourceTree = "<group>"; };
+		386034427C3144C595FAB30F /* RepeatedLinkTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RepeatedLinkTests.swift; sourceTree = "<group>"; };
 		45927B751C8797B05060174C /* RepeatedNotificationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RepeatedNotificationTests.swift; sourceTree = "<group>"; };
 		462569B5AE26FA4CCA644A6A /* SortingSettingsStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SortingSettingsStore.swift; sourceTree = "<group>"; };
 		4B466F1F135069DD48A1473B /* AppCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppCoordinator.swift; sourceTree = "<group>"; };
@@ -249,6 +251,7 @@
 				5986291BE197CA76F4D6CA8E /* MessagesLinkTests.swift */,
 				57E3E9CF0788DE8E74AA72D0 /* NotificationPayloadTests.swift */,
 				B6E277A35F2E45B98D480B7C /* OtherMacLinkTests.swift */,
+				386034427C3144C595FAB30F /* RepeatedLinkTests.swift */,
 				45927B751C8797B05060174C /* RepeatedNotificationTests.swift */,
 				E91FAECA5133A2FCFCD70647 /* RevealTests.swift */,
 				DCAC8A91CAFED37ADAB0ECAC /* SameLinkMergeTests.swift */,
@@ -633,6 +636,7 @@
 				71FCA40B8355B8319BD331C2 /* MessagesLinkTests.swift in Sources */,
 				D66550355B02294EBB91F582 /* NotificationPayloadTests.swift in Sources */,
 				32CF0DB6574A1C124BF2AFC0 /* OtherMacLinkTests.swift in Sources */,
+				6A643B645BA9306C81DF759D /* RepeatedLinkTests.swift in Sources */,
 				5AAA64C13330D029BA7B6A0A /* RepeatedNotificationTests.swift in Sources */,
 				73F5812B811D777FF02E0A88 /* RevealTests.swift in Sources */,
 				A04E3D9777FAE4F849543560 /* SameLinkMergeTests.swift in Sources */,
